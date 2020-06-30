@@ -1,0 +1,4 @@
+DOMAIN-SUFFIX,snssdk.com,REJECT
+DOMAIN-SUFFIX,toutiao.com,REJECT
+DOMAIN-SUFFIX,toutiaocloud.com,REJECT
+DOMAIN-SUFFIX,toutiaocloud.net,REJECT

@@ -1,0 +1,4 @@
+# 家庭内网
+host-suffix, mesu.apple.com, reject
+host-suffix, appldnld.apple.com, reject
+host-suffix, gdmf.apple.com, reject

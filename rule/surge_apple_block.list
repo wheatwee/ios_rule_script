@@ -1,0 +1,16 @@
+# >> TestFlight
+DOMAIN,testflight.apple.com,Proxy
+# >> Apple URL Shortener
+DOMAIN-SUFFIX,appsto.re,Proxy
+# >> iBooks Store download
+DOMAIN,books.itunes.apple.com,Proxy
+# >> iTunes Store Moveis Trailers
+DOMAIN,hls.itunes.apple.com,Proxy
+# >> App Store Preview
+DOMAIN,apps.apple.com,Proxy
+DOMAIN,itunes.apple.com,Proxy
+# >> Spotlight
+DOMAIN,api-glb-sea.smoot.apple.com,Proxy
+# >> Dictionary
+DOMAIN,lookup-api.apple.com,Proxy
+PROCESS-NAME,LookupViewService,Proxy

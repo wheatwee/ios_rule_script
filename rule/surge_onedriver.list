@@ -1,0 +1,8 @@
+DOMAIN-SUFFIX,1drv.com,Proxy
+DOMAIN-SUFFIX,1drv.ms,Proxy
+DOMAIN-SUFFIX,blob.core.windows.net,Proxy
+DOMAIN-SUFFIX,livefilestore.com,Proxy
+DOMAIN-SUFFIX,onedrive.com,Proxy
+DOMAIN-SUFFIX,storage.live.com,Proxy
+DOMAIN-SUFFIX,storage.msn.com,Proxy
+DOMAIN,oneclient.sfx.ms,Proxy
