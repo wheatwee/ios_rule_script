@@ -2,8 +2,8 @@
 Surge Config
 
 [Script]
-[什么值得买]每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm_checkin.js,script-update-interval=0,type=cron,cronexp=10 0 * * *
-[什么值得买]获取cookie = debug=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm_checkin.js,script-update-interval=0,type=http-request,pattern=^https?:\/\/zhiyou\.smzdm\.com\/user$
+什么值得买_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin_single.js,script-update-interval=0,type=cron,cronexp=10 0 * * *
+什么值得买_获取cookie = debug=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin_single.js,script-update-interval=0,type=http-request,pattern=^https?:\/\/zhiyou\.smzdm\.com\/user$
 
 [MITM]
 hostname = zhiyou.smzdm.com
@@ -170,11 +170,8 @@ function GetCurrentAfter() {
 }
 
 function Main(){
-  magicJS.log(magicJS.isResponse);
-  if (magicJS.isResponse){
+  if (magicJS.isRequest){
     if(zhiyouRegex.test(magicJS.request.url) && magicJS.request.method == 'GET'){
-      magicJS.log(JSON.stringify(magicJS.request));
-      magicJS.log(JSON.stringify(magicJS.request.headers));
       let match_str = magicJS.request.headers.Cookie.match(/sess=[^\s]*;/);
       session_id = match_str != null ? match_str[0] : null;
       // 获取新的session_id
@@ -196,7 +193,7 @@ function Main(){
         }
       }
       else{
-        magicJS.notify(scriptName, '', '❌获取cookie失败！！');
+        magicJS.log('没有读取到有效的Cookie信息。');
       }
     }
     magicJS.done();
