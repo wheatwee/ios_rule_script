@@ -4,7 +4,7 @@
 
 1. 安装模块
 
-   模块地址 https://raw.githubusercontent.com/dreamtalks/RulesAndScripts/master/modules/smzdm.sgmodule
+   模块地址 https://github.com/blackmatrix7/ios_rule_script/raw/master/script/smzdm/smzdm_checkin_single.sgmodule
 
 2. 登录账号
 
