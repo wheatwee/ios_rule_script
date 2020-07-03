@@ -1,23 +1,27 @@
 /*
 Surge
 
+[Proxy]
+Reject = reject
+RejectGif = reject-tinygif
+
 [Rule]
 # 联享家去广告
-DOMAIN-SUFFIX,bbs.hori-gz.com,TinyGif
-DOMAIN-SUFFIX,mms.hori-gz.com,TinyGif
-DOMAIN-SUFFIX,yxhd.hori-gz.com,TinyGif
-DOMAIN-SUFFIX,ad.hori-gz.com,TinyGif
-DOMAIN-SUFFIX,adfile.hori-gz.com,TinyGif
-DOMAIN-SUFFIX,shop17741405.m.youzan.com,TinyGif
+DOMAIN-SUFFIX,bbs.hori-gz.com,RejectGif
+DOMAIN-SUFFIX,mms.hori-gz.com,RejectGif
+DOMAIN-SUFFIX,yxhd.hori-gz.com,RejectGif
+DOMAIN-SUFFIX,ad.hori-gz.com,RejectGif
+DOMAIN-SUFFIX,adfile.hori-gz.com,RejectGif
+DOMAIN-SUFFIX,shop17741405.m.youzan.com,RejectGif
 DOMAIN-SUFFIX,pangolin.snssdk.com,Reject
-DOMAIN-SUFFIX,kinglian.cn,TinyGif
+DOMAIN-SUFFIX,kinglian.cn,RejectGif
 
 [MITM]
 hostname = adfile.hori-gz.com, sso.lxjapp.com, nfys.kinglian.cn, bbs.hori-gz.com
 
 [Script]
-联享家_去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/adfile\.hori-gz\.com*,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ad.js
-联享家_检查更新 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ad.js
+联享家_去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/adfile\.hori-gz\.com*,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
+联享家_检查更新 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
 */
 
 let body = $response.body;
