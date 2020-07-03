@@ -121,7 +121,8 @@ function Checkin() {
             resolve('本日签到成功');
           }
           else{
-            reject('签到出现异常:' + checkin_data);
+            magicJS.notify(scriptName, '', '❌签到出现异常，请查阅签到日志。');
+            reject('签到出现异常:' + data);
           }
         }
       });
@@ -161,6 +162,7 @@ function GetCurrentAfter() {
             resolve('获取用户签到后数据成功。')
           }
           else {
+            magicJS.notify(scriptName, '', '❌获取用户签到后数据异常！！');
             reject('获取用户签到后数据异常。');
           }
         }
@@ -224,164 +226,166 @@ Main();
 
 function MagicJS(scriptName='MagicJS') {
   
-    const version = '202007022130';
+  const version = '202007030027';
 
-    const isSurge = undefined !== this.$httpClient;
-    const isQuanX = undefined !== this.$task;
+  const isSurge = undefined !== this.$httpClient;
+  const isQuanX = undefined !== this.$task;
 
-    const read = (key, session='default') => {
-      let jsonStr = '';
-      let data = null;
-      if (isSurge) {
-        jsonStr = $persistentStore.read(key);
-      }
-      else if (isQuanX) {
-        jsonStr = $prefs.valueForKey(key);
-      }
-      try { 
-        data = JSON.parse(jsonStr);
-      } 
-      catch{ 
-        data = {};
-        del(key);
-      }
-      let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val); } catch {}
-      log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
-      return val;
+  const read = (key, session='default') => {
+    let jsonStr = '';
+    let data = null;
+    if (isSurge) {
+      jsonStr = $persistentStore.read(key);
+    }
+    else if (isQuanX) {
+      jsonStr = $prefs.valueForKey(key);
+    }
+    try { 
+      data = JSON.parse(jsonStr) != null? JSON.parse(jsonStr) : {};
+    } 
+    catch (err){ 
+      log(`Parse Data Error: ${err}`);
+      data = {};
+      del(key);
+    }
+    let val = data[session];
+    try { if (typeof val == 'string') val = JSON.parse(val); } catch {}
+    log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+    return val;
+  };
+
+  const write = (key, val, session='default') => {
+    let jsonStr = '';
+    let data = null;
+    if (isSurge) {
+      jsonStr = $persistentStore.read(key);
+    }
+    else if (isQuanX){
+      jsonStr = $prefs.valueForKey(key);
+    }
+    try { 
+      data = JSON.parse(jsonStr) != null? JSON.parse(jsonStr) : {};
+    } 
+    catch(err) { 
+      log(`Parse Data Error: ${err}`);
+      data = {};
+      del(key);
+    }
+    data[session] = val;
+    jsonStr = JSON.stringify(data);
+    log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+    if (isSurge) {
+      return $persistentStore.write(jsonStr, key);
+    }
+    else if (isQuanX) {
+      return $prefs.setValueForKey(jsonStr, key);
+    }
+  };
+
+  const del = (key) =>{
+    if (isSurge) {
+      $persistentStore.write({}, key);
+    }
+    else if (isQuanX) {
+      $prefs.setValueForKey({}, key);
+    }
+  }
+
+  const notify = (title, subTitle = '', body = '') => {
+    if (isSurge) $notification.post(title, subTitle, body)
+    if (isQuanX) $notify(title, subTitle, body)
+  }
+  
+  const log = (msg) => {
+    console.log(`[${scriptName}]\n${msg}\n`)
+  }
+
+  const get = (options, callback) => {
+    if (isSurge) {
+      $httpClient.get(options, callback);
     };
-  
-    const write = (key, val, session='default') => {
-      let jsonStr = '';
-      let data = null;
-      if (isSurge) {
-        jsonStr = $persistentStore.read(key);
-      }
-      else if (isQuanX){
-        jsonStr = $prefs.valueForKey(key);
-      }
-      try { 
-        data = JSON.parse(jsonStr);
-      } 
-      catch{ 
-        data = {};
-        del(key);
-      }
-      data[session] = val;
-      jsonStr = JSON.stringify(data);
-      log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
-      if (isSurge) {
-        return $persistentStore.write(jsonStr, key);
-      }
-      else if (isQuanX) {
-        return $prefs.setValueForKey(jsonStr, key);
-      }
+    if (isQuanX) {
+      if (typeof options == 'string') options = { url: options }
+      options['method'] = 'GET'
+      return $task.fetch(options).then(
+        response => {
+          response['status'] = response.statusCode
+          callback(null, response, response.body)
+        },
+        reason => callback(reason.error, null, null),
+      )
     };
+  }
 
-    const del = (key) =>{
-      if (isSurge) {
-        $persistentStore.write({}, key);
+  const post = (options, callback) => {
+    if (isSurge) {
+      $httpClient.post(options, callback);
+    };
+    if (isQuanX) {
+      if (typeof options == 'string') options = { url: options }
+      options['method'] = 'POST'
+      $task.fetch(options).then(
+        response => {
+          response['status'] = response.statusCode
+          callback(null, response, response.body)
+        },
+        reason => callback(reason.error, null, null),
+      )
+    };
+  }
+
+  const _response = () =>{
+    try{
+      return $response;
+    }
+    catch {
+      return undefined;
+    }
+  }
+  const response = _response();
+
+
+  const _request = () =>{
+    try{
+      return $request;
+    }
+    catch {
+      return undefined;
+    }
+  }
+  const request = _request();
+
+  const done = (value = {}) => {
+    $done(value)
+  }
+
+  const isToday = (day) => {
+    if (day == null){
+        return false;
+    }
+    else{
+      let today = new Date();
+      if (typeof day == 'string'){
+          day = new Date(day);
       }
-      else if (isQuanX) {
-        $prefs.setValueForKey({}, key);
-      }
-    }
-  
-    const notify = (title, subTitle = '', body = '') => {
-      if (isSurge) $notification.post(title, subTitle, body)
-      if (isQuanX) $notify(title, subTitle, body)
-    }
-    
-    const log = (msg) => {
-      console.log(`[${scriptName}]\n${msg}\n`)
-    }
-  
-    const get = (options, callback) => {
-      if (isSurge) {
-        $httpClient.get(options, callback);
-      };
-      if (isQuanX) {
-        if (typeof options == 'string') options = { url: options }
-        options['method'] = 'GET'
-        return $task.fetch(options).then(
-          response => {
-            response['status'] = response.statusCode
-            callback(null, response, response.body)
-          },
-          reason => callback(reason.error, null, null),
-        )
-      };
-    }
-  
-    const post = (options, callback) => {
-      if (isSurge) {
-        $httpClient.post(options, callback);
-      };
-      if (isQuanX) {
-        if (typeof options == 'string') options = { url: options }
-        options['method'] = 'POST'
-        $task.fetch(options).then(
-          response => {
-            response['status'] = response.statusCode
-            callback(null, response, response.body)
-          },
-          reason => callback(reason.error, null, null),
-        )
-      };
-    }
-  
-    const _response = () =>{
-      try{
-        return $response;
-      }
-      catch {
-        return undefined;
-      }
-    }
-    const response = _response();
-  
-  
-    const _request = () =>{
-      try{
-        return $request;
-      }
-      catch {
-        return undefined;
-      }
-    }
-    const request = _request();
-  
-    const done = (value = {}) => {
-      $done(value)
-    }
-  
-    const isToday = (day) => {
-      if (day == null){
-          return false;
+      if (today.getFullYear() == day.getFullYear() && today.getMonth() == day.getMonth() && today.getDay() == day.getDay()){
+          return true;
       }
       else{
-        let today = new Date();
-        if (typeof day == 'string'){
-            day = new Date(day);
-        }
-        if (today.getFullYear() == day.getFullYear() && today.getMonth() == day.getMonth() && today.getDay() == day.getDay()){
-            return true;
-        }
-        else{
-            return false;
-        }
+          return false;
       }
     }
-  
-    const _isRequest = () => {
-      return typeof $request != 'undefined';
-    }
-    const isRequest = _isRequest();
-  
-    const _isResponse = () => {
-      return typeof $response != 'undefined';
-    }
-    const isResponse = _isResponse();
-  
-    return { version, isSurge, isQuanX, response, request, isRequest, isResponse , notify, log, write, read, del, get, post, done, isToday}
+  }
+
+  const _isRequest = () => {
+    return typeof $request != 'undefined';
+  }
+  const isRequest = _isRequest();
+
+  const _isResponse = () => {
+    return typeof $response != 'undefined';
+  }
+  const isResponse = _isResponse();
+
+  return { version, isSurge, isQuanX, response, request, isRequest, isResponse , notify, log, write, read, del, get, post, done, isToday}
 }
