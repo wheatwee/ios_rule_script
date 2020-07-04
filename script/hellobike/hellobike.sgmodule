@@ -1,0 +1,9 @@
+#!name=哈罗出行
+#!desc=哈罗出行每日自动签到
+
+[Script]
+哈罗单车_每日签到 = script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/hellobike/hellobike.js,script-update-interval=0,type=cron,cronexp=15 0 * * *
+哈罗单车_获取cookie = script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/hellobike/hellobike.js,script-update-interval=0,type=http-request,requires-body=true,pattern=^https:\/\/gameapi\.hellobike\.com\/api
+
+[MITM]
+hostname = %APPEND% gameapi.hellobike.com
