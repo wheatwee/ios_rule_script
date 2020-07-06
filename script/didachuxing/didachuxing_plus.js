@@ -2,8 +2,8 @@
 Surge Config
 
 [Script]
-嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,script-update-interval=0,type=cron,cronexp=15 0 * * *
-嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,script-update-interval=0,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
+嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_checkin.js,script-update-interval=0,type=cron,cronexp=15 0 * * *
+嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_checkin.js,script-update-interval=0,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
 
 [MITM]
 hostname = www.didapinche.com
@@ -24,6 +24,9 @@ let didaCookie = null;
 let didaUserAgent = null;
 let didaCinfo = null;
 let didaAccessToken = null;
+let didaGetBeikeResult = [];
+let didaGetBeikeCount = 0;
+let didaNotifyContent = '';
 
 let checkinOptions = {
     url : 'https://www.didapinche.com/hapis/api/t/Jifen/signIn?userCid=',
@@ -40,6 +43,23 @@ let checkinOptions = {
       "x-access-token": null
     }
 };
+
+let getBeikeAccountOptions = {
+  url : 'https://www.didapinche.com/hapis/api/t/Jifen/getBeikeAccount?userCid=',
+  headers : {
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "zh-cn",
+    "Connection": "keep-alive",
+    "Cookie": null,
+    "Host": "www.didapinche.com",
+    "Referer": "https://www.didapinche.com/dida/public/didashell/index.html",
+    "User-Agent": null,
+    "ddcinfo": null,
+    "x-access-token": null,
+    "UserAgent": ''
+  }
+}
 
 // 检查cookie完整性
 function CheckCookie(){
@@ -68,35 +88,58 @@ function CheckCookie(){
 function Checkin() {
   return new Promise((resolve, reject) => {
     if (CheckCookie()){
-      checkinOptions.url += didaCid;
+      let url = checkinOptions.url.replace(/(userCid=[^&]*)/i, `userCid=${didaCid}`);
+      checkinOptions.url = url;
       checkinOptions.headers['Cookie'] = didaCookie;
       checkinOptions.headers['User-Agent'] = didaUserAgent;
       checkinOptions.headers['ddcinfo'] = didaCinfo;
       checkinOptions.headers['x-access-token'] = didaAccessToken;
+      let checkinLog = '';
+      let checkinNotify = '';
       magicJS.get(checkinOptions, (err, resp, data)=>{
         if (err) {
-          magicJS.notify(scriptName, '', '❌签到出现异常，http请求错误。');
-          reject('签到出现异常:' + err);
+          checkinNotify = '❌签到出现异常，http请求错误。';
+          checkinLog = '签到出现异常:' + err;
+          didaNotifyContent += checkinNotify;
+          resolve(checkinLog);
         }
         else{
           magicJS.log('签到结果返回数据：' + data);
           let checkin_obj = JSON.parse(data);
           if (checkin_obj.hasOwnProperty('code') && checkin_obj.hasOwnProperty('ret') && checkin_obj['code'] == 0){
             if (typeof checkin_obj['ret'] == 'object'){
-              magicJS.notify(scriptName, '', `🎉签到成功，连续签到${checkin_obj['ret']['continueSign']}天。\n ${checkin_obj['ret']['toast']}`);
-              resolve(checkin_obj['ret']['toast']);
+              checkinLog = `签到成功，连续签到${checkin_obj['ret']['continueSign']}天，${checkin_obj['ret']['toast']}`;
+              checkinNotify = `🎉${checkinLog}\n`;
+              didaNotifyContent += checkinNotify;
+              magicJS.log(checkinLog);
+              resolve(checkinLog);
             }
             else if (typeof checkin_obj['ret'] == 'string'){
-              magicJS.notify(scriptName, '', `🎉${checkin_obj['ret']}`);
-              resolve(checkin_obj['ret']);
+              if (checkin_obj['ret'] == '已经签到过'){
+                checkinNotify = `✅本日已经签到过，不要重复签到哦\n`;
+              }
+              else{
+                checkinNotify = `🎉${checkinLog}\n`;
+              }
+              checkinLog = checkin_obj['ret'];
+              didaNotifyContent += checkinNotify;
+              magicJS.log(checkinLog);
+              resolve(checkinLog);
             }
             else {
-              magicJS.notify(scriptName, '', `❌签到出现异常，请查看日志。`);
-              reject('签到出现异常:' + data);
+              checkinLog = '签到出现异常:' + data;
+              checkinNotify = '❌签到出现异常，请查看日志\n';
+              didaNotifyContent += checkinNotify;
+              magicJS.log(checkinLog);
+              resolve(checkinLog);
             }
           }
           else{
-            reject('签到出现异常:' + data);
+            checkinLog = '签到出现异常:' + data;
+            checkinNotify = '❌签到出现异常，请查看日志\n';
+            didaNotifyContent += checkinNotify;
+            magicJS.log(checkinLog);
+            resolve(checkinLog);
           }
         }
       });
@@ -104,10 +147,112 @@ function Checkin() {
   });
 }
 
+// 获取账户待领取贝壳
+function GetBeikeAccount(){
+  let beikeList = {};
+  return new Promise((resolve, reject) => {
+    if (CheckCookie()){
+      let url = getBeikeAccountOptions.url.replace(/(userCid=[^&]*)/i, `userCid=${didaCid}`);
+      getBeikeAccountOptions.url = url;
+      getBeikeAccountOptions.headers['Cookie'] = didaCookie;
+      getBeikeAccountOptions.headers['User-Agent'] = didaUserAgent;
+      getBeikeAccountOptions.headers['ddcinfo'] = didaCinfo;
+      getBeikeAccountOptions.headers['x-access-token'] = didaAccessToken;
 
-function Main(){
+      magicJS.get(getBeikeAccountOptions, (err, resp, data)=>{
+        if (err) {
+          magicJS.notify(scriptName, '', '❌获取账户下待领取贝壳异常，http请求错误。');
+          magicJS.log('获取账户下待领取贝壳异常，http请求错误：' + err);
+          resolve(beikeList);
+        }
+        else{
+          let obj = JSON.parse(data);
+          if (obj.hasOwnProperty('code') && obj['code'] == 0 && obj.hasOwnProperty('ret') && typeof obj['ret'] == 'object'){
+            beikeList = obj['ret']['receivableAccountList'];
+            magicJS.log('待拾取贝壳情况：' + JSON.stringify(beikeList));
+            resolve(beikeList);
+          }
+          else{
+            magicJS.notify(scriptName, '', '❌获取账户下待领取贝壳异常，接口响应错误。');
+            magicJS.log('获取账户下待领取贝壳异常，接口响应错误：' + data);
+            resolve(beikeList);
+          }
+        }
+      })
+    }
+  });
+}
+
+// 模拟点击实现单个贝壳拾取操作
+function AddBeikeAccount(uniqueKey, changeAmount, beikeType){
+  let beikeData = {'uniqueKey': uniqueKey, 'changeAmount': changeAmount, 'beikeType': beikeType};;
+  return new Promise((resolve, reject) => {
+    if (CheckCookie()){
+      let addBeikeAccount = {
+        url : `https://www.didapinche.com/hapis/api/t/Jifen/addBeikeAccountFromRedis?userCid=${didaCid}&uniqueKey=${beikeData['uniqueKey']}`,
+        headers : {
+          "Accept": "application/json, text/plain, */*",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Accept-Language": "zh-cn",
+          "Connection": "keep-alive",
+          "Cookie": didaCookie,
+          "Host": "www.didapinche.com",
+          "Referer": "https://www.didapinche.com/dida/public/didashell/index.html",
+          "User-Agent": didaUserAgent,
+          "ddcinfo": didaCinfo,
+          "x-access-token": didaAccessToken
+        }
+      };
+      magicJS.get(addBeikeAccount, (err, resp, data)=>{
+        if (err) {
+          magicJS.notify(scriptName, '', '❌拾取贝壳失败，http请求错误。');
+          magicJS.log('拾取贝壳失败，http请求错误：' + err);
+          resolve(beikeData);
+        }
+        else{
+          magicJS.log('拾取贝壳接口响应内容：' + data);
+          let obj = JSON.parse(data);
+          if (obj.hasOwnProperty('code') && obj['code'] == 0){
+            didaGetBeikeResult.push(beikeData);
+            didaGetBeikeCount += Number(beikeData['changeAmount']);
+            magicJS.log('拾取贝壳成功，贝壳数据：' + JSON.stringify(beikeData));
+            resolve(beikeData);
+          }
+          else{
+            magicJS.notify(scriptName, '', '❌拾取贝壳失败，接口响应错误。');
+            magicJS.log('拾取贝壳失败，接口响应错误：' + data);
+            resolve(beikeData);
+          }
+        }
+      });
+    }
+  });
+}
+
+async function GetAccountAllBeike(){
+  let beikeList = await GetBeikeAccount();
+  if (beikeList.length > 0){
+    for (let index=0; index < beikeList.length; index ++){
+        let element = beikeList[index];
+        await AddBeikeAccount(element['uniqueKey'], element['changeAmount'], element['beikeType']);
+    }
+    if (didaGetBeikeResult.length > 0 && didaGetBeikeCount > 0){
+      magicJS.log(`本次共拾取贝壳${didaGetBeikeCount}个，详细情况如下：${JSON.stringify(didaGetBeikeResult)}`);
+      didaNotifyContent += `🏖本次共拾取贝壳${didaGetBeikeCount}个\n🗳右滑查看获取贝壳详情`;
+      didaGetBeikeResult.forEach(element => {
+        didaNotifyContent += `\n🚘${element['beikeType']}：${element['changeAmount']}个`;
+      });
+    }
+  }
+  else{
+    didaNotifyContent += '🏖本次没有发现待拾取的贝壳，明天再来看看吧';
+    magicJS.log('没有待拾取的贝壳');
+  }
+}
+
+async function Main(){
   if (magicJS.isRequest){
-    if(didaGetCookieRegex.test(magicJS.request.url) && magicJS.request.method == 'GET'){
+    if(didaGetCookieRegex.test(magicJS.request.url) && magicJS.request.method == 'GET' && magicJS.request.headers.hasOwnProperty('UserAgent') == false){
 
       magicJS.log('获取http headers：' + JSON.stringify(magicJS.request.headers));
 
@@ -119,12 +264,13 @@ function Main(){
 
       let didaHisAccessToken = magicJS.read(didaAccessTokenKey);
       let didaHisCid = magicJS.read(didaCidKey);
+      let didaHisCookie = magicJS.read(didaCookieKey);
 
       if (didaHisAccessToken == didaAccessToken){
         magicJS.log('token与cookie没有变化，无需更新。');
         // magicJS.notify(scriptName, '', '🎈token与cookie没有变化，无需更新。')
       }
-      else if (didaHisCid == null || didaHisCid != didaCid || didaHisAccessToken == null){
+      else if (didaHisCid == null || didaHisCid != didaCid || didaHisAccessToken == null || didaHisAccessToken != didaAccessToken || didaHisCookie == null || didaHisCookie != didaCookie  ){
         magicJS.write(didaCidKey, didaCid);
         magicJS.write(didaCookieKey, didaCookie);
         magicJS.write(didaUserAgentKey, didaUserAgent);
@@ -140,102 +286,111 @@ function Main(){
     magicJS.done();
   }
   else{
-    Checkin().then(
-      value=>{
-        magicJS.log(value);
-        magicJS.done();
-      },
-      reason=>{
-        magicJS.log(reason);
-        magicJS.done();
-      }
-    );
+    
+    await Checkin();
+    
+    await GetAccountAllBeike();
+
+    magicJS.notify(scriptName, '', didaNotifyContent);
+
+    magicJS.done();
   }
 }
 
 Main();
 
-function MagicJS(scriptName='MagicJS') {
-  
-    const version = '202007030027';
+function MagicJS(scriptName='MagicJS'){
+  return new class{
 
-    const isSurge = undefined !== this.$httpClient;
-    const isQuanX = undefined !== this.$task;
+    constructor(){
+      this.scriptName = scriptName;
+    }
+    
+    get version() { return '202007021523' };
 
-    const read = (key, session='default') => {
+    get isSurge() { 
+      return undefined !== $httpClient 
+    };
+    
+    get isQuanX() { 
+      return undefined !== $task 
+    };
+
+    read(key, session='default'){
       let jsonStr = '';
       let data = null;
-      if (isSurge) {
+      if (this.isSurge) {
         jsonStr = $persistentStore.read(key);
       }
-      else if (isQuanX) {
+      else if (this.isQuanX) {
         jsonStr = $prefs.valueForKey(key);
       }
       try { 
-        data = JSON.parse(jsonStr) != null? JSON.parse(jsonStr) : {};
+        data = JSON.parse(jsonStr);
       } 
       catch (err){ 
-        log(`Parse Data Error: ${err}`);
+        this.log(`Parse Data Error: ${err}`);
         data = {};
-        del(key);
+        this.del(key);
       }
       let val = data[session];
       try { if (typeof val == 'string') val = JSON.parse(val); } catch {}
-      log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      this.log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
-  
-    const write = (key, val, session='default') => {
+
+    write(key, val, session='default'){
       let jsonStr = '';
       let data = null;
-      if (isSurge) {
+      if (this.isSurge) {
         jsonStr = $persistentStore.read(key);
       }
-      else if (isQuanX){
+      else if (this.isQuanX){
         jsonStr = $prefs.valueForKey(key);
       }
       try { 
-        data = JSON.parse(jsonStr) != null? JSON.parse(jsonStr) : {};
+        data = JSON.parse(jsonStr);
       } 
       catch(err) { 
-        log(`Parse Data Error: ${err}`);
+        this.log(`Parse Data Error: ${err}`);
         data = {};
-        del(key);
+        this.del(key);
       }
       data[session] = val;
       jsonStr = JSON.stringify(data);
-      log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
-      if (isSurge) {
+      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      if (this.isSurge) {
         return $persistentStore.write(jsonStr, key);
       }
-      else if (isQuanX) {
+      else if (this.isQuanX) {
         return $prefs.setValueForKey(jsonStr, key);
       }
     };
 
-    const del = (key) =>{
-      if (isSurge) {
+    del(key){
+      if (this.isSurge) {
         $persistentStore.write({}, key);
       }
-      else if (isQuanX) {
+      else if (this.isQuanX) {
         $prefs.setValueForKey({}, key);
       }
     }
-  
-    const notify = (title, subTitle = '', body = '') => {
-      if (isSurge) $notification.post(title, subTitle, body)
-      if (isQuanX) $notify(title, subTitle, body)
+
+    notify(title, subTitle = '', body = ''){
+      if (this.isSurge) $notification.post(title, subTitle, body)
+      else if (this.isQuanX) $notify(title, subTitle, body)
     }
     
-    const log = (msg) => {
-      console.log(`[${scriptName}]\n${msg}\n`)
+    log(msg){
+      console.log(`[${this.scriptName}]\n${msg}\n`)
     }
-  
-    const get = (options, callback) => {
-      if (isSurge) {
+
+    get(options, callback){
+      this.log(`Http Get: ${JSON.stringify(options)}`);
+      if (this.isSurge) {
         $httpClient.get(options, callback);
-      };
-      if (isQuanX) {
+      }
+      else if (this.isQuanX) {
         if (typeof options == 'string') options = { url: options }
         options['method'] = 'GET'
         return $task.fetch(options).then(
@@ -247,12 +402,13 @@ function MagicJS(scriptName='MagicJS') {
         )
       };
     }
-  
-    const post = (options, callback) => {
-      if (isSurge) {
+
+    post(options, callback){
+      this.log(`Http Post: ${JSON.stringify(options)}`);
+      if (this.isSurge) {
         $httpClient.post(options, callback);
-      };
-      if (isQuanX) {
+      }
+      else if (this.isQuanX) {
         if (typeof options == 'string') options = { url: options }
         options['method'] = 'POST'
         $task.fetch(options).then(
@@ -264,33 +420,21 @@ function MagicJS(scriptName='MagicJS') {
         )
       };
     }
-  
-    const _response = () =>{
-      try{
-        return $response;
-      }
-      catch {
-        return undefined;
-      }
+
+    get response(){
+      return (typeof $response != 'undefined') ? $response : undefined;
     }
-    const response = _response();
-  
-  
-    const _request = () =>{
-      try{
-        return $request;
-      }
-      catch {
-        return undefined;
-      }
+
+
+    get request(){
+      return (typeof $request != 'undefined') ? $request : undefined;
     }
-    const request = _request();
-  
-    const done = (value = {}) => {
+
+    done(value = {}){
       $done(value)
     }
-  
-    const isToday = (day) => {
+
+    isToday(day){
       if (day == null){
           return false;
       }
@@ -307,16 +451,13 @@ function MagicJS(scriptName='MagicJS') {
         }
       }
     }
-  
-    const _isRequest = () => {
-      return typeof $request != 'undefined';
+
+    get isRequest(){
+      return (typeof $request != 'undefined') && (typeof $response == 'undefined');
     }
-    const isRequest = _isRequest();
-  
-    const _isResponse = () => {
+
+    get isResponse(){
       return typeof $response != 'undefined';
     }
-    const isResponse = _isResponse();
-  
-    return { version, isSurge, isQuanX, response, request, isRequest, isResponse , notify, log, write, read, del, get, post, done, isToday}
+  }(scriptName);
 }
