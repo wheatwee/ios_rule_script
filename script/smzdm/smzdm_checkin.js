@@ -13,17 +13,13 @@ const zhiyouRegex = /^https?:\/\/zhiyou\.smzdm\.com\/user$/;
 const appLoginRegex = /^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$/;
 const smzdmCookieKey = 'smzdm_cookie';
 const smzdmSessionKey = 'smzdm_session';
+const smzdmTokenKey = 'smzdm_token';
 const smzdmAccountKey = 'smzdm_account';
 const smzdmPasswordKey = 'smzdm_password';
 const scriptName = '什么值得买';
 
 let magicJS = MagicJS(scriptName);
 let smzdmCookie = null;
-let beforeLevel = 0;
-let beforePoint = 0;
-let beforeExp = 0;
-let beforeGold = 0;
-let beforeSilver = 0;
 let webCheckinStr = '';
 let appCheckinStr = '';
 
@@ -101,7 +97,7 @@ function WebCheckCookie(){
 
 // 获取用户信息
 function WebGetCurrentBefore(){
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (WebCheckCookie()){
       webGetCurrentOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
       webGetCurrentOptions.headers.Cookie = smzdmCookie;
@@ -172,7 +168,7 @@ function WebCheckin() {
 
 // 签到后获取用户信息
 function WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (WebCheckCookie()){
       webGetCurrentOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
       webGetCurrentOptions.headers.Cookie = smzdmCookie;
@@ -180,6 +176,7 @@ function WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, bef
         if (err) {
           magicJS.notify(scriptName, '', '❌获取Web签到后异常，http请求错误！！');
           magicJS.log('获取Web签到后数据异常:' + err);
+          resolve(false);
         }
         else{
           magicJS.log('获取Web用户签到后数据 ' + data);
@@ -227,72 +224,98 @@ function AppGetToken(){
         magicJS.notify(scriptName, '', '❌App登录失败，http请求异常！！');
         resolve('');
       }
-      try{
-        let obj = JSON.parse(data);
-        magicJS.log(`什么值得买App登录，接口响应内容：${data}`);
-        if (obj.error_code == '111103'){
-          appCheckinStr = 'App账号密码错误';
-          magicJS.log(`什么值得买App登录失败，账号密码错误`);
-          magicJS.notify(scriptName, '', '❌App登录失败，账号密码错误！！');
-          resolve('');
+      else{
+        try{
+          let obj = JSON.parse(data);
+          magicJS.log(`什么值得买App登录，接口响应内容：${data}`);
+          if (obj.error_code == '111104'){
+            appCheckinStr = 'App登录异常';
+            magicJS.log(`什么值得买App登录失败，账号密码错误`);
+            magicJS.notify(scriptName, '', '❌App登录失败，账号密码错误！！');
+            resolve('');
+          }
+          if (obj.error_code == '110202'){
+            appCheckinStr = 'App登录异常';
+            magicJS.log(`什么值得买App登录失败，验证码错误`);
+            magicJS.notify(scriptName, '', '❌App登录失败，验证码错误！！');
+            resolve('');
+          }
+          else if (obj.error_code != '0'){
+            appCheckinStr = 'App登录异常';
+            magicJS.log(`什么值得买App登录失败，接口响应格式不合法`);
+            magicJS.notify(scriptName, '', '❌App登录失败，接口响应格式不合法！！');
+            resolve('');
+          }
+          else{
+            magicJS.log(`什么值得买App登录成功`);
+            magicJS.write(smzdmTokenKey, obj['data']['token']);
+            resolve(obj['data']['token']);
+          }
         }
-        else if (obj.error_code != '0'){
+        catch (ex){
           appCheckinStr = 'App登录异常';
-          magicJS.log(`什么值得买App登录失败，接口响应格式不合法`);
-          magicJS.notify(scriptName, '', '❌App登录失败，接口响应格式不合法！！');
+          magicJS.log(`什么值得买App登录失败，代码执行异常。异常内容：${ex}`);
+          magicJS.notify(scriptName, '', '❌登录失败，代码执行异常！！');
           resolve('');
         }
-        else{
-          magicJS.log(`什么值得买App登录成功`);
-          resolve(obj['data']['token']);
-        }
-      }
-      catch (ex){
-        appCheckinStr = 'App登录异常';
-        magicJS.log(`什么值得买App登录失败，代码执行异常。异常内容：${ex}`);
-        magicJS.notify(scriptName, '', '❌登录失败，代码执行异常！！');
-        resolve('');
-
       }
     })
   })
 }
 
+/*
+什么值得买App端签到，感谢苍井灰灰提供接口
+返回值 0 失败 1 成功 2 网络繁忙 3 token失效 4 重复签到
+*/
 function AppCheckin(token){
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     appCheckinOptions.body = `token=${token}&f=win`
     magicJS.post(appCheckinOptions, (err, resp, data) => {
       if (err){
         appCheckinStr = 'App签到异常';
         magicJS.log(`App签到失败，http请求异常。异常内容：${err}`);
         magicJS.notify(scriptName, '', '❌App签到失败，http请求异常！！');
-        resolve(false);
+        reject(0);
       }
-      try{
-        magicJS.log(`什么值得买App签到，接口响应内容：${data}`);
-        let obj = JSON.parse(data);
-        if (obj.error_code != '0'){
-          appCheckinStr = 'App签到失败';
-          magicJS.log(`App签到失败，接口响应格式不合法。响应内容：${data}`);
-          magicJS.notify(scriptName, '', '❌App签到失败，接口响应格式不合法！！');
-          resolve(false);
+      else{
+        try{
+          magicJS.log(`什么值得买App签到，接口响应内容：${data}`);
+          let obj = JSON.parse(data);
+          if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙')){
+            appCheckinStr = 'App签到失败';
+            magicJS.log('App签到失败，网络访问超时。');
+            reject(2);
+
+          }
+          if (obj.error_code == '11111'){
+            appCheckinStr = 'App签到失败';
+            magicJS.log(`App签到失败，Token已过期。`);
+            magicJS.notify(scriptName, '', '❌App签到失败，Token已过期！！');
+            resolve(3);
+          }
+          else if (obj.error_code != '0'){
+            appCheckinStr = 'App签到失败';
+            magicJS.log(`App签到失败，接口响应格式不合法。`);
+            magicJS.notify(scriptName, '', '❌App签到失败，接口响应格式不合法！！');
+            resolve(0);
+          }
+          else if(obj.error_msg == '已签到'){
+            appCheckinStr = 'App重复签到';
+            magicJS.log('App签到重复签到。');
+            resolve(4);
+          }
+          else{
+            appCheckinStr = 'App签到成功';
+            magicJS.log('App签到成功！！');
+            resolve(1);
+          }
         }
-        else if(obj.error_msg == '已签到'){
-          appCheckinStr = 'App重复签到';
-          magicJS.log(`App签到重复签到。`);
-          resolve(true);
+        catch (ex){
+          appCheckinStr = 'App签到异常';
+          magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}`);
+          magicJS.notify(scriptName, '', '❌App签到失败，代码执行异常！！');
+          resolve(0);
         }
-        else{
-          appCheckinStr = 'App签到成功';
-          magicJS.log(`App签到成功，接口响应内容：${data}`);
-          resolve(true);
-        }
-      }
-      catch (ex){
-        appCheckinStr = 'App签到异常';
-        magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}`);
-        magicJS.notify(scriptName, '', '❌App签到失败，代码执行异常！！');
-        resolve(false);
       }
     })
   })
@@ -363,15 +386,23 @@ async function Main(){
     if (!haveCheckin){
       await WebCheckin();
     }
-      
+
     // App签到
-    let token = await AppGetToken();
-    if (token.length > 0){
-      await AppCheckin(token);
+    let token = magicJS.read(smzdmTokenKey);
+    if (!token){
+      token = await AppGetToken();
     }
+    let AppCheckinRetry = magicJS.retry(AppCheckin, 3, 3000, async (result)=>{
+      if (result == 3){
+        token = await AppGetToken();
+        throw result;
+      }
+    });
+    // 重试三次App签到，每次间隔3000毫秒
+    await magicJS.attempt(AppCheckinRetry(token));
 
     // 查询签到后用户数据
-    WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver)
+    await WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver);
   }
   magicJS.done();
 }
@@ -383,29 +414,39 @@ function MagicJS(scriptName='MagicJS'){
 
     constructor(){
       this.scriptName = scriptName;
+      this.node = {'request': undefined, 'fs': undefined, 'data': {}};
+      if (this.isNode){
+        this.node.request = require('request');
+        this.node.data = require('./data.json');
+        this.node.fs = require('fs');
+      }
     }
     
-    get version() { return '202007021523' };
-
-    get isSurge() { 
-      return undefined !== $httpClient 
-    };
-    
-    get isQuanX() { 
-      return undefined !== $task 
-    };
+    get version() { return '2020.07.07.21.05' };
+    get isSurge() { return typeof $httpClient !== 'undefined' };
+    get isQuanX() { return typeof $task !== 'undefined' };
+    get isLoon() { return typeof $loon !== 'undefined' };
+    get isNode() { return typeof module !== 'undefined' };
+    get response(){ return (typeof $response != 'undefined') ? $response : undefined }
+    get request(){ return (typeof $request != 'undefined') ? $request : undefined }
+    get isRequest(){ return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+    get isResponse(){ return typeof $response !== 'undefined' }
 
     read(key, session='default'){
-      let jsonStr = '';
-      let data = null;
+      let data = '';
       if (this.isSurge) {
-        jsonStr = $persistentStore.read(key);
+        data = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
-        jsonStr = $prefs.valueForKey(key);
+        data = $prefs.valueForKey(key);
       }
-      try { 
-        data = JSON.parse(jsonStr);
+      else if (this.isNode){
+        data = this.node.data[key];
+      }
+      try {
+        if (typeof data === 'string'){
+          data = JSON.parse(data);
+        }
         data = data != null ? data: {};
       } 
       catch (err){ 
@@ -420,16 +461,20 @@ function MagicJS(scriptName='MagicJS'){
     };
 
     write(key, val, session='default'){
-      let jsonStr = '';
-      let data = null;
+      let data = '';
       if (this.isSurge) {
-        jsonStr = $persistentStore.read(key);
+        data = $persistentStore.read(key);
       }
-      else if (this.isQuanX){
-        jsonStr = $prefs.valueForKey(key);
+      else if (this.isQuanX) {
+        data = $prefs.valueForKey(key);
       }
-      try { 
-        data = JSON.parse(jsonStr);
+      else if (this.isNode){
+        data = this.node.data;
+      }
+      try {
+        if (typeof data === 'string'){
+          data = JSON.parse(data);
+        }
         data = data != null ? data: {};
       } 
       catch(err) { 
@@ -437,14 +482,24 @@ function MagicJS(scriptName='MagicJS'){
         data = {};
         this.del(key);
       }
-      data[session] = val;
-      jsonStr = JSON.stringify(data);
+      if (!this.isNode){
+        data[session] = val;
+      }
+      else{
+        data[key][session] = val;
+      }
+      data = JSON.stringify(data);
       this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       if (this.isSurge) {
-        return $persistentStore.write(jsonStr, key);
+        return $persistentStore.write(data, key);
       }
       else if (this.isQuanX) {
-        return $prefs.setValueForKey(jsonStr, key);
+        return $prefs.setValueForKey(data, key);
+      }
+      else if (this.isNode){
+        this.node.fs.writeFileSync('./data.json', data, (err) =>{
+          this.log(err);
+        })
       }
     };
 
@@ -455,11 +510,21 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isQuanX) {
         $prefs.setValueForKey({}, key);
       }
+      else if (this.isNode){
+        this.write(key, '');
+      }
     }
 
     notify(title, subTitle = '', body = ''){
-      if (this.isSurge) $notification.post(title, subTitle, body)
-      else if (this.isQuanX) $notify(title, subTitle, body)
+      if (this.isSurge || this.isLoon) {
+        $notification.post(title, subTitle, body);
+      }
+      else if (this.isQuanX) {
+         $notify(title, subTitle, body);
+      }
+      else if (this.isNode) {
+        this.log(`${title} ${subTitle}\n${body}`);
+      }
     }
     
     log(msg){
@@ -481,7 +546,12 @@ function MagicJS(scriptName='MagicJS'){
           },
           reason => callback(reason.error, null, null),
         )
-      };
+      }
+      else if(this.isNode){
+        delete options.headers['Accept-Encoding'];
+        options['encoding'] = null;
+        return this.node.request.get(options, callback);
+      }
     }
 
     post(options, callback){
@@ -499,20 +569,19 @@ function MagicJS(scriptName='MagicJS'){
           },
           reason => callback(reason.error, null, null),
         )
-      };
-    }
-
-    get response(){
-      return (typeof $response != 'undefined') ? $response : undefined;
-    }
-
-
-    get request(){
-      return (typeof $request != 'undefined') ? $request : undefined;
+      }
+      else if(this.isNode){
+        if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
+        delete options.headers['Accept-Encoding'];
+        options['encoding'] = null;
+        return this.node.request.post(options, callback);
+      }
     }
 
     done(value = {}){
-      $done(value)
+      if (typeof $done !== 'undefined'){
+        $done(value);
+      }
     }
 
     isToday(day){
@@ -533,12 +602,63 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
 
-    get isRequest(){
-      return (typeof $request != 'undefined') && (typeof $response == 'undefined');
+    /**
+     * 对await执行中出现的异常进行捕获并返回，避免写过多的try catch语句
+     * @param {*} promise Promise 对象
+     * @returns 返回两个值，第一个值为异常，第二个值为执行结果
+     */
+    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>[ex, null]) }
+
+    /**
+     * 重试方法
+     *
+     * @param {*} fn 需要重试的函数
+     * @param {number} [retries=5] 重试次数
+     * @param {number} [interval=0] 每次重试间隔
+     * @param {function} [callback=null] 函数没有异常时的回调，会将函数执行结果result传入callback，根据result的值进行判断，如果需要再次重试，在callback中throw一个异常，适用于函数本身没有异常但仍需重试的情况。
+     * @returns 返回一个Promise对象
+     */
+    retry(fn, retries=5, interval=0, callback=null) {
+      return (...args)=>{
+        return new Promise((resolve, reject) =>{
+          function _retry(...args){
+            Promise.resolve().then(()=>fn.apply(this,args)).then(
+              result => {
+                if (typeof callback === 'function'){
+                  Promise.resolve().then(()=>callback(result)).catch(ex=>{
+                    if (retries >= 1 && interval > 0){
+                      setTimeout(() => _retry.apply(this, args), interval);
+                    }
+                    else if (retries >= 1) {
+                      _retry.apply(this, args);
+                    }
+                    else{
+                      resolve(result);
+                    }
+                    retries --;
+                  });
+                }
+                else{
+                  resolve(result);
+                }
+              }
+              ).catch(ex=>{
+              if (retries >= 1 && interval > 0){
+                setTimeout(() => _retry.apply(this, args), interval);
+              }
+              else if (retries >= 1) {
+                _retry.apply(this, args);
+              }
+              else{
+                reject(ex);
+              }
+              retries --;
+            })
+          }
+          _retry.apply(this, args);
+        });
+      };
     }
 
-    get isResponse(){
-      return typeof $response != 'undefined';
-    }
   }(scriptName);
 }
