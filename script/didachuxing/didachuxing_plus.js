@@ -86,7 +86,7 @@ function CheckCookie(){
 
 // 每日签到
 function Checkin() {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (CheckCookie()){
       let url = checkinOptions.url.replace(/(userCid=[^&]*)/i, `userCid=${didaCid}`);
       checkinOptions.url = url;
@@ -116,7 +116,7 @@ function Checkin() {
             }
             else if (typeof checkin_obj['ret'] == 'string'){
               if (checkin_obj['ret'] == '已经签到过'){
-                checkinNotify = `✅本日已经签到过，不要重复签到哦\n`;
+                checkinNotify = `🎉本日已经签到过，不要重复签到哦\n`;
               }
               else{
                 checkinNotify = `🎉${checkinLog}\n`;
@@ -150,7 +150,7 @@ function Checkin() {
 // 获取账户待领取贝壳
 function GetBeikeAccount(){
   let beikeList = {};
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (CheckCookie()){
       let url = getBeikeAccountOptions.url.replace(/(userCid=[^&]*)/i, `userCid=${didaCid}`);
       getBeikeAccountOptions.url = url;
@@ -186,7 +186,7 @@ function GetBeikeAccount(){
 // 模拟点击实现单个贝壳拾取操作
 function AddBeikeAccount(uniqueKey, changeAmount, beikeType){
   let beikeData = {'uniqueKey': uniqueKey, 'changeAmount': changeAmount, 'beikeType': beikeType};;
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (CheckCookie()){
       let addBeikeAccount = {
         url : `https://www.didapinche.com/hapis/api/t/Jifen/addBeikeAccountFromRedis?userCid=${didaCid}&uniqueKey=${beikeData['uniqueKey']}`,
@@ -238,14 +238,14 @@ async function GetAccountAllBeike(){
     }
     if (didaGetBeikeResult.length > 0 && didaGetBeikeCount > 0){
       magicJS.log(`本次共拾取贝壳${didaGetBeikeCount}个，详细情况如下：${JSON.stringify(didaGetBeikeResult)}`);
-      didaNotifyContent += `🏖本次共拾取贝壳${didaGetBeikeCount}个\n🗳右滑查看获取贝壳详情`;
+      didaNotifyContent += `🏖本次共拾取贝壳${didaGetBeikeCount}，左滑查看详情`;
       didaGetBeikeResult.forEach(element => {
-        didaNotifyContent += `\n🚘${element['beikeType']}：${element['changeAmount']}个`;
+        didaNotifyContent += `\n${element['beikeType']}：${element['changeAmount']}个`;
       });
     }
   }
   else{
-    didaNotifyContent += '🏖本次没有发现待拾取的贝壳，明天再来看看吧';
+    didaNotifyContent += '🏖本次没有发现待拾取的贝壳';
     magicJS.log('没有待拾取的贝壳');
   }
 }
@@ -304,29 +304,40 @@ function MagicJS(scriptName='MagicJS'){
 
     constructor(){
       this.scriptName = scriptName;
+      this.node = {'request': undefined, 'fs': undefined, 'data': {}};
+      if (this.isNode){
+        this.node.request = require('request');
+        this.node.data = require('./data.json');
+        this.node.fs = require('fs');
+      }
     }
     
-    get version() { return '202007021523' };
-
-    get isSurge() { 
-      return undefined !== $httpClient 
-    };
-    
-    get isQuanX() { 
-      return undefined !== $task 
-    };
+    get version() { return '202007072322' };
+    get isSurge() { return typeof $httpClient !== 'undefined' };
+    get isQuanX() { return typeof $task !== 'undefined' };
+    get isLoon() { return typeof $loon !== 'undefined' };
+    get isNode() { return typeof module !== 'undefined' };
+    get response(){ return (typeof $response !== 'undefined') ? $response : undefined }
+    get request(){ return (typeof $request !== 'undefined') ? $request : undefined }
+    get isRequest(){ return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+    get isResponse(){ return typeof $response !== 'undefined' }
 
     read(key, session='default'){
-      let jsonStr = '';
-      let data = null;
+      let data = '';
       if (this.isSurge) {
-        jsonStr = $persistentStore.read(key);
+        data = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
-        jsonStr = $prefs.valueForKey(key);
+        data = $prefs.valueForKey(key);
       }
-      try { 
-        data = JSON.parse(jsonStr);
+      else if (this.isNode){
+        data = this.node.data[key];
+      }
+      try {
+        if (typeof data === 'string'){
+          data = JSON.parse(data);
+        }
+        data = data != null ? data: {};
       } 
       catch (err){ 
         this.log(`Parse Data Error: ${err}`);
@@ -340,30 +351,45 @@ function MagicJS(scriptName='MagicJS'){
     };
 
     write(key, val, session='default'){
-      let jsonStr = '';
-      let data = null;
+      let data = '';
       if (this.isSurge) {
-        jsonStr = $persistentStore.read(key);
+        data = $persistentStore.read(key);
       }
-      else if (this.isQuanX){
-        jsonStr = $prefs.valueForKey(key);
+      else if (this.isQuanX) {
+        data = $prefs.valueForKey(key);
       }
-      try { 
-        data = JSON.parse(jsonStr);
+      else if (this.isNode){
+        data = this.node.data;
+      }
+      try {
+        if (typeof data === 'string'){
+          data = JSON.parse(data);
+        }
+        data = data != null ? data: {};
       } 
       catch(err) { 
         this.log(`Parse Data Error: ${err}`);
         data = {};
         this.del(key);
       }
-      data[session] = val;
-      jsonStr = JSON.stringify(data);
+      if (!this.isNode){
+        data[session] = val;
+      }
+      else{
+        data[key][session] = val;
+      }
+      data = JSON.stringify(data);
       this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       if (this.isSurge) {
-        return $persistentStore.write(jsonStr, key);
+        return $persistentStore.write(data, key);
       }
       else if (this.isQuanX) {
-        return $prefs.setValueForKey(jsonStr, key);
+        return $prefs.setValueForKey(data, key);
+      }
+      else if (this.isNode){
+        this.node.fs.writeFileSync('./data.json', data, (err) =>{
+          this.log(err);
+        })
       }
     };
 
@@ -374,11 +400,21 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isQuanX) {
         $prefs.setValueForKey({}, key);
       }
+      else if (this.isNode){
+        this.write(key, '');
+      }
     }
 
     notify(title, subTitle = '', body = ''){
-      if (this.isSurge) $notification.post(title, subTitle, body)
-      else if (this.isQuanX) $notify(title, subTitle, body)
+      if (this.isSurge || this.isLoon) {
+        $notification.post(title, subTitle, body);
+      }
+      else if (this.isQuanX) {
+         $notify(title, subTitle, body);
+      }
+      else if (this.isNode) {
+        this.log(`${title} ${subTitle}\n${body}`);
+      }
     }
     
     log(msg){
@@ -400,7 +436,12 @@ function MagicJS(scriptName='MagicJS'){
           },
           reason => callback(reason.error, null, null),
         )
-      };
+      }
+      else if(this.isNode){
+        delete options.headers['Accept-Encoding'];
+        options['encoding'] = null;
+        return this.node.request.get(options, callback);
+      }
     }
 
     post(options, callback){
@@ -418,20 +459,19 @@ function MagicJS(scriptName='MagicJS'){
           },
           reason => callback(reason.error, null, null),
         )
-      };
-    }
-
-    get response(){
-      return (typeof $response != 'undefined') ? $response : undefined;
-    }
-
-
-    get request(){
-      return (typeof $request != 'undefined') ? $request : undefined;
+      }
+      else if(this.isNode){
+        if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
+        delete options.headers['Accept-Encoding'];
+        options['encoding'] = null;
+        return this.node.request.post(options, callback);
+      }
     }
 
     done(value = {}){
-      $done(value)
+      if (typeof $done !== 'undefined'){
+        $done(value);
+      }
     }
 
     isToday(day){
@@ -452,12 +492,63 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
 
-    get isRequest(){
-      return (typeof $request != 'undefined') && (typeof $response == 'undefined');
+    /**
+     * 对await执行中出现的异常进行捕获并返回，避免写过多的try catch语句
+     * @param {*} promise Promise 对象
+     * @returns 返回两个值，第一个值为异常，第二个值为执行结果
+     */
+    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>[ex, null]) }
+
+    /**
+     * 重试方法
+     *
+     * @param {*} fn 需要重试的函数
+     * @param {number} [retries=5] 重试次数
+     * @param {number} [interval=0] 每次重试间隔
+     * @param {function} [callback=null] 函数没有异常时的回调，会将函数执行结果result传入callback，根据result的值进行判断，如果需要再次重试，在callback中throw一个异常，适用于函数本身没有异常但仍需重试的情况。
+     * @returns 返回一个Promise对象
+     */
+    retry(fn, retries=5, interval=0, callback=null) {
+      return (...args)=>{
+        return new Promise((resolve, reject) =>{
+          function _retry(...args){
+            Promise.resolve().then(()=>fn.apply(this,args)).then(
+              result => {
+                if (typeof callback === 'function'){
+                  Promise.resolve().then(()=>callback(result)).then(()=>{resolve(result)}).catch(ex=>{
+                    if (retries >= 1 && interval > 0){
+                      setTimeout(() => _retry.apply(this, args), interval);
+                    }
+                    else if (retries >= 1) {
+                      _retry.apply(this, args);
+                    }
+                    else{
+                      reject(ex);
+                    }
+                    retries --;
+                  });
+                }
+                else{
+                  resolve(result);
+                }
+              }
+              ).catch(ex=>{
+              if (retries >= 1 && interval > 0){
+                setTimeout(() => _retry.apply(this, args), interval);
+              }
+              else if (retries >= 1) {
+                _retry.apply(this, args);
+              }
+              else{
+                reject(ex);
+              }
+              retries --;
+            })
+          }
+          _retry.apply(this, args);
+        });
+      };
     }
 
-    get isResponse(){
-      return typeof $response != 'undefined';
-    }
   }(scriptName);
 }
