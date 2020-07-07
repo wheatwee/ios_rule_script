@@ -28,9 +28,9 @@ hostname = zhiyou.smzdm.com, user-api.smzdm.com
 
 **Web端获取Cookie：**
 
-使用手机浏览器访问https://zhiyou.smzdm.com/进行一次登录，通常会显示获取cookie成功。
+使用手机浏览器访问 https://zhiyou.smzdm.com/ 进行一次登录，通常会显示获取cookie成功。
 
-可能因为重定向的问题，登录成功后访问的不是https://zhiyou.smzdm.com/user/，则重新在浏览器中访问一次https://zhiyou.smzdm.com/user/即可。
+可能因为重定向的问题，登录成功后访问的不是https://zhiyou.smzdm.com/user/ ，则重新在浏览器中访问一次https://zhiyou.smzdm.com/user/ 即可。
 
 如果还是没有获取到Cookie，请查阅Surge等第三方App的执行日志。
 
