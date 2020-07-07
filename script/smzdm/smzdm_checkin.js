@@ -281,11 +281,10 @@ function AppCheckin(token){
         try{
           magicJS.log(`什么值得买App签到，接口响应内容：${data}`);
           let obj = JSON.parse(data);
-          if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙')){
+          if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙') >= 0){
             appCheckinStr = 'App签到失败';
             magicJS.log('App签到失败，网络访问超时。');
             reject(2);
-
           }
           if (obj.error_code == '11111'){
             appCheckinStr = 'App签到失败';
@@ -422,13 +421,13 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
     
-    get version() { return '2020.07.07.21.05' };
+    get version() { return '202007072322' };
     get isSurge() { return typeof $httpClient !== 'undefined' };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
     get isNode() { return typeof module !== 'undefined' };
-    get response(){ return (typeof $response != 'undefined') ? $response : undefined }
-    get request(){ return (typeof $request != 'undefined') ? $request : undefined }
+    get response(){ return (typeof $response !== 'undefined') ? $response : undefined }
+    get request(){ return (typeof $request !== 'undefined') ? $request : undefined }
     get isRequest(){ return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse(){ return typeof $response !== 'undefined' }
 
@@ -625,7 +624,7 @@ function MagicJS(scriptName='MagicJS'){
             Promise.resolve().then(()=>fn.apply(this,args)).then(
               result => {
                 if (typeof callback === 'function'){
-                  Promise.resolve().then(()=>callback(result)).catch(ex=>{
+                  Promise.resolve().then(()=>callback(result)).then(()=>{resolve(result)}).catch(ex=>{
                     if (retries >= 1 && interval > 0){
                       setTimeout(() => _retry.apply(this, args), interval);
                     }
@@ -633,7 +632,7 @@ function MagicJS(scriptName='MagicJS'){
                       _retry.apply(this, args);
                     }
                     else{
-                      resolve(result);
+                      reject(ex);
                     }
                     retries --;
                   });
