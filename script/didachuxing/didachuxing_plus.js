@@ -312,7 +312,7 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
     
-    get version() { return '202007082330' };
+    get version() { return '202007090033' };
     get isSurge() { return typeof $httpClient !== 'undefined' };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -455,7 +455,6 @@ function MagicJS(scriptName='MagicJS'){
         )
       }
       else if(this.isNode){
-        delete options.headers['Accept-Encoding'];
         return this.node.request.get(options, callback);
       }
       else if(this.isJSBox){
@@ -465,7 +464,6 @@ function MagicJS(scriptName='MagicJS'){
         options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
-          console.log('JSBox Http Post 接口返回' + data);
           callback(err, resp.response, data);
         }
         $http.get(options);
