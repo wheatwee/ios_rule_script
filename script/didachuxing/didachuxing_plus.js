@@ -307,20 +307,21 @@ function MagicJS(scriptName='MagicJS'){
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
-        this.node.data = require('./data.json');
+        this.node.data = require('./magic.json');
         this.node.fs = require('fs');
       }
     }
     
-    get version() { return '202007072322' };
+    get version() { return '202007082330' };
     get isSurge() { return typeof $httpClient !== 'undefined' };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
-    get isNode() { return typeof module !== 'undefined' };
-    get response(){ return (typeof $response !== 'undefined') ? $response : undefined }
-    get request(){ return (typeof $request !== 'undefined') ? $request : undefined }
-    get isRequest(){ return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
-    get isResponse(){ return typeof $response !== 'undefined' }
+    get isJSBox() { return typeof $drive !== 'undefined'};
+    get isNode() { return typeof module !== 'undefined' && !this.isJSBox };
+    get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+    get isResponse() { return typeof $response !== 'undefined' }
+    get response() { return (typeof $response !== 'undefined') ? $response : undefined }
+    get request() { return (typeof $request !== 'undefined') ? $request : undefined }
 
     read(key, session='default'){
       let data = '';
@@ -333,11 +334,15 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isNode){
         data = this.node.data[key];
       }
+      else if (this.isJSBox){
+        data = $file.read('drive://magic.json').string;
+        data = JSON.parse(data)[key];
+      }
       try {
         if (typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null ? data: {};
+        data = data != null && data != undefined ? data: {};
       } 
       catch (err){ 
         this.log(`Parse Data Error: ${err}`);
@@ -345,7 +350,7 @@ function MagicJS(scriptName='MagicJS'){
         this.del(key);
       }
       let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val); } catch {}
+      try { if (typeof val == 'string') val = JSON.parse(val) } catch {}
       this.log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
@@ -361,25 +366,27 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isNode){
         data = this.node.data;
       }
+      else if (this.isJSBox){
+        data = JSON.parse($file.read('drive://magic.json').string);
+      }
       try {
         if (typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null ? data: {};
+        data = data != null && data != undefined ? data: {};
       } 
       catch(err) { 
         this.log(`Parse Data Error: ${err}`);
         data = {};
         this.del(key);
       }
-      if (!this.isNode){
-        data[session] = val;
-      }
-      else{
+      if (this.isNode || this.isJSBox){
         data[key][session] = val;
       }
+      else{
+        data[session] = val;
+      }
       data = JSON.stringify(data);
-      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       if (this.isSurge) {
         return $persistentStore.write(data, key);
       }
@@ -387,10 +394,14 @@ function MagicJS(scriptName='MagicJS'){
         return $prefs.setValueForKey(data, key);
       }
       else if (this.isNode){
-        this.node.fs.writeFileSync('./data.json', data, (err) =>{
+        this.node.fs.writeFileSync('./magic.json', data, (err) =>{
           this.log(err);
         })
       }
+      else if (this.isJSBox){
+        $file.write({data: $data({string: data}), path: 'drive://magic.json'});
+      }
+      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
     };
 
     del(key){
@@ -400,7 +411,7 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isQuanX) {
         $prefs.setValueForKey({}, key);
       }
-      else if (this.isNode){
+      else if (this.isNode || this.isJSBox){
         this.write(key, '');
       }
     }
@@ -414,6 +425,12 @@ function MagicJS(scriptName='MagicJS'){
       }
       else if (this.isNode) {
         this.log(`${title} ${subTitle}\n${body}`);
+      }
+      else if (this.isJSBox){
+        $push.schedule({
+          title: title,
+          body: subTitle ? `${subTitle}\n${body}` : body
+        });
       }
     }
     
@@ -439,8 +456,19 @@ function MagicJS(scriptName='MagicJS'){
       }
       else if(this.isNode){
         delete options.headers['Accept-Encoding'];
-        options['encoding'] = null;
         return this.node.request.get(options, callback);
+      }
+      else if(this.isJSBox){
+        options = typeof options === 'string'? {'url': options} : options;
+        options['header'] = options['headers'];
+        delete options['headers']
+        options['handler'] = (resp)=>{
+          let err = resp.error? JSON.stringify(resp.error) : undefined;
+          let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
+          console.log('JSBox Http Post 接口返回' + data);
+          callback(err, resp.response, data);
+        }
+        $http.get(options);
       }
     }
 
@@ -462,9 +490,19 @@ function MagicJS(scriptName='MagicJS'){
       }
       else if(this.isNode){
         if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
-        delete options.headers['Accept-Encoding'];
-        options['encoding'] = null;
         return this.node.request.post(options, callback);
+      }
+      else if(this.isJSBox){
+        options = typeof options === 'string'? {'url': options} : options;
+        options['header'] = options['headers'];
+        delete options['headers']
+        options['handler'] = (resp)=>{
+          let err = resp.error? JSON.stringify(resp.error) : undefined;
+          let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
+          console.log('Http Post 接口返回' + data);
+          callback(err, resp.response, data);
+        }
+        $http.post(options);
       }
     }
 
@@ -497,7 +535,7 @@ function MagicJS(scriptName='MagicJS'){
      * @param {*} promise Promise 对象
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>[ex, null]) }
+    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>{this.log('捕获异常' + ex); return [ex, null]}) }
 
     /**
      * 重试方法
@@ -549,6 +587,5 @@ function MagicJS(scriptName='MagicJS'){
         });
       };
     }
-
   }(scriptName);
 }
