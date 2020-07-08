@@ -23,7 +23,7 @@ let smzdmCookie = null;
 let webCheckinStr = '';
 let appCheckinStr = '';
 
-let webGetCurrentOptions = {
+let webGetCurrentBeforeOptions = {
     url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_',
     headers : {
       'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
@@ -36,6 +36,21 @@ let webGetCurrentOptions = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
       'Cookie': null
     }
+};
+
+let webGetCurrentAfterOptions = {
+  url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_',
+  headers : {
+    'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Language': 'zh-CN,zh;q=0.9',
+    'Connection': 'keep-alive',
+    'DNT': '1',
+    'Host': 'zhiyou.smzdm.com',
+    'Referer': 'https://zhiyou.smzdm.com/user/',
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
+    'Cookie': null
+  }
 };
 
 let webCheckinOptions = {
@@ -59,7 +74,8 @@ let getAppTokenOptions ={
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-cn',
     'Connection': 'keep-alive',
-    'Host': 'api.smzdm.com'
+    'Host': 'api.smzdm.com',
+    'Content-Type':'application/x-www-form-urlencoded'
   },
   body: ''
 };
@@ -71,7 +87,8 @@ let appCheckinOptions ={
     'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-cn',
     'Connection': 'keep-alive',
-    'Host': 'api.smzdm.com'
+    'Host': 'api.smzdm.com',
+    'Content-Type':'application/x-www-form-urlencoded'
   },
   body: ''
 };
@@ -99,9 +116,9 @@ function WebCheckCookie(){
 function WebGetCurrentBefore(){
   return new Promise((resolve) => {
     if (WebCheckCookie()){
-      webGetCurrentOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
-      webGetCurrentOptions.headers.Cookie = smzdmCookie;
-      magicJS.get(webGetCurrentOptions, (err, resp, data)=>{
+      webGetCurrentBeforeOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
+      webGetCurrentBeforeOptions.headers.Cookie = smzdmCookie;
+      magicJS.get(webGetCurrentBeforeOptions, (err, resp, data)=>{
         magicJS.log('Web获取用户签到前数据 ' + data);
         before_data = /jQuery.*\((.*)\)/.exec(data)[1];
         let before_obj = JSON.parse(before_data);
@@ -170,9 +187,9 @@ function WebCheckin() {
 function WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver) {
   return new Promise((resolve) => {
     if (WebCheckCookie()){
-      webGetCurrentOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
-      webGetCurrentOptions.headers.Cookie = smzdmCookie;
-      magicJS.get(webGetCurrentOptions, (err, resp, data)=>{
+      webGetCurrentAfterOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
+      webGetCurrentAfterOptions.headers.Cookie = smzdmCookie;
+      magicJS.get(webGetCurrentAfterOptions, (err, resp, data)=>{
         if (err) {
           magicJS.notify(scriptName, '', '❌获取Web签到后异常，http请求错误！！');
           magicJS.log('获取Web签到后数据异常:' + err);
@@ -216,7 +233,18 @@ function AppGetToken(){
   return new Promise((resolve) => {
     let account = magicJS.read(smzdmAccountKey);
     let password = magicJS.read(smzdmPasswordKey);
-    getAppTokenOptions.body = `user_login=${account}&user_pass=${password}&f=win`
+    if (magicJS.isJSBox){
+      getAppTokenOptions.body = {user_login: account, user_pass: password, f:'win'};
+    }
+    else if (magicJS.isNode){
+      getAppTokenOptions.form = {token: token, f:'win'};
+    }
+    else{
+      getAppTokenOptions.body = `user_login=${account}&user_pass=${password}&f=win`;
+    }
+    if (magicJS.isNode){
+      delete getAppTokenOptions['headers']['Accept-Encoding'];
+    }
     magicJS.post(getAppTokenOptions, (err, resp, data) => {
       if (err){
         appCheckinStr = 'App登录异常';
@@ -269,7 +297,18 @@ function AppGetToken(){
 */
 function AppCheckin(token){
   return new Promise((resolve, reject) => {
-    appCheckinOptions.body = `token=${token}&f=win`
+    if (magicJS.isJSBox){
+      appCheckinOptions.body = {token: token, f:'win'};
+    }
+    else if (magicJS.isNode){
+      appCheckinOptions.form = {token: token, f:'win'};
+    }
+    else{
+      appCheckinOptions.body =  `token=${token}&f=win`;
+    }
+    if (magicJS.isNode){
+      delete appCheckinOptions['headers']['Accept-Encoding'];
+    }
     magicJS.post(appCheckinOptions, (err, resp, data) => {
       if (err){
         appCheckinStr = 'App签到异常';
@@ -391,7 +430,7 @@ async function Main(){
     if (!token){
       token = await AppGetToken();
     }
-    let AppCheckinRetry = magicJS.retry(AppCheckin, 3, 3000, async (result)=>{
+    let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 3000, async (result)=>{
       if (result == 3){
         token = await AppGetToken();
         throw result;
@@ -416,20 +455,21 @@ function MagicJS(scriptName='MagicJS'){
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
-        this.node.data = require('./data.json');
+        this.node.data = require('./magic.json');
         this.node.fs = require('fs');
       }
     }
     
-    get version() { return '202007072322' };
+    get version() { return '202007090033' };
     get isSurge() { return typeof $httpClient !== 'undefined' };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
-    get isNode() { return typeof module !== 'undefined' };
-    get response(){ return (typeof $response !== 'undefined') ? $response : undefined }
-    get request(){ return (typeof $request !== 'undefined') ? $request : undefined }
-    get isRequest(){ return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
-    get isResponse(){ return typeof $response !== 'undefined' }
+    get isJSBox() { return typeof $drive !== 'undefined'};
+    get isNode() { return typeof module !== 'undefined' && !this.isJSBox };
+    get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+    get isResponse() { return typeof $response !== 'undefined' }
+    get response() { return (typeof $response !== 'undefined') ? $response : undefined }
+    get request() { return (typeof $request !== 'undefined') ? $request : undefined }
 
     read(key, session='default'){
       let data = '';
@@ -442,11 +482,15 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isNode){
         data = this.node.data[key];
       }
+      else if (this.isJSBox){
+        data = $file.read('drive://magic.json').string;
+        data = JSON.parse(data)[key];
+      }
       try {
         if (typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null ? data: {};
+        data = data != null && data != undefined ? data: {};
       } 
       catch (err){ 
         this.log(`Parse Data Error: ${err}`);
@@ -454,7 +498,7 @@ function MagicJS(scriptName='MagicJS'){
         this.del(key);
       }
       let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val); } catch {}
+      try { if (typeof val == 'string') val = JSON.parse(val) } catch {}
       this.log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
@@ -470,25 +514,27 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isNode){
         data = this.node.data;
       }
+      else if (this.isJSBox){
+        data = JSON.parse($file.read('drive://magic.json').string);
+      }
       try {
         if (typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null ? data: {};
+        data = data != null && data != undefined ? data: {};
       } 
       catch(err) { 
         this.log(`Parse Data Error: ${err}`);
         data = {};
         this.del(key);
       }
-      if (!this.isNode){
-        data[session] = val;
-      }
-      else{
+      if (this.isNode || this.isJSBox){
         data[key][session] = val;
       }
+      else{
+        data[session] = val;
+      }
       data = JSON.stringify(data);
-      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       if (this.isSurge) {
         return $persistentStore.write(data, key);
       }
@@ -496,10 +542,14 @@ function MagicJS(scriptName='MagicJS'){
         return $prefs.setValueForKey(data, key);
       }
       else if (this.isNode){
-        this.node.fs.writeFileSync('./data.json', data, (err) =>{
+        this.node.fs.writeFileSync('./magic.json', data, (err) =>{
           this.log(err);
         })
       }
+      else if (this.isJSBox){
+        $file.write({data: $data({string: data}), path: 'drive://magic.json'});
+      }
+      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
     };
 
     del(key){
@@ -509,7 +559,7 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isQuanX) {
         $prefs.setValueForKey({}, key);
       }
-      else if (this.isNode){
+      else if (this.isNode || this.isJSBox){
         this.write(key, '');
       }
     }
@@ -523,6 +573,12 @@ function MagicJS(scriptName='MagicJS'){
       }
       else if (this.isNode) {
         this.log(`${title} ${subTitle}\n${body}`);
+      }
+      else if (this.isJSBox){
+        $push.schedule({
+          title: title,
+          body: subTitle ? `${subTitle}\n${body}` : body
+        });
       }
     }
     
@@ -547,9 +603,18 @@ function MagicJS(scriptName='MagicJS'){
         )
       }
       else if(this.isNode){
-        delete options.headers['Accept-Encoding'];
-        options['encoding'] = null;
         return this.node.request.get(options, callback);
+      }
+      else if(this.isJSBox){
+        options = typeof options === 'string'? {'url': options} : options;
+        options['header'] = options['headers'];
+        delete options['headers']
+        options['handler'] = (resp)=>{
+          let err = resp.error? JSON.stringify(resp.error) : undefined;
+          let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
+          callback(err, resp.response, data);
+        }
+        $http.get(options);
       }
     }
 
@@ -571,9 +636,19 @@ function MagicJS(scriptName='MagicJS'){
       }
       else if(this.isNode){
         if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
-        delete options.headers['Accept-Encoding'];
-        options['encoding'] = null;
         return this.node.request.post(options, callback);
+      }
+      else if(this.isJSBox){
+        options = typeof options === 'string'? {'url': options} : options;
+        options['header'] = options['headers'];
+        delete options['headers']
+        options['handler'] = (resp)=>{
+          let err = resp.error? JSON.stringify(resp.error) : undefined;
+          let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
+          console.log('Http Post 接口返回' + data);
+          callback(err, resp.response, data);
+        }
+        $http.post(options);
       }
     }
 
@@ -606,7 +681,7 @@ function MagicJS(scriptName='MagicJS'){
      * @param {*} promise Promise 对象
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>[ex, null]) }
+    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>{this.log('捕获异常' + ex); return [ex, null]}) }
 
     /**
      * 重试方法
@@ -658,6 +733,5 @@ function MagicJS(scriptName='MagicJS'){
         });
       };
     }
-
   }(scriptName);
 }
