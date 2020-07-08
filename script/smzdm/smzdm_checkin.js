@@ -325,7 +325,7 @@ function AppCheckin(token){
             magicJS.log('App签到失败，网络访问超时。');
             reject(2);
           }
-          if (obj.error_code == '11111'){
+          else if (obj.error_code == '11111'){
             appCheckinStr = 'App签到失败';
             magicJS.log(`App签到失败，Token已过期。`);
             magicJS.notify(scriptName, '', '❌App签到失败，Token已过期！！');
