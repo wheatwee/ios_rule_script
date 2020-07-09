@@ -1,0 +1,3 @@
+# > WhiteList
+IP-CIDR,10.10.10.10/32
+DOMAIN-SUFFIX,f.video.weibocdn.com
