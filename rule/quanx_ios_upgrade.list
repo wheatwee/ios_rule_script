@@ -1,4 +1,9 @@
-# 家庭内网
+# iOS升级拦截
 host-suffix, mesu.apple.com, reject
 host-suffix, appldnld.apple.com, reject
 host-suffix, gdmf.apple.com, reject
+host-suffix, gdmf.apple.com.akadns.net, reject
+host-suffix, mesu-cdn.apple.com.akadns.net, reject
+host-suffix, mesu-cdn.origin-apple.com.akadns.net, reject
+host-suffix, mesu.g.aaplimg.com, reject
+host-suffix, appldnld.apple.com.akadns.net, reject
