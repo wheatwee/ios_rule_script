@@ -312,20 +312,31 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
     
-    get version() { return '202007090033' };
-    get isSurge() { return typeof $httpClient !== 'undefined' };
+    get version() { return '202007111531' };
+    get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
     get isJSBox() { return typeof $drive !== 'undefined'};
     get isNode() { return typeof module !== 'undefined' && !this.isJSBox };
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
-    get response() { return (typeof $response !== 'undefined') ? $response : undefined }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
+
+
+    get response() { 
+      if (typeof $response !== 'undefined'){
+        if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
+        if ($response.hasOwnProperty('statusCode')) $response['status'] = $response['statusCode']
+        return $response;
+      }
+      else{
+        return undefined;
+      }
+    }
 
     read(key, session='default'){
       let data = '';
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         data = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
@@ -357,7 +368,7 @@ function MagicJS(scriptName='MagicJS'){
 
     write(key, val, session='default'){
       let data = '';
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         data = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
@@ -387,7 +398,7 @@ function MagicJS(scriptName='MagicJS'){
         data[session] = val;
       }
       data = JSON.stringify(data);
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         return $persistentStore.write(data, key);
       }
       else if (this.isQuanX) {
@@ -405,7 +416,7 @@ function MagicJS(scriptName='MagicJS'){
     };
 
     del(key){
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         $persistentStore.write({}, key);
       }
       else if (this.isQuanX) {
@@ -440,16 +451,16 @@ function MagicJS(scriptName='MagicJS'){
 
     get(options, callback){
       this.log(`Http Get: ${JSON.stringify(options)}`);
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         $httpClient.get(options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options == 'string') options = { url: options }
+        if (typeof options === 'string') options = { url: options }
         options['method'] = 'GET'
-        return $task.fetch(options).then(
-          response => {
-            response['status'] = response.statusCode
-            callback(null, response, response.body)
+        $task.fetch(options).then(
+          resp => {
+            resp['status'] = resp.statusCode
+            callback(null, resp, resp.body)
           },
           reason => callback(reason.error, null, null),
         )
@@ -472,18 +483,19 @@ function MagicJS(scriptName='MagicJS'){
 
     post(options, callback){
       this.log(`Http Post: ${JSON.stringify(options)}`);
-      if (this.isSurge) {
+      if (this.isSurge || this.isLoon) {
         $httpClient.post(options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options == 'string') options = { url: options }
+        if (typeof options === 'string') options = { url: options }
+        if (options.hasOwnProperty('body') && typeof options['body'] !== 'string') options['body'] = JSON.stringify(options['body']);
         options['method'] = 'POST'
         $task.fetch(options).then(
-          response => {
-            response['status'] = response.statusCode
-            callback(null, response, response.body)
+          resp => {
+            resp['status'] = resp.statusCode
+            callback(null, resp, resp.body)
           },
-          reason => callback(reason.error, null, null),
+          reason => {callback(reason.error, null, null)}
         )
       }
       else if(this.isNode){
