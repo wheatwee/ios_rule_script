@@ -40,7 +40,7 @@ let youzan_shop_regex = /^https?:\/\/shop17741405\.m\.youzan\.com/;
 let lxj_bbs_regex = /^https?:\/\/bbs\.hori-gz\.com\:8443\/*/;
 
 
-console.log('[联享家去广告]去除咨询广告');
+console.log('[联享家去广告]去除资讯广告');
 
 // 有赞商城直接返回html，特殊处理
 if (youzan_shop_regex.test($request.url)){
