@@ -55,11 +55,20 @@ hostname = zhiyou.smzdm.com, user-api.smzdm.com
 
 ### Quantumult X
 
-因为本人没有TF版，无法调用远程脚本，所以随缘支持，各位看着修改下配置能不能用，如果不能用再反馈给我。
+修改配置文件
+
+```ini
+[rewrite_local]
+^https?:\/\/zhiyou\.smzdm\.com\/user$ url script-request-header https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js
+^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$ url script-request-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js
+
+[task_local]
+5 0 * * * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js, tag=什么值得买每日签到
+```
 
 ### 使用说明
 
-**Web端获取Cookie：**
+#### **Web端获取Cookie：**
 
 使用手机浏览器访问 https://zhiyou.smzdm.com/ 进行一次登录，通常会显示获取cookie成功。
 
@@ -67,11 +76,7 @@ hostname = zhiyou.smzdm.com, user-api.smzdm.com
 
 如果还是没有获取到Cookie，请查阅Surge等第三方App的执行日志。
 
-**App端获取账号密码：**
-
-> 特别说明：
->
-> 因为手机端需要使用账号密码换取token，再通过token签到，所以需要获取一次账号密码。账号密码只会在本地存储，只会发送给“什么值得买”服务端接口用于换取token，不会发送给任何第三方。脚本完全开源，如有疑虑请查阅脚本源码。
+#### **App端获取账号密码：**
 
 打开什么值得买App，点击“我的“-“设置”-“退出登录”，先退出登录。随后点击“我的”中顶部的“立即登录”，选择“账号密码登录”，注意是账号密码登录，不要使用手机快捷登录或其他第三方登录方式。
 
@@ -79,9 +84,26 @@ hostname = zhiyou.smzdm.com, user-api.smzdm.com
 
 以上在什么值得买的iPhone 9.5.17版本测试通过。
 
-存在的问题：
+##### 隐私说明
 
-目前App端的签到，反复确认没有任何收益，纯粹只是娱乐。另外在凌晨高峰期签到，有很大的概率会出现“主页君较忙”的提示，导致签到失败。这个是什么值得买服务器接口的问题，非脚本可以解决。所以脚本内置了3次App端签到机会，每次间隔3秒。如果三次签到后还是失败，会在通知中显示App签到失败，避开高峰时期再手动执行一次脚本即可。
+因为手机端需要使用账号密码换取token，再通过token签到，所以需要获取一次账号密码。账号密码只会在本地存储，用于发送给“什么值得买”服务端接口用于换取token，不会发送给任何第三方。脚本完全开源，如有疑虑请查阅脚本源码。
+
+##### 存在的问题
+
+###### 什么值得买iPhone 9.8.5抓取不到账户名密码
+
+在最新版的什么值得买客户端iPhone 9.8.5(2020-07-13)中，由于请求头声明异常，会导致Quantumult X和Surge的商店版本无法抓取到账户名和密码，Loon抓取正常。这个属于什么值得买客户端的请求不规范导致，修复时间未知。和Quantumlu X作者反馈，作者迅速对这种请求头不规范的情况做了兼容，目前在Qutumult X 1.0.13(348) TF版本中已经可以正常获取到数据。
+
+现阶段的解决办法：
+
+1. 如果有Quantumult X有TF版本，更新至最新版即可
+2. 如果使用Loon，没影响
+3. 如果使用Surge，降级什么值得买App后抓取 
+4. clone 整个项目到本地，在本地脚本里填上预留的用户名密码
+
+###### App端签到没有收益
+
+目前App端的签到，反复确认没有任何收益，纯粹只是娱乐。另外在凌晨高峰期签到，有很大的概率会出现“主页君较忙”的提示，导致签到失败。这个是什么值得买服务器接口的问题，非脚本可以解决。所以脚本内置了5次App端签到机会，每次间隔3秒。如果三次签到后还是失败，会在通知中显示App签到失败，避开高峰时期再手动执行一次脚本即可。
 
 ## 去广告
 
@@ -127,4 +149,4 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smz
 
 ### Quantumult X
 
-因为本人没有TF版，无法调用远程脚本，所以随缘支持，各位看着修改下配置能不能用，如果不能用再反馈给我。
+待补充
