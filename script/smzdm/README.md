@@ -74,7 +74,8 @@ hostname = video.google.com,zhiyou.smzdm.com,user-api.smzdm.com
 远程复写配置
 
 ```ini
-
+[rewrite_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.quanx, tag=什么值得买_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 ### 使用说明
@@ -124,7 +125,9 @@ hostname = video.google.com,zhiyou.smzdm.com,user-api.smzdm.com
 
 #### Surge
 
-去广告应是一个常驻功能，所以没有提供Surge模块，请直接在配置文件中修改。
+##### 配置文件
+
+在配置文件中修改。
 
 ```ini
 [MITM]
@@ -135,6 +138,10 @@ hostname = homepage-api.smzdm.com, haojia-api.smzdm.com, article-api.smzdm.com
 什么值得买_好价去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/haojia-api.smzdm.com\/home\/list\?,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js
 什么值得买_好文去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/article-api.smzdm.com\/article\/index_home_page\?ad_info,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js
 ```
+
+##### 模块安装
+
+模块地址： https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.sgmodule
 
 ### Loon
 
