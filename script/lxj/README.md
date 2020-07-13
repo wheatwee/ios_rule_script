@@ -18,9 +18,7 @@ Surge 4
 
 ## 配置说明
 
-目前仅在Surge4测试通过，其他App请自行修改配置文件后测试。
-
-Surge 配置
+### Surge
 
 ```ini
 [Proxy]
@@ -45,6 +43,14 @@ hostname = adfile.hori-gz.com, sso.lxjapp.com, nfys.kinglian.cn, bbs.hori-gz.com
 联享家_去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/adfile\.hori-gz\.com*,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
 联享家_检查更新 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
 ```
+
+### Quantumult X
+
+```
+
+```
+
+
 
 ## 去广告效果
 
