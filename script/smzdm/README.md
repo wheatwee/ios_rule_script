@@ -174,7 +174,8 @@ hostname = homepage-api.smzdm.com, haojia-api.smzdm.com, article-api.smzdm.com
 
 **远程复写脚本**
 
-```
-
+```ini
+[rewrite_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.quanx, tag=什么值得买_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
 
