@@ -21,20 +21,16 @@ Surge 4
 ### Surge
 
 ```ini
-[Proxy]
-Reject = reject
-RejectGif = reject-tinygif
-
 [Rule]
 # 联享家去广告
-DOMAIN-SUFFIX,bbs.hori-gz.com,RejectGif
-DOMAIN-SUFFIX,mms.hori-gz.com,RejectGif
-DOMAIN-SUFFIX,yxhd.hori-gz.com,RejectGif
-DOMAIN-SUFFIX,ad.hori-gz.com,RejectGif
-DOMAIN-SUFFIX,adfile.hori-gz.com,RejectGif
-DOMAIN-SUFFIX,shop17741405.m.youzan.com,RejectGif
-DOMAIN-SUFFIX,pangolin.snssdk.com,Reject
-DOMAIN-SUFFIX,kinglian.cn,RejectGif
+DOMAIN-SUFFIX,bbs.hori-gz.com,REJECT
+DOMAIN-SUFFIX,mms.hori-gz.com,REJECT
+DOMAIN-SUFFIX,yxhd.hori-gz.com,REJECT
+DOMAIN-SUFFIX,ad.hori-gz.com,REJECT
+DOMAIN-SUFFIX,adfile.hori-gz.com,REJECT
+DOMAIN-SUFFIX,shop17741405.m.youzan.com,REJECT
+DOMAIN-SUFFIX,pangolin.snssdk.com,REJECT
+DOMAIN-SUFFIX,kinglian.cn,REJECT
 
 [MITM]
 hostname = adfile.hori-gz.com, sso.lxjapp.com, nfys.kinglian.cn, bbs.hori-gz.com
@@ -46,8 +42,19 @@ hostname = adfile.hori-gz.com, sso.lxjapp.com, nfys.kinglian.cn, bbs.hori-gz.com
 
 ### Quantumult X
 
-```
+```ini
+[filter_local]
+DOMAIN-SUFFIX,bbs.hori-gz.com,REJECT
+DOMAIN-SUFFIX,mms.hori-gz.com,REJECT
+DOMAIN-SUFFIX,yxhd.hori-gz.com,REJECT
+DOMAIN-SUFFIX,ad.hori-gz.com,REJECT
+DOMAIN-SUFFIX,adfile.hori-gz.com,REJECT
+DOMAIN-SUFFIX,shop17741405.m.youzan.com,REJECT
+DOMAIN-SUFFIX,pangolin.snssdk.com,REJECT
+DOMAIN-SUFFIX,kinglian.cn,REJECT
 
+[rewrite_local]
+^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet url reject-dict
 ```
 
 
