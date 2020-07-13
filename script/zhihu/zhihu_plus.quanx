@@ -1,0 +1,10 @@
+# 什么值得买去广告
+
+^https://api.zhihu.com/people/ url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/moments/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/topstory/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/v4/questions url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https:\/\/api.zhihu.com\/notifications\/v3\/message\? url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https:\/\/api.zhihu.com\/notifications\/v3\/timeline\/entry\/system_message url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+
+hostname = api.zhihu.com
