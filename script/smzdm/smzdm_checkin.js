@@ -17,11 +17,15 @@ const smzdmTokenKey = 'smzdm_token';
 const smzdmAccountKey = 'smzdm_account';
 const smzdmPasswordKey = 'smzdm_password';
 const scriptName = '什么值得买';
+const appCheckin = true // 是否开启App端签到，不开启改为false，大小写敏感
+const smzdmAccount = '' // 什么值得买账号
+const smzdmPassword = '' // 什么值得买密码
 
 let magicJS = MagicJS(scriptName);
 let smzdmCookie = null;
 let webCheckinStr = '';
 let appCheckinStr = '';
+
 
 let webGetCurrentBeforeOptions = {
     url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_',
@@ -231,8 +235,8 @@ function WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, bef
 
 function AppGetToken(){
   return new Promise((resolve) => {
-    let account = magicJS.read(smzdmAccountKey);
-    let password = magicJS.read(smzdmPasswordKey);
+    let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey);
+    let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey);
     if (magicJS.isJSBox){
       getAppTokenOptions.body = {user_login: account, user_pass: password, f:'win'};
     }
@@ -425,19 +429,22 @@ async function Main(){
       await WebCheckin();
     }
 
-    // App签到
-    let token = magicJS.read(smzdmTokenKey);
-    if (!token){
-      token = await AppGetToken();
-    }
-    let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 3000, async (result)=>{
-      if (result == 3){
+    // 判断是否开启App端签到
+    if (appCheckin){
+      // App签到
+      let token = magicJS.read(smzdmTokenKey);
+      if (!token){
         token = await AppGetToken();
-        throw result;
       }
-    });
-    // 重试三次App签到，每次间隔3000毫秒
-    await magicJS.attempt(AppCheckinRetry(token));
+      let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 3000, async (result)=>{
+        if (result == 3){
+          token = await AppGetToken();
+          throw result;
+        }
+      });
+      // 重试三次App签到，每次间隔3000毫秒
+      await magicJS.attempt(AppCheckinRetry(token));
+    }
 
     // 查询签到后用户数据
     await WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver);
