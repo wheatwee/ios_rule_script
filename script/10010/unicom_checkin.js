@@ -6,14 +6,8 @@ m.client.10010.com
 联通_获取cookie = type=http-request,pattern=^https?:\/\/m\.client\.10010\.com\/dailylottery\/static\/(integral|doubleball)\/firstpage,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/10010/unicom_checkin.js,script-update-interval=0
 联通_签到与抽奖 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/10010/unicom_checkin.js,script-update-interval=0,type=cron,cronexp=10 0 * * *
 */
-const getUserInfoCookieRegex = /^https?:\/\/m\.client\.10010\.com\/mobileService\/customer\/query\/(getMyUnicomDateTotle|getMyUnicomPrivil)/ // 短时间失效
-const getLotteryCookieRegex = /^https?:\/\/m\.client\.10010\.com\/dailylottery\/static\/(integral|doubleball)\/firstpage/; // 短时间失效
-const getUserLoginCookieRege = /^https?:\/\/m\.client\.10010.com\/dailylottery\/static\/textdl\/userLogin/
-const getMeituanFirCookieRegex = /^https?:\/\/m\.client\.10010\.com\/welfare-mall-front\/mobile\/activity\/get619Activity\/v1\?whetherFriday/
-const lotteryCookieKey = 'unicom_lottery_cookie';
-const userInfoCookieKey = 'unicom_userinfo_cookie';
-const userLoginCookieKey = 'unicom_userlogin_cookie';
-const meituanFirCookieKey = 'unicom_meituan_cookie';
+const getLotteryCookieRegex = /^https?:\/\/m\.client\.10010\.com\/dailylottery\/static\/(integral|doubleball)\/firstpage/;
+const unicomCookieKey = 'unicom_user_cookie';
 const mobileKey = 'unicom_mobile'
 const encryptMobileKey = 'unicom_encrypt_mobile'
 const cityCodeKey = 'city_code'
@@ -232,7 +226,7 @@ let meituanCouponOptions = {
 function UserLogin(){
   // 联通App签到
   return new Promise((resolve) =>{
-    let cookie = magicJS.read(lotteryCookieKey);
+    let cookie = magicJS.read(unicomCookieKey);
     if (cookie){
       userLoginOptions.headers['Cookie'] = cookie;
       magicJS.get(userLoginOptions, (err, resp, data) =>{
@@ -267,7 +261,7 @@ function UserLogin(){
 function AppCheckin(){
   // 联通App签到
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     daySingOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingOptions, (err, resp, data) => {
       if (err){
@@ -295,7 +289,7 @@ function AppCheckin(){
 function AppCheckinNewVersion(){
   // 联通App签到
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     daySingNewVersionOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingNewVersionOptions, (err, resp, data) => {
       if (err){
@@ -326,7 +320,7 @@ function AppCheckinNewVersion(){
 // 获取连续签到天数
 function GetContinueCount(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     getContinueCountOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getContinueCountOptions, (err, resp, data) => {
       if (err){
@@ -350,7 +344,7 @@ function GetContinueCount(){
 // 获取当前积分(弃用)
 function GetScoreTotal(){
   return new Promise((resolve) =>{
-    let unicomCookie =  magicJS.read(lotteryCookieKey);
+    let unicomCookie =  magicJS.read(unicomCookieKey);
     getScoreTotalOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getScoreTotalOptions, (err, resp, data) => {
       if (err){
@@ -375,7 +369,7 @@ function GetScoreTotal(){
 // 获取当前金币(弃用)
 function GetGoldTotal(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     getGoldTotalOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getGoldTotalOptions, (err, resp, data) => {
       if (err){
@@ -400,7 +394,7 @@ function GetGoldTotal(){
 // 获取用户信息
 function GetUserInfo(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     if (unicomCookie){
       let mobile = magicJS.read(mobileKey);
       getUserInfoOptions.headers['Cookie'] = unicomCookie;
@@ -438,7 +432,7 @@ function GetUserInfo(){
 // 获取抽奖次数
 function GetLotteryCount(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     let encryptMobile = magicJS.read(encryptMobileKey);
     let areaCode = magicJS.read(cityCodeKey);
     getLotteryCountOptions.headers['Cookie'] = unicomCookie;
@@ -471,7 +465,7 @@ function GetLotteryCount(){
 // 新版获取抽奖次数
 function GetLotteryCountNewVersion(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(lotteryCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey);
     let encryptMobile = magicJS.read(encryptMobileKey);
     let areaCode = magicJS.read(cityCodeKey);
     getLotteryCountNewVersionOptions.headers['Cookie'] = unicomCookie;
@@ -505,7 +499,7 @@ function GetLotteryCountNewVersion(){
 function DailyLottery(){
   return new Promise((resolve) =>{
     // 签到的cookie就可以用
-    let lotteryCookie = magicJS.read(lotteryCookieKey);
+    let lotteryCookie = magicJS.read(unicomCookieKey);
     let encryptMobile = magicJS.read(encryptMobileKey);
     if (lotteryCookie && encryptMobile){
       dailyLotteryOptions.headers['Cookie'] = lotteryCookie;
@@ -547,7 +541,7 @@ function DailyLottery(){
 function DailyLotteryNewVersion(){
   return new Promise((resolve) =>{
     // 签到的cookie就可以用
-    let lotteryCookie = magicJS.read(lotteryCookieKey);
+    let lotteryCookie = magicJS.read(unicomCookieKey);
     let encryptMobile = magicJS.read(encryptMobileKey);
     if (lotteryCookie && encryptMobile){
       dailyLotteryNewVersionOptions.headers['Cookie'] = lotteryCookie;
@@ -623,7 +617,7 @@ async function StartDailyLotteryNewVersion(lotteryCount){
 function MeituanCoupon(){
   return new Promise((resolve) =>{
     // 签到的cookie就可以用
-    let meituanCookie = magicJS.read(lotteryCookieKey);
+    let meituanCookie = magicJS.read(unicomCookieKey);
     if (meituanCookie){
       meituanCouponOptions.headers['Cookie'] = meituanCookie;
       magicJS.get(meituanCouponOptions, (err, resp, data) => {
@@ -668,7 +662,7 @@ async function Main(){
     if(getLotteryCookieRegex.test(magicJS.request.url) && magicJS.request.headers.hasOwnProperty('savedata') == false){
       // 获取cookie
       let cookie = magicJS.request.headers['Cookie'];
-      let hisCookie = magicJS.read(lotteryCookieKey);
+      let hisCookie = magicJS.read(unicomCookieKey);
       // 获取手机号
       let mobile = /c_mobile=([0-9]{11})/.exec(cookie)[1];
       let hisMobile = magicJS.read(mobileKey);
@@ -685,7 +679,7 @@ async function Main(){
       magicJS.log(`新的城市代码：${cityCode}\n旧的城市代码：${hisCityCode}`);
       // cookie
       if (cookie != hisCookie){
-        magicJS.write(lotteryCookieKey, cookie);
+        magicJS.write(unicomCookieKey, cookie);
         if (!hisCookie){
           magicJS.log('首次获取联通cookie成功：' + cookie);
           notifyContent += '🍩联通cookie:获取成功';
@@ -743,67 +737,6 @@ async function Main(){
         notifyContent += ' 🌃城市:没有变化';
       }
       magicJS.notify(scriptName, '', notifyContent);
-    }
-    else if(getUserLoginCookieRege.test(magicJS.request.url) && magicJS.request.headers.hasOwnProperty('savedata') == false){
-      let userLoginCookie = magicJS.request.headers['Cookie'];
-      let hisUserLoginCookie = magicJS.read(userLoginCookieKey);
-      let notify = false;
-      let notifyContent = '';
-      if (userLoginCookie != hisUserLoginCookie){
-        magicJS.write(userLoginCookieKey, userLoginCookie);
-        magicJS.log('写入用户登录cookie数据成功：'+ userLoginCookie);
-        notifyContent += '🍩用户登录cookie:写入成功';
-        notify = true;
-      }
-      else{
-        magicJS.log('用户登录cookie:没有变化');
-        notifyContent += '🍩用户登录cookie:没有变化';
-      }
-      if (notify) magicJS.notify(scriptName, '', notifyContent);
-    }
-    else if(getUserInfoCookieRegex.test(magicJS.request.url) && magicJS.request.headers.hasOwnProperty('savedata') == false){
-      let userInfoCookie = magicJS.request.headers['Cookie'];
-      let hisUserInfoCookie = magicJS.read(userInfoCookieKey);
-      let compareStr = /cw_mutual=([^;]*)/.exec(userInfoCookie)[1];
-      let hisCompareStr = hisUserInfoCookie? /cw_mutual=([^;]*)/.exec(hisUserInfoCookie)[1]: '';
-      let notify = false;
-      let notifyContent = '';
-      if (compareStr != hisCompareStr){
-        magicJS.write(userInfoCookieKey, userInfoCookie);
-        magicJS.log('写入用户cookie数据成功：'+ userInfoCookie);
-        notifyContent += '🍩联通cookie:写入成功';
-        notify = true;
-      }
-      else{
-        notifyContent += '🍩联通cookie:没有变化';
-      }
-      let mobile = /(phone=|mobile=)([0-9]{11})/.exec(magicJS.request.body)[2]
-      let hisMobile = magicJS.read(mobileKey);
-      if (mobile != hisMobile){
-        magicJS.write(mobileKey, mobile);
-        magicJS.log('写入用户手机号成功：'+ mobile);
-        notifyContent += ' 📱手机号:写入成功';
-        notify = true;
-      }
-      else{
-        magicJS.log('手机号码没有变化：'+ mobile);
-        notifyContent += ' 📱手机号:没有变化';
-      }
-      if (notify) magicJS.notify(scriptName, '', notifyContent);
-    }
-    else if(getMeituanFirCookieRegex.test(magicJS.request.url) && magicJS.request.headers.hasOwnProperty('savedata') == false){
-      let meituanCookie = magicJS.request.headers['Cookie'];
-      let hisMeituanCookie = magicJS.read(meituanFirCookieKey);
-      let compareStr = /ecs_token=([^;]*)/.exec(meituanCookie)[1];
-      let hisCompareStr = hisMeituanCookie? /ecs_token=([^;]*)/.exec(hisMeituanCookie)[1]: '';
-      if (compareStr != hisCompareStr){
-        magicJS.write(meituanFirCookieKey, meituanCookie);
-        magicJS.log('写入积分商城cookie数据成功：'+ meituanCookie);
-        magicJS.notify(scriptName, '', '🍩积分商城cookie:写入成功');
-      }
-      else{
-        magicJS.log('积分商城cookie没有变化，无需更新');
-      }
     }
     magicJS.done();
   }
