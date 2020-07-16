@@ -299,11 +299,12 @@ async function Main(){
 
 Main();
 
-function MagicJS(scriptName='MagicJS'){
+function MagicJS(scriptName='MagicJS', debug=false){
   return new class{
 
     constructor(){
       this.scriptName = scriptName;
+      this.debug = debug;
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
@@ -312,7 +313,7 @@ function MagicJS(scriptName='MagicJS'){
       }
     }
     
-    get version() { return '202007111531' };
+    get version() { return '202007151811' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -362,7 +363,7 @@ function MagicJS(scriptName='MagicJS'){
       }
       let val = data[session];
       try { if (typeof val == 'string') val = JSON.parse(val) } catch {}
-      this.log(`Read Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      if (this.debug) this.log(`read data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
@@ -399,10 +400,10 @@ function MagicJS(scriptName='MagicJS'){
       }
       data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
-        return $persistentStore.write(data, key);
+        $persistentStore.write(data, key);
       }
       else if (this.isQuanX) {
-        return $prefs.setValueForKey(data, key);
+        $prefs.setValueForKey(data, key);
       }
       else if (this.isNode){
         this.node.fs.writeFileSync('./magic.json', data, (err) =>{
@@ -412,7 +413,7 @@ function MagicJS(scriptName='MagicJS'){
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://magic.json'});
       }
-      this.log(`Write Data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      if (this.debug) this.log(`write data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
     };
 
     del(key){
@@ -450,7 +451,7 @@ function MagicJS(scriptName='MagicJS'){
     }
 
     get(options, callback){
-      this.log(`Http Get: ${JSON.stringify(options)}`);
+      if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.get(options, callback);
       }
@@ -482,7 +483,7 @@ function MagicJS(scriptName='MagicJS'){
     }
 
     post(options, callback){
-      this.log(`Http Post: ${JSON.stringify(options)}`);
+      if (this.debug) this.log(`http post: ${JSON.stringify(options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.post(options, callback);
       }
@@ -509,7 +510,6 @@ function MagicJS(scriptName='MagicJS'){
         options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
-          console.log('Http Post 接口返回' + data);
           callback(err, resp.response, data);
         }
         $http.post(options);
@@ -543,9 +543,10 @@ function MagicJS(scriptName='MagicJS'){
     /**
      * 对await执行中出现的异常进行捕获并返回，避免写过多的try catch语句
      * @param {*} promise Promise 对象
+     * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise){ return promise.then(data=>[null, data]).catch(ex=>{this.log('捕获异常' + ex); return [ex, null]}) }
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, ...args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
