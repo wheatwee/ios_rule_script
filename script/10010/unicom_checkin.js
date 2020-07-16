@@ -11,7 +11,6 @@ const unicomCookieKey = 'unicom_user_cookie';
 const mobileKey = 'unicom_mobile'
 const encryptMobileKey = 'unicom_encrypt_mobile'
 const cityCodeKey = 'city_code'
-const newVersionCheckin = true; // 使用新版签到
 const scriptName = '中国联通';
 
 let magicJS = MagicJS(scriptName,false);
@@ -267,18 +266,25 @@ function AppCheckin(){
       if (err){
         magicJS.log('签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        resolve(['签到失败', null,null,null]);
+        resolve([false, '签到失败', null,null,null]);
       }
       else {
         magicJS.log('联通签到，接口响应数据：' + data);
-        let obj = JSON.parse(data);
-        if (obj.hasOwnProperty('prizeCount')){
-          magicJS.log('签到成功');
-          resolve(['签到成功',obj.prizeCount,obj.growthV,obj.flowerCount]);
+        let obj = {};
+        try{
+          obj = JSON.parse(data);
+          if (obj.hasOwnProperty('prizeCount')){
+            magicJS.log('签到成功');
+            resolve([true, '签到成功', Number(obj.prizeCount),Number(obj.growthV),Number(obj.flowerCount)]);
+          }
+          else if (data == '{}'){
+            magicJS.log('重复签到');
+            resolve([true, '重复签到', null,null,null]);
+          }
         }
-        else if (data == '{}'){
-          magicJS.log('重复签到');
-          resolve(['重复签到', null,null,null]);
+        catch (err){
+          magicJS.log('签到异常，代码执行错误：' + err);
+          resolve([false, '签到异常', null,null,null]);
         }
       }
     })
@@ -295,22 +301,29 @@ function AppCheckinNewVersion(){
       if (err){
         magicJS.log('新版签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        resolve(['签到失败', null,null,null]);
+        resolve([false, '签到失败', null,null,null]);
       }
       else {
         magicJS.log('新版联通签到，接口响应数据：' + data);
-        let obj = JSON.parse(data);
-        if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '0000'){
-          magicJS.log('新版签到成功');
-          resolve(['签到成功',obj.prizeCount,obj.growValue,obj.flowerCount]);
+        let obj = {};
+        try{
+          obj = JSON.parse(data);
+          if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '0000'){
+            magicJS.log('新版签到成功');
+            resolve([true, '签到成功',Number(obj.prizeCount),Number(obj.growValue),Number(obj.flowerCount)]);
+          }
+          else if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '8888'){
+            magicJS.log('新版重复签到');
+            resolve([true, '重复签到',obj.prizeCount,obj.growValue,obj.flowerCount]);
+          }
+          else{
+            magicJS.log('新版签到异常，接口返回数据不合法。');
+            resolve([false, '签到异常', null,null,null]);
+          }
         }
-        else if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '8888'){
-          magicJS.log('新版重复签到');
-          resolve(['重复签到',obj.prizeCount,obj.growValue,obj.flowerCount]);
-        }
-        else{
-          magicJS.log('新版签到异常，接口返回数据不合法。');
-          resolve(['签到异常', null,null,null]);
+        catch (err){
+          magicJS.log('新版签到异常，代码执行错误：' + err);
+          resolve([false, '签到异常', null,null,null]);
         }
       }
     })
@@ -330,10 +343,17 @@ function GetContinueCount(){
       else {
         magicJS.log('获取连续签到次数，接口响应数据：' + data);
         if (data){
-          resolve(data);
+          let number = '?';
+          try {
+            number = Number(data);
+          }
+          catch(err){
+            magicJS.log('获取连续签到次数失败，接口响应不合法。');
+          }
+          resolve(number);
         }
         else{
-          magicJS.log('获取连续签到次数异常，接口响应不合法：' + data);
+          magicJS.log('获取连续签到次数异常，接口响应不合法。');
           resolve('?');
         }
       }
@@ -747,19 +767,17 @@ async function Main(){
     let notifySubTtile = '';
     // 通知内容
     let notifyContent = '';
+    let checkinResult,checkinResultStr,prizeCount,growthV,flowerCount;
 
-    // 新旧版签到共存
-    if (newVersionCheckin){
-      checkinData = await magicJS.attempt(AppCheckinNewVersion(), ['签到异常',null,null,null]);
+    // 旧版签到，如果失败就用新版的再试试
+    [,checkinResult,checkinResultStr,prizeCount,growthV,flowerCount] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
+    if (!checkinResult){
+      [,checkinResult,checkinResultStr,prizeCount,growthV,flowerCount] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
     }
-    else{
-      checkinData = await magicJS.attempt(AppCheckin(), ['签到异常',null,null,null]);
-    }
-    // 联通App签到
-    let [,checkinResult,prizeCount,growthV,flowerCount] = checkinData;
+
     // 查询连续签到天数
     let [,contineCount] = await magicJS.attempt(GetContinueCount(), '?');
-    if (prizeCount >= 0 && growthV >= 0 && flowerCount >= 0){
+    if (typeof(prizeCount) === 'number' && typeof(growthV) === 'number' && typeof(flowerCount) === 'number' && prizeCount >= 0 && growthV >= 0 && flowerCount >= 0){
       notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
     }
 
@@ -800,7 +818,7 @@ async function Main(){
 
     magicJS.log('签到与抽奖执行完毕！');
     // 通知签到和抽奖结果
-    magicJS.notify(`${scriptName} ${checkinResult}，连续签到${contineCount}天`, notifySubTtile, notifyContent);
+    magicJS.notify(`${scriptName} ${checkinResultStr}，连续签到${contineCount}天`, notifySubTtile, notifyContent);
     magicJS.done();
   }
 }
