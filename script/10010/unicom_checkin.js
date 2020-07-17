@@ -344,10 +344,10 @@ function GetContinueCount(){
         magicJS.log('获取连续签到次数，接口响应数据：' + data);
         if (data){
           let number = '?';
-          try {
-            number = Number(data);
+          if (/^\d+$/.test(data)){
+            number = data;
           }
-          catch(err){
+          else{
             magicJS.log('获取连续签到次数失败，接口响应不合法。');
           }
           resolve(number);
@@ -774,12 +774,12 @@ async function Main(){
     if (!checkinResult){
       [,checkinResult,checkinResultStr,prizeCount,growthV,flowerCount] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
     }
-
-    // 查询连续签到天数
-    let [,contineCount] = await magicJS.attempt(GetContinueCount(), '?');
     if (typeof(prizeCount) === 'number' && typeof(growthV) === 'number' && typeof(flowerCount) === 'number' && prizeCount >= 0 && growthV >= 0 && flowerCount >= 0){
       notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
     }
+
+    // 查询连续签到天数
+    let [,contineCount] = await magicJS.attempt(GetContinueCount(), '?');
 
     // 查询用户信息
     let userInfo = await GetUserInfo();
