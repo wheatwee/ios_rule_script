@@ -761,8 +761,6 @@ async function Main(){
     magicJS.done();
   }
   else{
-    // 签到数据
-    let checkinData = null;
     // 生成签到结果的通知
     let notifySubTtile = '';
     // 通知内容
@@ -779,16 +777,19 @@ async function Main(){
     }
 
     // 查询连续签到天数
-    let [,contineCount] = await magicJS.attempt(GetContinueCount(), '?');
+    let genContinueCountPromise = GetContinueCount();
+    let [,contineCount] = await magicJS.attempt(genContinueCountPromise, '?');
 
     // 查询用户信息
-    let userInfo = await GetUserInfo();
+    let getUserInfoPromise = GetUserInfo();
+    let userInfo = await getUserInfoPromise;
     if (userInfo && userInfo.hasOwnProperty('flow') && userInfo.hasOwnProperty('fee')){
       notifyContent += `${userInfo['flow']} ${userInfo['fee']}\n${userInfo['voice']} ${userInfo['point']}`
     }
 
     // 领取美团外卖优惠券
-    let meituanResult = await MeituanCoupon();
+    let getMeituanCoupon = MeituanCoupon();
+    let meituanResult = await getMeituanCoupon;
     if (meituanResult){
       notifyContent += notifyContent ? `\n${meituanResult}` : meituanResult;
     }
