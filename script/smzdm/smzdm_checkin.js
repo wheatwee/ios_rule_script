@@ -439,7 +439,7 @@ async function Main(){
       let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 3000, async (result)=>{
         if (result == 3){
           token = await AppGetToken();
-          throw result;
+          if (token) throw result;
         }
       });
       // 重试三次App签到，每次间隔3000毫秒
