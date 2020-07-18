@@ -275,7 +275,7 @@ function AppCheckin(){
           obj = JSON.parse(data);
           if (obj.hasOwnProperty('prizeCount')){
             magicJS.log('签到成功');
-            resolve([true, '签到成功', Number(obj.prizeCount),Number(obj.growthV),Number(obj.flowerCount)]);
+            resolve([true, '签到成功', obj.prizeCount, obj.growthV, obj.flowerCount]);
           }
           else if (data == '{}'){
             magicJS.log('重复签到');
@@ -304,20 +304,19 @@ function AppCheckinNewVersion(){
         resolve([false, '签到失败', null,null,null]);
       }
       else {
-        magicJS.log('新版联通签到，接口响应数据：' + data);
         let obj = {};
         try{
           obj = JSON.parse(data);
           if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '0000'){
             magicJS.log('新版签到成功');
-            resolve([true, '签到成功',Number(obj.prizeCount),Number(obj.growValue),Number(obj.flowerCount)]);
+            resolve([true, '签到成功', obj.prizeCount, obj.growValue, bj.flowerCount]);
           }
           else if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '8888'){
             magicJS.log('新版重复签到');
             resolve([true, '重复签到',obj.prizeCount,obj.growValue,obj.flowerCount]);
           }
           else{
-            magicJS.log('新版签到异常，接口返回数据不合法。');
+            magicJS.log('新版签到异常，接口返回数据不合法。' + data);
             resolve([false, '签到异常', null,null,null]);
           }
         }
@@ -332,29 +331,29 @@ function AppCheckinNewVersion(){
 
 // 获取连续签到天数
 function GetContinueCount(){
-  return new Promise((resolve) =>{
+  return new Promise((resolve, reject) =>{
     let unicomCookie = magicJS.read(unicomCookieKey);
     getContinueCountOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getContinueCountOptions, (err, resp, data) => {
       if (err){
         magicJS.log('获取连续签到次数失败，http请求异常：' + err);
-        resolve('?');
+        reject('?');
       }
       else {
-        magicJS.log('获取连续签到次数，接口响应数据：' + data);
+        // magicJS.log('获取连续签到次数，接口响应数据：' + data);
         if (data){
           let number = '?';
           if (/^\d+$/.test(data)){
             number = data;
           }
           else{
-            magicJS.log('获取连续签到次数失败，接口响应不合法。');
+            magicJS.log('获取连续签到次数失败，接口响应不合法。' + data);
           }
           resolve(number);
         }
         else{
-          magicJS.log('获取连续签到次数异常，接口响应不合法。');
-          resolve('?');
+          magicJS.log('获取连续签到次数异常，没有获取到响应体。' );
+          reject('?');
         }
       }
     })
@@ -413,7 +412,7 @@ function GetGoldTotal(){
 
 // 获取用户信息
 function GetUserInfo(){
-  return new Promise((resolve) =>{
+  return new Promise((resolve, reject) =>{
     let unicomCookie = magicJS.read(unicomCookieKey);
     if (unicomCookie){
       let mobile = magicJS.read(mobileKey);
@@ -422,10 +421,10 @@ function GetUserInfo(){
       magicJS.get(getUserInfoOptions, (err, resp, data) => {
         if (err){
           magicJS.log('获取用户信息失败，http请求异常：' + err);
-          resolve({});
+          reject({});
         }
         else {
-          magicJS.log('获取用户信息，接口响应数据：' + data);
+          // magicJS.log('获取用户信息，接口响应数据：' + data);
           let result = {}
           let obj = JSON.parse(data);
           if (obj.hasOwnProperty('data') && obj['data'].hasOwnProperty('dataList')){
@@ -435,11 +434,12 @@ function GetUserInfo(){
               }
             });
             magicJS.log('获取用户信息：' + JSON.stringify(result));
+            resolve(result);
           }
           else{
             magicJS.log('获取用户信息异常，接口响应不合法：' + data);
+            reject(data);
           }
-          resolve(result);
         }
       })
     }
@@ -465,7 +465,6 @@ function GetLotteryCount(){
           resolve(0);
         }
         else {
-          magicJS.log('获取抽奖次数，接口响应数据：' + data);
           let obj = JSON.parse(data);
           if (obj.hasOwnProperty('acFrequency')){
             let lotteryCount = Number(obj['acFrequency']['totalAcFreq']);
@@ -498,7 +497,6 @@ function GetLotteryCountNewVersion(){
           resolve(0);
         }
         else {
-          magicJS.log('获取新版抽奖次数，接口响应数据：' + data);
           let obj = JSON.parse(data);
           if (obj.hasOwnProperty('acFrequency')){
             let lotteryCount = Number(obj['acFrequency']['totalAcFreq']);
@@ -634,8 +632,8 @@ async function StartDailyLotteryNewVersion(lotteryCount){
 }
 
 // 美团外卖优惠券
-function MeituanCoupon(){
-  return new Promise((resolve) =>{
+function GetMeituanCoupon(){
+  return new Promise((resolve, reject) =>{
     // 签到的cookie就可以用
     let meituanCookie = magicJS.read(unicomCookieKey);
     if (meituanCookie){
@@ -643,28 +641,34 @@ function MeituanCoupon(){
       magicJS.get(meituanCouponOptions, (err, resp, data) => {
         if (err){
           magicJS.log('领取美团外卖优惠券异常，http请求异常：' + err);
-          resolve('美团外卖优惠券:请求异常');
+          reject('美团外卖优惠券:请求异常');
         }
         else {
-          magicJS.log('领取美团外卖优惠券，接口响应数据：' + data);
-          let obj = JSON.parse(data);
-          if (obj.hasOwnProperty('code')){
-            if (obj['code'] == '0' && obj['msg'] == '下单成功'){
-              resolve('美团外卖优惠券：领取成功');
-              magicJS.log('领取美团外卖优惠券，领取成功');
-            }
-            else if (obj['code'] == '1'){
-              resolve('美团外卖优惠券：达到领取上限');
-              magicJS.log('领取美团外卖优惠券，达到领取上限');
-            }
+          let obj = {};
+          try{
+            obj = JSON.parse(data);
+            if (obj.hasOwnProperty('code')){
+              if (obj['code'] == '0' && obj['msg'] == '下单成功'){
+                magicJS.log('领取美团外卖优惠券，领取成功');
+                resolve('美团外卖优惠券：领取成功');
+              }
+              else if (obj['code'] == '1'){
+                magicJS.log('领取美团外卖优惠券，达到领取上限');
+                resolve('美团外卖优惠券：达到领取上限');
+              }
+              else{
+                magicJS.log('领取美团外卖优惠券，接口响应不合法：' + data);
+                reject('接口响应不合法');
+              }
+            } 
             else{
-              resolve('接口响应不合法');
-              magicJS.log('领取美团外卖优惠券，接口响应不合法');
+              magicJS.log('领取美团外卖优惠券，接口响应不合法：' + data);
+              reject('美团外卖优惠券：接口响应不合法');
             }
-          } 
-          else{
-            magicJS.log('领取美团外卖优惠券，接口响应不合法');
-            resolve('美团外卖优惠券：接口响应不合法');
+          }
+          catch (err){
+            magicJS.log('领取美团外卖优惠券，代码执行异常：' + err);
+            reject('美团外卖优惠券：代码执行异常');
           }
         }
       });
@@ -761,6 +765,8 @@ async function Main(){
     magicJS.done();
   }
   else{
+    magicJS.log('签到与抽奖开始执行！');
+
     // 生成签到结果的通知
     let notifySubTtile = '';
     // 通知内容
@@ -768,28 +774,29 @@ async function Main(){
     let checkinResult,checkinResultStr,prizeCount,growthV,flowerCount;
 
     // 旧版签到，如果失败就用新版的再试试
-    [,checkinResult,checkinResultStr,prizeCount,growthV,flowerCount] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
+    [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
     if (!checkinResult){
-      [,checkinResult,checkinResultStr,prizeCount,growthV,flowerCount] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
+      [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
     }
-    if (typeof(prizeCount) === 'number' && typeof(growthV) === 'number' && typeof(flowerCount) === 'number' && prizeCount >= 0 && growthV >= 0 && flowerCount >= 0){
+    if (!!prizeCount && !!growthV && !!flowerCount){
       notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
     }
 
     // 查询连续签到天数
-    let genContinueCountPromise = GetContinueCount();
-    let [,contineCount] = await magicJS.attempt(genContinueCountPromise, '?');
+    let genContinueCountPromise = magicJS.retry(GetContinueCount, 3, 2000)();
+    let [,contineCount] = await magicJS.attempt(genContinueCountPromise);
 
     // 查询用户信息
-    let getUserInfoPromise = GetUserInfo();
-    let userInfo = await getUserInfoPromise;
+    let getUserInfoPromise = magicJS.retry(GetUserInfo, 3, 2000)();
+    let [,userInfo] = await magicJS.attempt(getUserInfoPromise);
     if (userInfo && userInfo.hasOwnProperty('flow') && userInfo.hasOwnProperty('fee')){
       notifyContent += `${userInfo['flow']} ${userInfo['fee']}\n${userInfo['voice']} ${userInfo['point']}`
     }
 
     // 领取美团外卖优惠券
-    let getMeituanCoupon = MeituanCoupon();
-    let meituanResult = await getMeituanCoupon;
+    let getMeituanCouponRetry = magicJS.retry(GetMeituanCoupon, 3, 2000);
+    let getMeituanCouponPromise = getMeituanCouponRetry();
+    let [,meituanResult] = await magicJS.attempt(getMeituanCouponPromise);
     if (meituanResult){
       notifyContent += notifyContent ? `\n${meituanResult}` : meituanResult;
     }
@@ -840,7 +847,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007151811' };
+    get version() { return '202007181155' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -977,6 +984,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
       console.log(`[${this.scriptName}]\n${msg}\n`)
     }
 
+    table(msg){
+      console.table(`[${this.scriptName}]\n${msg}\n`)
+    }
+
     get(options, callback){
       if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
       if (this.isSurge || this.isLoon) {
@@ -1073,7 +1084,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
      * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, ...args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
