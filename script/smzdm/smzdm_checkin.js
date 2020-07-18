@@ -20,8 +20,7 @@ const scriptName = '什么值得买';
 const smzdmAccount = '' // 什么值得买账号
 const smzdmPassword = '' // 什么值得买密码
 
-let magicJS = MagicJS(scriptName, true);
-let smzdmCookie = null;
+let magicJS = MagicJS(scriptName);
 let appToken = null;
 
 let webGetCurrentInfo = {
@@ -97,7 +96,7 @@ function WebGetCurrentInfo(){
     let smzdmCookie = magicJS.read(smzdmCookieKey);
     webGetCurrentInfo.headers.Cookie = smzdmCookie;
     magicJS.get(webGetCurrentInfo, (err, resp, data)=>{
-      magicJS.log('Web获取用户数据 ' + data);
+      magicJS.log('Web端获取用户数据 ' + data);
       data = /jQuery.*\((.*)\)/.exec(data)[1];
       let obj = JSON.parse(data);
       if ('smzdm_id' in obj && obj['smzdm_id'] != undefined && obj['smzdm_id'].length >0 ){
@@ -129,19 +128,19 @@ function WebCheckin() {
     webCheckinOptions.headers.Cookie = smzdmCookie;
     magicJS.get(webCheckinOptions, (err, resp, data)=>{
       if (err) {
-        magicJS.log('Web签到出现异常:' + err);
-        resolve([false, 'Web签到异常']);
+        magicJS.log('Web端签到出现异常:' + err);
+        resolve([false, 'Web端签到异常']);
       }
       else{
         checkin_data = /jQuery.*\((.*)\)/.exec(data)[1];
         let checkin_obj = JSON.parse(checkin_data);
         if (checkin_obj['error_code'] == 0){
-          magicJS.log('Web本日签到成功');
-          resolve([true, 'Web签到成功']);
+          magicJS.log('Web端本日签到成功');
+          resolve([true, 'Web端签到成功']);
         }
         else{
-          magicJS.log(`Web签到出现异常，接口返回数据：${data}`);
-          resolve([false,'Web签到异常']);
+          magicJS.log(`Web端签到出现异常，接口返回数据：${data}`);
+          resolve([false,'Web端签到异常']);
         }
       }
     });
@@ -167,7 +166,7 @@ function AppGetToken(){
     magicJS.post(getAppTokenOptions, (err, resp, data) => {
       if (err){
         magicJS.log(`什么值得买App登录失败，http请求异常。异常内容：${err}`);
-        resolve([false,'App登录异常',null]);
+        resolve([false,'App端登录异常',null]);
       }
       else{
         try{
@@ -175,25 +174,25 @@ function AppGetToken(){
           magicJS.log(`什么值得买App登录，接口响应内容：${data}`);
           if (obj.error_code == '111104'){
             magicJS.log(`什么值得买App登录失败，账号密码错误`);
-            resolve([false,'App账号密码错误',null]);
+            resolve([false,'App端账号密码错误',null]);
           }
           if (obj.error_code == '110202'){
             magicJS.log(`什么值得买App登录失败，验证码错误`);
-            resolve([false,'App验证码错误',null]);
+            resolve([false,'App端验证码错误',null]);
           }
           else if (obj.error_code != '0'){
             magicJS.log(`什么值得买App登录失败，接口响应格式不合法`);
-            resolve([false,'App接口响应不合法',null]);
+            resolve([false,'App端响应异常',null]);
           }
           else{
             magicJS.log(`什么值得买App登录成功`);
             magicJS.write(smzdmTokenKey, obj['data']['token']);
-            resolve([true,'App登录成功',obj['data']['token']]);
+            resolve([true,'App端登录成功',obj['data']['token']]);
           }
         }
         catch (ex){
           magicJS.log(`什么值得买App登录失败，代码执行异常。异常内容：${ex}`);
-          resolve([false,'App代码执行异常',null]);
+          resolve([false,'App端执行异常',null]);
         }
       }
     })
