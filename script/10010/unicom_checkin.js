@@ -281,6 +281,13 @@ function AppCheckin(){
             magicJS.log('重复签到');
             resolve([true, '重复签到', null,null,null]);
           }
+          else if (obj.hasOwnProperty('toLogin')){
+            magicJS.log('未登录');
+            resolve([false, '未登录', null,null,null]);
+          }
+          else{
+            resolve([false, '接口返回异常', null,null,null]);
+          }
         }
         catch (err){
           magicJS.log('签到异常，代码执行错误：' + err);
@@ -314,6 +321,10 @@ function AppCheckinNewVersion(){
           else if (obj.hasOwnProperty('msgCode') && obj['msgCode'] == '8888'){
             magicJS.log('新版重复签到');
             resolve([true, '重复签到',obj.prizeCount,obj.growValue,obj.flowerCount]);
+          }
+          else if (obj.hasOwnProperty('toLogin')){
+            magicJS.log('新版未登录');
+            resolve([false, '未登录', null,null,null]);
           }
           else{
             magicJS.log('新版签到异常，接口返回数据不合法。' + data);
@@ -424,7 +435,6 @@ function GetUserInfo(){
           reject({});
         }
         else {
-          // magicJS.log('获取用户信息，接口响应数据：' + data);
           let result = {}
           let obj = JSON.parse(data);
           if (obj.hasOwnProperty('data') && obj['data'].hasOwnProperty('dataList')){
@@ -766,63 +776,66 @@ async function Main(){
   }
   else{
     magicJS.log('签到与抽奖开始执行！');
-
     // 生成签到结果的通知
     let notifySubTtile = '';
     // 通知内容
     let notifyContent = '';
     let checkinResult,checkinResultStr,prizeCount,growthV,flowerCount;
+    // 连续签到天数
+    let contineCount = '?'
 
-    // 旧版签到，如果失败就用新版的再试试
-    [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
-    if (!checkinResult){
-      [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
-    }
-    if (!!prizeCount && !!growthV && !!flowerCount){
-      notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
-    }
-
-    // 查询连续签到天数
-    let genContinueCountPromise = magicJS.retry(GetContinueCount, 3, 2000)();
-    let [,contineCount] = await magicJS.attempt(genContinueCountPromise);
-
-    // 查询用户信息
-    let getUserInfoPromise = magicJS.retry(GetUserInfo, 3, 2000)();
-    let [,userInfo] = await magicJS.attempt(getUserInfoPromise);
-    if (userInfo && userInfo.hasOwnProperty('flow') && userInfo.hasOwnProperty('fee')){
-      notifyContent += `${userInfo['flow']} ${userInfo['fee']}\n${userInfo['voice']} ${userInfo['point']}`
-    }
-
-    // 领取美团外卖优惠券
-    let getMeituanCouponRetry = magicJS.retry(GetMeituanCoupon, 3, 2000);
-    let getMeituanCouponPromise = getMeituanCouponRetry();
-    let [,meituanResult] = await magicJS.attempt(getMeituanCouponPromise);
-    if (meituanResult){
-      notifyContent += notifyContent ? `\n${meituanResult}` : meituanResult;
-    }
-
-    // 抽奖前用户登录
-    let [errUserLogin, loginResult, loginStr] = await magicJS.attempt(UserLogin(), [false, '用户登录失败']);
-    if (errUserLogin){
-      magicJS.log('用户登录失败，异常信息：' + errUserLogin);
-    }
-    else if (loginResult){
-      // 旧版抽奖
-      let [errLottery, lotteryCount, lotteryResult] = await magicJS.attempt(StartDailyLottery(), [null,null]);
-      if (errLottery) magicJS.log('旧版抽奖出现异常：' + errLottery);
-      // 新版抽奖
-      let [errLotteryNewVersion, lotteryNewVersionCount,lotteryNewVersionResult] = await magicJS.attempt(StartDailyLotteryNewVersion(lotteryCount), [null,null]);
-      if (errLotteryNewVersion) magicJS.log('新版抽奖出现异常：' + errLotteryNewVersion);
-      if (lotteryResult){
-        notifyContent += notifyContent ? `\n${lotteryResult}` : lotteryResult;
+    await (async ()=>{
+      // 旧版签到，如果失败就用新版的再试试
+      [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
+      if (!checkinResult){
+        [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
       }
-      if (lotteryNewVersionResult){
-        notifyContent +=  notifyContent ? `\n${lotteryNewVersionResult}` : lotteryNewVersionResult;
+      if (!!prizeCount && !!growthV && !!flowerCount){
+        notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
       }
-    }
-    else {
-      magicJS.log('用户登录结果：' + loginStr);
-    }
+
+      // 查询连续签到天数
+      let genContinueCountPromise = magicJS.retry(GetContinueCount, 3, 2000)();
+      [,contineCount] = await magicJS.attempt(genContinueCountPromise);
+
+      // 查询用户信息
+      let getUserInfoPromise = magicJS.retry(GetUserInfo, 3, 2000)();
+      let [,userInfo] = await magicJS.attempt(getUserInfoPromise);
+      if (userInfo && userInfo.hasOwnProperty('flow') && userInfo.hasOwnProperty('fee')){
+        notifyContent += `${userInfo['flow']} ${userInfo['fee']}\n${userInfo['voice']} ${userInfo['point']}`
+      }
+
+      // 领取美团外卖优惠券
+      let getMeituanCouponRetry = magicJS.retry(GetMeituanCoupon, 3, 2000);
+      let getMeituanCouponPromise = getMeituanCouponRetry();
+      let [,meituanResult] = await magicJS.attempt(getMeituanCouponPromise);
+      if (meituanResult){
+        notifyContent += notifyContent ? `\n${meituanResult}` : meituanResult;
+      }
+
+      // 抽奖前用户登录
+      let [errUserLogin, loginResult, loginStr] = await magicJS.attempt(UserLogin(), [false, '用户登录失败']);
+      if (errUserLogin){
+        magicJS.log('用户登录失败，异常信息：' + errUserLogin);
+      }
+      else if (loginResult){
+        // 旧版抽奖
+        let [errLottery, [lotteryCount, lotteryResult]] = await magicJS.attempt(StartDailyLottery(), [null,null]);
+        if (errLottery) magicJS.log('旧版抽奖出现异常：' + errLottery);
+        // 新版抽奖
+        let [errLotteryNewVersion, [lotteryNewVersionCount, lotteryNewVersionResult]] = await magicJS.attempt(StartDailyLotteryNewVersion(lotteryCount), [null,null]);
+        if (errLotteryNewVersion) magicJS.log('新版抽奖出现异常：' + errLotteryNewVersion);
+        if (lotteryResult){
+          notifyContent += notifyContent ? `\n${lotteryResult}` : lotteryResult;
+        }
+        if (lotteryNewVersionResult){
+          notifyContent +=  notifyContent ? `\n${lotteryNewVersionResult}` : lotteryNewVersionResult;
+        }
+      }
+      else {
+        magicJS.log('用户登录结果：' + loginStr);
+      }
+    })();
 
     magicJS.log('签到与抽奖执行完毕！');
     // 通知签到和抽奖结果
