@@ -17,18 +17,15 @@ const smzdmTokenKey = 'smzdm_token';
 const smzdmAccountKey = 'smzdm_account';
 const smzdmPasswordKey = 'smzdm_password';
 const scriptName = '什么值得买';
-const appCheckin = true // 是否开启App端签到，不开启改为false，大小写敏感
 const smzdmAccount = '' // 什么值得买账号
 const smzdmPassword = '' // 什么值得买密码
 
-let magicJS = MagicJS(scriptName);
+let magicJS = MagicJS(scriptName, true);
 let smzdmCookie = null;
-let webCheckinStr = '';
-let appCheckinStr = '';
+let appToken = null;
 
-
-let webGetCurrentBeforeOptions = {
-    url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_',
+let webGetCurrentInfo = {
+    url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_1595084820484&_=1595084820484',
     headers : {
       'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
       'Accept-Encoding': 'gzip, deflate, br',
@@ -40,21 +37,6 @@ let webGetCurrentBeforeOptions = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
       'Cookie': null
     }
-};
-
-let webGetCurrentAfterOptions = {
-  url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_',
-  headers : {
-    'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'zh-CN,zh;q=0.9',
-    'Connection': 'keep-alive',
-    'DNT': '1',
-    'Host': 'zhiyou.smzdm.com',
-    'Referer': 'https://zhiyou.smzdm.com/user/',
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-    'Cookie': null
-  }
 };
 
 let webCheckinOptions = {
@@ -99,137 +81,70 @@ let appCheckinOptions ={
 
 // 检查cookie完整性
 function WebCheckCookie(){
-  if (smzdmCookie == null){
-    smzdmCookie = magicJS.read(smzdmCookieKey);
-    if (smzdmCookie == null || smzdmCookie == ''){
-      webCheckinStr = 'WebCookie无效';
-      magicJS.log('没有读取到什么值得买有效cookie，请访问zhiyou.smzdm.com进行登录');
-      magicJS.notify(scriptName, '', '❓没有获取到Webcookie，请先进行登录。')
-      return false;
-    }
-    else{
-        return true;
-    }
+  let smzdmCookie = magicJS.read(smzdmCookieKey);
+  if (!!smzdmCookie){
+    return true;
   }
   else{
-    return true;
+      return false;
   }
 }
 
 // 获取用户信息
-function WebGetCurrentBefore(){
+function WebGetCurrentInfo(){
   return new Promise((resolve) => {
-    if (WebCheckCookie()){
-      webGetCurrentBeforeOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
-      webGetCurrentBeforeOptions.headers.Cookie = smzdmCookie;
-      magicJS.get(webGetCurrentBeforeOptions, (err, resp, data)=>{
-        magicJS.log('Web获取用户签到前数据 ' + data);
-        before_data = /jQuery.*\((.*)\)/.exec(data)[1];
-        let before_obj = JSON.parse(before_data);
-        if ('smzdm_id' in before_obj && before_obj['smzdm_id'] != undefined && before_obj['smzdm_id'].length >0 ){
-          let beforeLevel = Number(before_obj['level']);
-          let beforePoint = Number(before_obj['point']);
-          let beforeExp = Number(before_obj['exp']);
-          let beforeGold = Number(before_obj['gold']);
-          let beforeSilver = Number(before_obj['silver']);
-          let haveCheckin = before_obj['checkin']['has_checkin'];
-          if (haveCheckin == true){
-            webCheckinStr = 'Web重复签到';
-            magicJS.log('Web今天已经签到过，不要重复签到。');
-            resolve([beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin]);
-          }
-          else {
-            resolve([beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin]);
-          }
+    webGetCurrentInfo.url = webGetCurrentInfo.url.replace(/_[0-9]*&_=[0-9]*/, `_${new Date().getTime()}&_=${new Date().getTime()}`);
+    let smzdmCookie = magicJS.read(smzdmCookieKey);
+    webGetCurrentInfo.headers.Cookie = smzdmCookie;
+    magicJS.get(webGetCurrentInfo, (err, resp, data)=>{
+      magicJS.log('Web获取用户数据 ' + data);
+      data = /jQuery.*\((.*)\)/.exec(data)[1];
+      let obj = JSON.parse(data);
+      if ('smzdm_id' in obj && obj['smzdm_id'] != undefined && obj['smzdm_id'].length >0 ){
+        let level = Number(obj['level']);
+        let point = Number(obj['point']);
+        let exp = Number(obj['exp']);
+        let gold = Number(obj['gold']);
+        let silver = Number(obj['silver']);
+        let haveCheckin = obj['checkin']['has_checkin'];
+        if (haveCheckin == true){
+          resolve([level, point, exp, gold, silver, haveCheckin, obj['checkin']['daily_checkin_num'], obj['unread']['notice']['num']]);
         }
         else {
-          resolve([null, null, null, null, null, false]);
+          resolve([level, point, exp, gold, silver, haveCheckin, obj['checkin']['daily_checkin_num'], obj['unread']['notice']['num']]);
         }
-      })
-    }
-    else{
-      resolve([null, null, null, null, null, false]);
-    }
+      }
+      else {
+        resolve([null, null, null, null, null, false, null, null]);
+      }
+    })
   });
 }
 
 // 每日签到
 function WebCheckin() {
   return new Promise((resolve) => {
-    if (WebCheckCookie()){
-      webCheckinOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
-      webCheckinOptions.headers.Cookie = smzdmCookie;
-      magicJS.get(webCheckinOptions, (err, resp, data)=>{
-        if (err) {
-          webCheckinStr = 'Web签到异常';
-          magicJS.log('Web签到出现异常:' + err);
-          resolve(false);
+    let smzdmCookie = magicJS.read(smzdmCookieKey);
+    webCheckinOptions.url = webCheckinOptions.url.replace(/_[0-9]*&_=[0-9]*/, `_${new Date().getTime()}&_=${new Date().getTime()}`);
+    webCheckinOptions.headers.Cookie = smzdmCookie;
+    magicJS.get(webCheckinOptions, (err, resp, data)=>{
+      if (err) {
+        magicJS.log('Web签到出现异常:' + err);
+        resolve([false, 'Web签到异常']);
+      }
+      else{
+        checkin_data = /jQuery.*\((.*)\)/.exec(data)[1];
+        let checkin_obj = JSON.parse(checkin_data);
+        if (checkin_obj['error_code'] == 0){
+          magicJS.log('Web本日签到成功');
+          resolve([true, 'Web签到成功']);
         }
         else{
-          checkin_data = /jQuery.*\((.*)\)/.exec(data)[1];
-          let checkin_obj = JSON.parse(checkin_data);
-          if (checkin_obj['error_code'] == 0){
-            webCheckinStr = 'Web签到成功';
-            magicJS.log('Web本日签到成功');
-            resolve(true);
-          }
-          else{
-            magicJS.log(`Web签到出现异常，接口返回数据：${data}`);
-            webCheckinStr = 'Web签到异常';
-            resolve(false);
-          }
+          magicJS.log(`Web签到出现异常，接口返回数据：${data}`);
+          resolve([false,'Web签到异常']);
         }
-      });
-    }
-    else{
-      resolve(false);
-    }
-  });
-}
-
-// 签到后获取用户信息
-function WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver) {
-  return new Promise((resolve) => {
-    if (WebCheckCookie()){
-      webGetCurrentAfterOptions.url += new Date().getTime() + '&_=' + new Date().getTime();
-      webGetCurrentAfterOptions.headers.Cookie = smzdmCookie;
-      magicJS.get(webGetCurrentAfterOptions, (err, resp, data)=>{
-        if (err) {
-          magicJS.notify(scriptName, '', '❌获取Web签到后异常，http请求错误！！');
-          magicJS.log('获取Web签到后数据异常:' + err);
-          resolve(false);
-        }
-        else{
-          magicJS.log('获取Web用户签到后数据 ' + data);
-          let afterData = /jQuery.*\((.*)\)/.exec(data)[1];
-          let afterObj = JSON.parse(afterData);
-          if ('smzdm_id' in afterObj && afterObj['smzdm_id'] != undefined && afterObj['smzdm_id'].length >0 ){
-            let subj = `📆${webCheckinStr} ${appCheckinStr} 已签到${afterObj['checkin']['daily_checkin_num']}天`;
-            let addLevel = Number(afterObj['level']) - beforeLevel;
-            let addPoint = Number(afterObj['point']) - beforePoint;
-            let addExp = Number(afterObj['exp']) - beforeExp;
-            let addGold = Number(afterObj['gold']) - beforeGold;
-            let addSilver = Number(afterObj['silver']) - beforeSilver;
-            let content = '🥇等级' + afterObj['level'] + (addLevel > 0 ? '(+' + addLevel + ')' : '') + 
-            ' 💡积分' + afterObj['point'] + (addPoint > 0 ? '(+' + addPoint + ')' : '') +  
-            ' 🔰经验' + afterObj['exp'] + (addExp > 0 ? '(+' + addExp + ')' : '') + '\n' + 
-            '💰金币' + afterObj['gold'] + (addGold > 0 ? '(+' + addGold + ')' : '') +  
-            ' ✨碎银子' + afterObj['silver'] + (addSilver > 0 ? '(+' + addSilver + ')' : '') +
-            ' 📮未读消息' + afterObj['unread']['notice']['num'];
-            magicJS.notify(scriptName, subj, content);
-            resolve(true);
-          }
-          else {
-            magicJS.notify(scriptName, '', '❌获取Web用户签到后数据异常！！');
-            magicJS.log('获取Web用户签到后数据异常。');
-            resolve(false);
-          }
-        }
-      })
-    }
-    else{
-      resolve(false);
-    }
+      }
+    });
   });
 }
 
@@ -251,44 +166,34 @@ function AppGetToken(){
     }
     magicJS.post(getAppTokenOptions, (err, resp, data) => {
       if (err){
-        appCheckinStr = 'App登录异常';
         magicJS.log(`什么值得买App登录失败，http请求异常。异常内容：${err}`);
-        magicJS.notify(scriptName, '', '❌App登录失败，http请求异常！！');
-        resolve('');
+        resolve([false,'App登录异常',null]);
       }
       else{
         try{
           let obj = JSON.parse(data);
           magicJS.log(`什么值得买App登录，接口响应内容：${data}`);
           if (obj.error_code == '111104'){
-            appCheckinStr = 'App登录异常';
             magicJS.log(`什么值得买App登录失败，账号密码错误`);
-            magicJS.notify(scriptName, '', '❌App登录失败，账号密码错误！！');
-            resolve('');
+            resolve([false,'App账号密码错误',null]);
           }
           if (obj.error_code == '110202'){
-            appCheckinStr = 'App登录异常';
             magicJS.log(`什么值得买App登录失败，验证码错误`);
-            magicJS.notify(scriptName, '', '❌App登录失败，验证码错误！！');
-            resolve('');
+            resolve([false,'App验证码错误',null]);
           }
           else if (obj.error_code != '0'){
-            appCheckinStr = 'App登录异常';
             magicJS.log(`什么值得买App登录失败，接口响应格式不合法`);
-            magicJS.notify(scriptName, '', '❌App登录失败，接口响应格式不合法！！');
-            resolve('');
+            resolve([false,'App接口响应不合法',null]);
           }
           else{
             magicJS.log(`什么值得买App登录成功`);
             magicJS.write(smzdmTokenKey, obj['data']['token']);
-            resolve(obj['data']['token']);
+            resolve([true,'App登录成功',obj['data']['token']]);
           }
         }
         catch (ex){
-          appCheckinStr = 'App登录异常';
           magicJS.log(`什么值得买App登录失败，代码执行异常。异常内容：${ex}`);
-          magicJS.notify(scriptName, '', '❌登录失败，代码执行异常！！');
-          resolve('');
+          resolve([false,'App代码执行异常',null]);
         }
       }
     })
@@ -299,64 +204,53 @@ function AppGetToken(){
 什么值得买App端签到，感谢苍井灰灰提供接口
 返回值 0 失败 1 成功 2 网络繁忙 3 token失效 4 重复签到
 */
-function AppCheckin(token){
+function AppCheckin(){
   return new Promise((resolve, reject) => {
     if (magicJS.isJSBox){
-      appCheckinOptions.body = {token: token, f:'win'};
+      appCheckinOptions.body = {token: appToken, f:'win'};
     }
     else if (magicJS.isNode){
-      appCheckinOptions.form = {token: token, f:'win'};
+      appCheckinOptions.form = {token: appToken, f:'win'};
     }
     else{
-      appCheckinOptions.body =  `token=${token}&f=win`;
+      appCheckinOptions.body =  `token=${appToken}&f=win`;
     }
     if (magicJS.isNode){
       delete appCheckinOptions['headers']['Accept-Encoding'];
     }
     magicJS.post(appCheckinOptions, (err, resp, data) => {
       if (err){
-        appCheckinStr = 'App签到异常';
-        magicJS.log(`App签到失败，http请求异常。异常内容：${err}`);
-        magicJS.notify(scriptName, '', '❌App签到失败，http请求异常！！');
-        reject(0);
+        magicJS.log(`App端签到失败，http请求异常。异常内容：${err}`);
+        reject([0, 'App端请求异常']);
       }
       else{
         try{
           magicJS.log(`什么值得买App签到，接口响应内容：${data}`);
           let obj = JSON.parse(data);
           if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙') >= 0){
-            appCheckinStr = 'App签到失败';
             magicJS.log('App签到失败，网络访问超时。');
-            reject(2);
+            reject([2, 'App签到超时']);
           }
           else if (obj.error_code == '11111'){
-            appCheckinStr = 'App签到失败';
-            magicJS.log(`App签到失败，Token已过期。`);
-            magicJS.notify(scriptName, '', '❌App签到失败，Token已过期！！');
-            resolve(3);
+            magicJS.log('App签到失败，Token已过期。');
+            resolve([3, 'App端Token过期']);
           }
           else if (obj.error_code != '0'){
-            appCheckinStr = 'App签到失败';
-            magicJS.log(`App签到失败，接口响应格式不合法。`);
-            magicJS.notify(scriptName, '', '❌App签到失败，接口响应格式不合法！！');
-            resolve(0);
+            magicJS.log('App签到失败，接口响应格式不合法。');
+            resolve([3, 'App端返回异常']);
           }
           else if(obj.error_msg == '已签到'){
-            appCheckinStr = 'App重复签到';
             magicJS.log('App签到重复签到。');
-            resolve(4);
+            resolve([4, 'App端重复签到']);
           }
           else{
-            appCheckinStr = 'App签到成功';
             magicJS.log('App签到成功！！');
-            resolve(1);
+            resolve([1, 'App端签到成功']);
           }
         }
         catch (ex){
-          appCheckinStr = 'App签到异常';
           magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}`);
-          magicJS.notify(scriptName, '', '❌App签到失败，代码执行异常！！');
-          resolve(0);
+          reject([0, 'App端执行异常']);
         }
       }
     })
@@ -420,34 +314,91 @@ async function Main(){
     }
   }
   else{
+    let subTitle = '';
+    let content = '';
+    let webCheckinErr = null;
+    let webCheckinResult = '';
+    let webCheckinStr = '';
+    let getTokenStr = '';
+    let appCheckinStr = '';
+    let beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin, checkinNum;
+    let afterLevel, afterPoint, afterExp, afterGold, afterSilver, unread;
 
-    // 查询签到前用户数据
-    let [beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin] = await WebGetCurrentBefore();
-
-    // Web签到
-    if (!haveCheckin){
-      await WebCheckin();
+    if (!WebCheckCookie()){
+      magicJS.log('没有读取到什么值得买有效cookie，请访问zhiyou.smzdm.com进行登录');
+      magicJS.notify(scriptName, '', '❓没有获取到Web端Cookie，请先进行登录。');
     }
-
-    // 判断是否开启App端签到
-    if (appCheckin){
-      // App签到
-      let token = magicJS.read(smzdmTokenKey);
-      if (!token){
-        token = await AppGetToken();
-      }
-      let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 3000, async (result)=>{
-        if (result == 3){
-          token = await AppGetToken();
-          if (token) throw result;
+    else{
+      // 查询签到前用户数据
+      [beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin,] = await WebGetCurrentInfo();
+      magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
+      // Web端签到
+      if (!haveCheckin){
+        let webCheckinPromise = WebCheckin()
+        [webCheckinErr,webCheckinResult, webCheckinStr] = await magicJS.attempt(webCheckinPromise);
+        if (webCheckinErr) 
+        {
+          webCheckinStr = webCheckinErr;
+          magicJS.log(webCheckinErr);
         }
-      });
-      // 重试三次App签到，每次间隔3000毫秒
-      await magicJS.attempt(AppCheckinRetry(token));
+      }
+      else{
+        webCheckinStr = 'Web端重复签到';
+      }
     }
 
-    // 查询签到后用户数据
-    await WebGetCurrentAfter(beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver);
+    // App端签到
+    let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey);
+    let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey);
+    if (!!account && !!password){
+      appToken = magicJS.read(smzdmTokenKey);
+      if (!appToken){
+        [,getTokenStr,appToken] = await AppGetToken();
+      }
+      if (!!appToken){
+        let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 2000, async (result)=>{
+          if (result == 3){
+            appToken = await AppGetToken();
+            if (appToken) throw result;
+          }
+        });
+        // 重试5次App签到，每次间隔2000毫秒
+        [,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, '签到异常']);
+      }
+      else{
+        appCheckinStr = getTokenStr;
+      }
+    }
+    else{
+      magicJS.notify(scriptName, '', '❓没有获取到App端账号密码，请先进行登录。');
+    }
+    
+    if (WebCheckCookie()){
+      // 查询签到后用户数据
+      [afterLevel, afterPoint, afterExp, afterGold, afterSilver, , checkinNum, unread] = await WebGetCurrentInfo();
+      magicJS.log(`签到后等级${afterLevel}，积分${afterPoint}，经验${afterExp}，金币${afterGold}，碎银子${afterSilver}`);
+    }
+
+    subTitle = `${webCheckinStr} ${appCheckinStr}`;
+    if (!!checkinNum) subTitle += ` 已签到${checkinNum}天`;
+
+    if (beforeLevel && afterLevel){
+      let addLevel = afterLevel - beforeLevel;
+      let addPoint = afterPoint - beforePoint;
+      let addExp = afterExp - beforeExp;
+      let addGold = afterGold - beforeGold;
+      let addSilver = afterSilver - beforeSilver;
+      content = '🥇等级' + afterLevel + (addLevel > 0 ? '(+' + addLevel + ')' : '') + 
+      ' 💡积分' + afterPoint + (addPoint > 0 ? '(+' + addPoint + ')' : '') +  
+      ' 🔰经验' + afterExp + (addExp > 0 ? '(+' + addExp + ')' : '') + '\n' + 
+      '💰金币' + afterGold + (addGold > 0 ? '(+' + addGold + ')' : '') +  
+      ' ✨碎银子' + afterSilver + (addSilver > 0 ? '(+' + addSilver + ')' : '') +
+      ' 📮未读消息' + unread;
+    }
+    if (webCheckinStr || appCheckinStr || content){
+      magicJS.notify(scriptName, subTitle, content);
+    }
+    
   }
   magicJS.done();
 }
@@ -468,7 +419,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007151811' };
+    get version() { return '202007181155' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -605,6 +556,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
       console.log(`[${this.scriptName}]\n${msg}\n`)
     }
 
+    table(msg){
+      console.table(`[${this.scriptName}]\n${msg}\n`)
+    }
+
     get(options, callback){
       if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
       if (this.isSurge || this.isLoon) {
@@ -701,7 +656,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
      * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, ...args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
