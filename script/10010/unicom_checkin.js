@@ -259,14 +259,14 @@ function UserLogin(){
 // 旧版签到
 function AppCheckin(){
   // 联通App签到
-  return new Promise((resolve) =>{
+  return new Promise((resolve, reject) =>{
     let unicomCookie = magicJS.read(unicomCookieKey);
     daySingOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingOptions, (err, resp, data) => {
       if (err){
         magicJS.log('签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        resolve([false, '签到失败', null,null,null]);
+        reject([false, '签到失败', null,null,null]);
       }
       else {
         magicJS.log('联通签到，接口响应数据：' + data);
@@ -286,12 +286,12 @@ function AppCheckin(){
             resolve([false, '未登录', null,null,null]);
           }
           else{
-            resolve([false, '接口返回异常', null,null,null]);
+            reject([false, '接口返回异常', null,null,null]);
           }
         }
         catch (err){
           magicJS.log('签到异常，代码执行错误：' + err);
-          resolve([false, '签到异常', null,null,null]);
+          reject([false, '签到异常', null,null,null]);
         }
       }
     })
@@ -308,7 +308,7 @@ function AppCheckinNewVersion(){
       if (err){
         magicJS.log('新版签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        resolve([false, '签到失败', null,null,null]);
+        reject([false, '签到失败', null,null,null]);
       }
       else {
         let obj = {};
@@ -328,12 +328,12 @@ function AppCheckinNewVersion(){
           }
           else{
             magicJS.log('新版签到异常，接口返回数据不合法。' + data);
-            resolve([false, '签到异常', null,null,null]);
+            reject([false, '签到异常', null,null,null]);
           }
         }
         catch (err){
           magicJS.log('新版签到异常，代码执行错误：' + err);
-          resolve([false, '签到异常', null,null,null]);
+          reject([false, '签到异常', null,null,null]);
         }
       }
     })
@@ -786,9 +786,11 @@ async function Main(){
 
     await (async ()=>{
       // 旧版签到，如果失败就用新版的再试试
-      [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckin(), [false,'签到异常',null,null,null]);
+      let AppCheckinPromise = magicJS.retry(AppCheckin, 5, 2000)();
+      [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinPromise, [false,'签到异常',null,null,null]);
       if (!checkinResult){
-        [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersion(), [false,'签到异常',null,null,null]);
+        let AppCheckinNewVersionPromise = magicJS.retry(AppCheckinNewVersion, 5, 2000)();
+        [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersionPromise, [false,'签到异常',null,null,null]);
       }
       if (!!prizeCount && !!growthV && !!flowerCount){
         notifySubTtile = `🧱积分+${prizeCount} 🎈成长值+${growthV} 💐鲜花+${flowerCount}`
