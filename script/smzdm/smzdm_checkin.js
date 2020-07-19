@@ -122,25 +122,38 @@ function WebGetCurrentInfo(){
 
 // 每日签到
 function WebCheckin() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let smzdmCookie = magicJS.read(smzdmCookieKey);
     webCheckinOptions.url = webCheckinOptions.url.replace(/_[0-9]*&_=[0-9]*/, `_${new Date().getTime()}&_=${new Date().getTime()}`);
     webCheckinOptions.headers.Cookie = smzdmCookie;
     magicJS.get(webCheckinOptions, (err, resp, data)=>{
       if (err) {
         magicJS.log('Web端签到出现异常:' + err);
-        resolve([false, 'Web端签到异常']);
+        reject([false, 'Web端签到异常']);
       }
       else{
-        checkin_data = /jQuery.*\((.*)\)/.exec(data)[1];
-        let checkin_obj = JSON.parse(checkin_data);
-        if (checkin_obj['error_code'] == 0){
-          magicJS.log('Web端本日签到成功');
-          resolve([true, 'Web端签到成功']);
+        try {
+          let checkin_data = /jQuery.*\((.*)\)/.exec(data);
+          if (checkin_data){
+            let checkin_obj = JSON.parse(checkin_data[1]);
+            if (checkin_obj['error_code'] == 0){
+              magicJS.log('Web端本日签到成功');
+              resolve([true, 'Web端签到成功']);
+            }
+            else{
+              magicJS.log(`Web端签到出现异常，接口返回数据：${data}`);
+              reject([false,'Web端签到异常']);
+            }
+          }
+          else{
+            magicJS.log(`Web端签到出现异常，接口返回数据不合法：${data}`);
+            reject([false,'Web端签到异常']);
+          }
         }
-        else{
-          magicJS.log(`Web端签到出现异常，接口返回数据：${data}`);
-          resolve([false,'Web端签到异常']);
+        catch (err){
+          magicJS.log()
+          magicJS.log(`Web端签到出现异常，代码执行异常：${err}，接口返回：${data}`);
+          reject([false,'Web端执行异常']);
         }
       }
     });
@@ -333,8 +346,8 @@ async function Main(){
       magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
       // Web端签到
       if (!haveCheckin){
-        let webCheckinPromise = WebCheckin()
-        [webCheckinErr,webCheckinResult, webCheckinStr] = await magicJS.attempt(webCheckinPromise);
+        let webCheckinPromise = magicJS.retry(WebCheckin, 5, 1000)();
+        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinPromise, [false, 'Web端签到异常']);
         if (webCheckinErr) 
         {
           webCheckinStr = webCheckinErr;
