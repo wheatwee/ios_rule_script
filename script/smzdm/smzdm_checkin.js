@@ -96,24 +96,24 @@ function WebGetCurrentInfo(){
     let smzdmCookie = magicJS.read(smzdmCookieKey);
     webGetCurrentInfo.headers.Cookie = smzdmCookie;
     magicJS.get(webGetCurrentInfo, (err, resp, data)=>{
-      magicJS.log('Web端获取用户数据 ' + data);
-      data = /jQuery.*\((.*)\)/.exec(data)[1];
-      let obj = JSON.parse(data);
-      if ('smzdm_id' in obj && obj['smzdm_id'] != undefined && obj['smzdm_id'].length >0 ){
-        let level = Number(obj['level']);
-        let point = Number(obj['point']);
-        let exp = Number(obj['exp']);
-        let gold = Number(obj['gold']);
-        let silver = Number(obj['silver']);
-        let haveCheckin = obj['checkin']['has_checkin'];
-        if (haveCheckin == true){
+      try{
+        let obj = JSON.parse(/jQuery.*\((.*)\)/.exec(data)[1]);
+        if ('smzdm_id' in obj && !!obj['smzdm_id']){
+          let level = Number(obj['level']);
+          let point = Number(obj['point']);
+          let exp = Number(obj['exp']);
+          let gold = Number(obj['gold']);
+          let silver = Number(obj['silver']);
+          let haveCheckin = obj['checkin']['has_checkin'];
           resolve([level, point, exp, gold, silver, haveCheckin, obj['checkin']['daily_checkin_num'], obj['unread']['notice']['num']]);
         }
         else {
-          resolve([level, point, exp, gold, silver, haveCheckin, obj['checkin']['daily_checkin_num'], obj['unread']['notice']['num']]);
+          magicJS.log(`获取用户信息异常，接口返回数据不合法：${data}`);
+          resolve([null, null, null, null, null, false, null, null]);
         }
       }
-      else {
+      catch (err){
+        magicJS.log(`获取用户信息异常，代码指向异常：${err}，接口返回数据：${data}`);
         resolve([null, null, null, null, null, false, null, null]);
       }
     })
