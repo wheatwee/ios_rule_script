@@ -237,22 +237,21 @@ function AppCheckin(){
       }
       else{
         try{
-          magicJS.log(`什么值得买App签到，接口响应内容：${data}`);
           let obj = JSON.parse(data);
           if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙') >= 0){
             magicJS.log('App签到失败，网络访问超时。');
-            reject([2, 'App签到超时']);
+            reject([2, 'App签到网络异常']);
           }
           else if (obj.error_code == '11111'){
-            magicJS.log('App签到失败，Token已过期。');
+            magicJS.log(`App签到失败，Token已过期。接口返回：${data}`);
             resolve([3, 'App端Token过期']);
           }
           else if (obj.error_code != '0'){
-            magicJS.log('App签到失败，接口响应格式不合法。');
+            magicJS.log(`App签到失败，接口响应格式不合法：${data}`);
             resolve([3, 'App端返回异常']);
           }
           else if(obj.error_msg == '已签到'){
-            magicJS.log('App签到重复签到。');
+            magicJS.log('App端重复签到。');
             resolve([4, 'App端重复签到']);
           }
           else{
@@ -261,7 +260,7 @@ function AppCheckin(){
           }
         }
         catch (ex){
-          magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}`);
+          magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}，接口返回：${data}`);
           reject([0, 'App端执行异常']);
         }
       }
@@ -355,6 +354,7 @@ async function Main(){
         }
       }
       else{
+        magicJS.log('Web端重复签到');
         webCheckinStr = 'Web端重复签到';
       }
     }
