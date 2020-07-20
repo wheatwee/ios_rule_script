@@ -436,19 +436,31 @@ function GetUserInfo(){
         }
         else {
           let result = {}
-          let obj = JSON.parse(data);
-          if (obj.hasOwnProperty('data') && obj['data'].hasOwnProperty('dataList')){
-            obj['data']['dataList'].forEach(element => {
-              if ('flow,fee,voice,point'.indexOf(element['type'])>=0){
-                result[element['type']] = `${element['remainTitle']}${element['number']}${element['unit']}`
-              }
-            });
-            magicJS.log('获取用户信息：' + JSON.stringify(result));
-            resolve(result);
+          try{
+            let obj = JSON.parse(data);
+            if (obj.hasOwnProperty('data') && obj['data'].hasOwnProperty('dataList')){
+              obj['data']['dataList'].forEach(element => {
+                if ('flow,fee,voice,point'.indexOf(element['type'])>=0){
+                  if (element['number'] != '-'){
+                    result[element['type']] = `${element['remainTitle']}${element['number']}${element['unit']}`
+                  }
+                  else{
+                    magicJS.log('获取用户信息异常：' + data);
+                    reject('获取用户信息异常');
+                  }
+                }
+              });
+              magicJS.log('获取用户信息：' + JSON.stringify(result));
+              resolve(result);
+            }
+            else{
+              magicJS.log('获取用户信息异常，接口响应不合法：' + data);
+              reject('获取用户信息接口响应异常');
+            }
           }
-          else{
-            magicJS.log('获取用户信息异常，接口响应不合法：' + data);
-            reject(data);
+          catch (err){
+            magicJS.log(`获取用户信息失败，代码执行异常：${err}，接口返回：${data}`);
+            reject('获取用户信息执行异常');
           }
         }
       })
@@ -785,6 +797,10 @@ async function Main(){
     let contineCount = '?'
 
     await (async ()=>{
+
+      // 抽奖前用户登录
+      let [errUserLogin, [loginResult, loginStr]] = await magicJS.attempt(UserLogin(), [false, '用户登录失败']);
+
       // 旧版签到，如果失败就用新版的再试试
       let AppCheckinPromise = magicJS.retry(AppCheckin, 3, 5000)();
       [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinPromise, [false,'签到异常',null,null,null]);
@@ -797,11 +813,11 @@ async function Main(){
       }
 
       // 查询连续签到天数
-      let genContinueCountPromise = magicJS.retry(GetContinueCount, 3, 2000)();
+      let genContinueCountPromise = magicJS.retry(GetContinueCount, 3, 3000)();
       [,contineCount] = await magicJS.attempt(genContinueCountPromise);
 
       // 查询用户信息
-      let getUserInfoPromise = magicJS.retry(GetUserInfo, 3, 2000)();
+      let getUserInfoPromise = magicJS.retry(GetUserInfo, 3, 5000)();
       let [,userInfo] = await magicJS.attempt(getUserInfoPromise);
       if (userInfo && userInfo.hasOwnProperty('flow') && userInfo.hasOwnProperty('fee')){
         notifyContent += `${userInfo['flow']} ${userInfo['fee']}\n${userInfo['voice']} ${userInfo['point']}`
@@ -815,8 +831,6 @@ async function Main(){
         notifyContent += notifyContent ? `\n${meituanResult}` : meituanResult;
       }
 
-      // 抽奖前用户登录
-      let [errUserLogin, loginResult, loginStr] = await magicJS.attempt(UserLogin(), [false, '用户登录失败']);
       if (errUserLogin){
         magicJS.log('用户登录失败，异常信息：' + errUserLogin);
       }
