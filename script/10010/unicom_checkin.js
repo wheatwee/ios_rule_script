@@ -266,7 +266,7 @@ function AppCheckin(){
       if (err){
         magicJS.log('签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        reject([false, '签到失败', null,null,null]);
+        reject('签到失败');
       }
       else {
         magicJS.log('联通签到，接口响应数据：' + data);
@@ -286,12 +286,12 @@ function AppCheckin(){
             resolve([false, '未登录', null,null,null]);
           }
           else{
-            reject([false, '接口返回异常', null,null,null]);
+            reject('接口返回异常');
           }
         }
         catch (err){
           magicJS.log('签到异常，代码执行错误：' + err);
-          reject([false, '签到异常', null,null,null]);
+          reject('执行错误');
         }
       }
     })
@@ -308,7 +308,7 @@ function AppCheckinNewVersion(){
       if (err){
         magicJS.log('新版签到失败，http请求异常：' + err);
         magicJS.notify(scriptName, '', '❌签到失败，http请求异常！！');
-        reject([false, '签到失败', null,null,null]);
+        reject('签到失败');
       }
       else {
         let obj = {};
@@ -328,12 +328,12 @@ function AppCheckinNewVersion(){
           }
           else{
             magicJS.log('新版签到异常，接口返回数据不合法。' + data);
-            reject([false, '签到异常', null,null,null]);
+            reject('签到异常');
           }
         }
         catch (err){
           magicJS.log('新版签到异常，代码执行错误：' + err);
-          reject([false, '签到异常', null,null,null]);
+          reject('执行错误');
         }
       }
     })
@@ -786,10 +786,10 @@ async function Main(){
 
     await (async ()=>{
       // 旧版签到，如果失败就用新版的再试试
-      let AppCheckinPromise = magicJS.retry(AppCheckin, 5, 2000)();
+      let AppCheckinPromise = magicJS.retry(AppCheckin, 3, 5000)();
       [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinPromise, [false,'签到异常',null,null,null]);
       if (!checkinResult){
-        let AppCheckinNewVersionPromise = magicJS.retry(AppCheckinNewVersion, 5, 2000)();
+        let AppCheckinNewVersionPromise = magicJS.retry(AppCheckinNewVersion, 3, 5000)();
         [,[checkinResult,checkinResultStr,prizeCount,growthV,flowerCount]] = await magicJS.attempt(AppCheckinNewVersionPromise, [false,'签到异常',null,null,null]);
       }
       if (!!prizeCount && !!growthV && !!flowerCount){
