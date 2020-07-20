@@ -129,31 +129,40 @@ function WebCheckin() {
     magicJS.get(webCheckinOptions, (err, resp, data)=>{
       if (err) {
         magicJS.log('Web端签到出现异常:' + err);
-        reject([false, 'Web端签到异常']);
+        reject('Web端签到异常');
       }
       else{
         try {
-          let checkin_data = /jQuery.*\((.*)\)/.exec(data);
+          let checkin_data = /(callback\()(.*)(\))/.exec(data);
           if (checkin_data){
-            let checkin_obj = JSON.parse(checkin_data[1]);
-            if (checkin_obj['error_code'] == 0){
-              magicJS.log('Web端本日签到成功');
-              resolve([true, 'Web端签到成功']);
+            let checkin_obj = JSON.parse(checkin_data[2]);
+            if (!!checkin_obj && checkin_obj.hasOwnProperty('error_code')){
+              if (checkin_obj.error_code == -1){
+                magicJS.log(`Web端签到出现异常，网络繁忙，接口返回：${data}`);
+                reject( 'Web端网络繁忙');
+              }
+              else if (checkin_obj['error_code'] == 0){
+                magicJS.log('Web端本日签到成功');
+                resolve([true, 'Web端签到成功']);
+              }
+              else{
+                magicJS.log(`Web端签到出现异常，接口返回数据不合法：${data}`);
+                reject('Web端返回错误');
+              }
             }
             else{
               magicJS.log(`Web端签到出现异常，接口返回数据：${data}`);
-              reject([false,'Web端签到异常']);
+              reject('Web端签到异常');
             }
           }
           else{
             magicJS.log(`Web端签到出现异常，接口返回数据不合法：${data}`);
-            reject([false,'Web端签到异常']);
+            reject('Web端签到异常');
           }
         }
         catch (err){
-          magicJS.log()
           magicJS.log(`Web端签到出现异常，代码执行异常：${err}，接口返回：${data}`);
-          reject([false,'Web端执行异常']);
+          reject('Web端执行异常');
         }
       }
     });
@@ -233,14 +242,14 @@ function AppCheckin(){
     magicJS.post(appCheckinOptions, (err, resp, data) => {
       if (err){
         magicJS.log(`App端签到失败，http请求异常。异常内容：${err}`);
-        reject([0, 'App端请求异常']);
+        reject('App端请求异常');
       }
       else{
         try{
           let obj = JSON.parse(data);
           if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙') >= 0){
-            magicJS.log('App签到失败，网络访问超时。');
-            reject([2, 'App签到网络异常']);
+            magicJS.log(`App签到失败，网络繁忙。接口返回：${data}`);
+            reject('App端网络繁忙');
           }
           else if (obj.error_code == '11111'){
             magicJS.log(`App签到失败，Token已过期。接口返回：${data}`);
@@ -261,7 +270,7 @@ function AppCheckin(){
         }
         catch (ex){
           magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}，接口返回：${data}`);
-          reject([0, 'App端执行异常']);
+          reject('App端执行异常');
         }
       }
     })
@@ -331,6 +340,7 @@ async function Main(){
     let webCheckinResult = '';
     let webCheckinStr = '';
     let getTokenStr = '';
+    let appCheckinErr = null;
     let appCheckinStr = '';
     let beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin, checkinNum;
     let afterLevel, afterPoint, afterExp, afterGold, afterSilver, unread;
@@ -345,12 +355,12 @@ async function Main(){
       magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
       // Web端签到
       if (!haveCheckin){
-        let webCheckinPromise = magicJS.retry(WebCheckin, 5, 1000)();
+        let webCheckinPromise = magicJS.retry(WebCheckin, 2, 1000)();
         [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinPromise, [false, 'Web端签到异常']);
         if (webCheckinErr) 
         {
           webCheckinStr = webCheckinErr;
-          magicJS.log(webCheckinErr);
+          magicJS.log('Web端签到异常：' + webCheckinErr);
         }
       }
       else{
@@ -375,7 +385,10 @@ async function Main(){
           }
         });
         // 重试5次App签到，每次间隔2000毫秒
-        [,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, '签到异常']);
+        [appCheckinErr,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, 'App端签到异常']);
+        if (appCheckinErr){
+          appCheckinStr = appCheckinErr;
+        }
       }
       else{
         appCheckinStr = getTokenStr;
