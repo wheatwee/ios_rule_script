@@ -260,7 +260,7 @@ function AppCheckin(){
             resolve([3, 'App端返回异常']);
           }
           else if(obj.error_msg == '已签到'){
-            magicJS.log('App端重复签到。');
+            magicJS.log('App端重复签到');
             resolve([4, 'App端重复签到']);
           }
           else{
