@@ -355,8 +355,8 @@ async function Main(){
       magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
       // Web端签到
       if (!haveCheckin){
-        let webCheckinPromise = magicJS.retry(WebCheckin, 2, 1000)();
-        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinPromise, [false, 'Web端签到异常']);
+        let webCheckinRetry = magicJS.retry(WebCheckin, 2, 1000);
+        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinRetry, [false, 'Web端签到异常']);
         if (webCheckinErr) 
         {
           webCheckinStr = webCheckinErr;
