@@ -34,6 +34,7 @@ const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\
 const answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽'];
 const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
 
+
 if (topstory_recommend_regex.test(magicJS.request.url)){
   body['data'].forEach((element, index)=> {
     if(element['card_type']=='slot_event_card'||element.hasOwnProperty('ad')){      
