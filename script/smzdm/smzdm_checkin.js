@@ -356,7 +356,7 @@ async function Main(){
       // Web端签到
       if (!haveCheckin){
         let webCheckinRetry = magicJS.retry(WebCheckin, 2, 1000);
-        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinRetry, [false, 'Web端签到异常']);
+        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinRetry(), [false, 'Web端签到异常']);
         if (webCheckinErr) 
         {
           webCheckinStr = webCheckinErr;
