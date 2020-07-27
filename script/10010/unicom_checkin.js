@@ -876,7 +876,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007181155' };
+    get version() { return '202007220021' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -1011,10 +1011,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     
     log(msg){
       console.log(`[${this.scriptName}]\n${msg}\n`)
-    }
-
-    table(msg){
-      console.table(`[${this.scriptName}]\n${msg}\n`)
     }
 
     get(options, callback){

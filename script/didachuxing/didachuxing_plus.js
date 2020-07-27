@@ -313,7 +313,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007151811' };
+    get version() { return '202007220021' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -546,7 +546,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
      * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, ...args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
