@@ -353,6 +353,36 @@ async function Main(){
       // 查询签到前用户数据
       [beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin,] = await WebGetCurrentInfo();
       magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
+
+      // App端签到
+      let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey);
+      let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey);
+      if (!!account && !!password){
+        appToken = magicJS.read(smzdmTokenKey);
+        if (!appToken){
+          [,getTokenStr,appToken] = await AppGetToken();
+        }
+        if (!!appToken){
+          let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 2000, async (result)=>{
+            if (result == 3){
+              appToken = await AppGetToken();
+              if (appToken) throw result;
+            }
+          });
+          // 重试5次App签到，每次间隔2000毫秒
+          [appCheckinErr,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, 'App端签到异常']);
+          if (appCheckinErr){
+            appCheckinStr = appCheckinErr;
+          }
+        }
+        else{
+          appCheckinStr = getTokenStr;
+        }
+      }
+      else{
+        magicJS.notify(scriptName, '', '❓没有获取到App端账号密码，请先进行登录。');
+      }
+      
       // Web端签到
       if (!haveCheckin){
         let webCheckinRetry = magicJS.retry(WebCheckin, 2, 1000);
@@ -369,35 +399,6 @@ async function Main(){
       }
     }
 
-    // App端签到
-    let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey);
-    let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey);
-    if (!!account && !!password){
-      appToken = magicJS.read(smzdmTokenKey);
-      if (!appToken){
-        [,getTokenStr,appToken] = await AppGetToken();
-      }
-      if (!!appToken){
-        let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 2000, async (result)=>{
-          if (result == 3){
-            appToken = await AppGetToken();
-            if (appToken) throw result;
-          }
-        });
-        // 重试5次App签到，每次间隔2000毫秒
-        [appCheckinErr,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, 'App端签到异常']);
-        if (appCheckinErr){
-          appCheckinStr = appCheckinErr;
-        }
-      }
-      else{
-        appCheckinStr = getTokenStr;
-      }
-    }
-    else{
-      magicJS.notify(scriptName, '', '❓没有获取到App端账号密码，请先进行登录。');
-    }
-    
     if (WebCheckCookie()){
       // 查询签到后用户数据
       [afterLevel, afterPoint, afterExp, afterGold, afterSilver, , checkinNum, unread] = await WebGetCurrentInfo();
