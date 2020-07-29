@@ -343,7 +343,7 @@ async function Main(){
     let appCheckinErr = null;
     let appCheckinStr = '';
     let beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin, checkinNum;
-    let afterLevel, afterPoint, afterExp, afterGold, afterSilver, unread;
+    let afterLevel, afterPoint, afterExp, afterGold, afterSilver, afterHaveCheckin, unread;
 
     if (!WebCheckCookie()){
       magicJS.log('没有读取到什么值得买有效cookie，请访问zhiyou.smzdm.com进行登录');
@@ -382,6 +382,8 @@ async function Main(){
       else{
         magicJS.notify(scriptName, '', '❓没有获取到App端账号密码，请先进行登录。');
       }
+
+      await magicJS.sleep(5000);
       
       // Web端签到
       if (!haveCheckin){
@@ -401,8 +403,15 @@ async function Main(){
 
     if (WebCheckCookie()){
       // 查询签到后用户数据
-      [afterLevel, afterPoint, afterExp, afterGold, afterSilver, , checkinNum, unread] = await WebGetCurrentInfo();
+      [afterLevel, afterPoint, afterExp, afterGold, afterSilver, afterHaveCheckin, checkinNum, unread] = await WebGetCurrentInfo();
       magicJS.log(`签到后等级${afterLevel}，积分${afterPoint}，经验${afterExp}，金币${afterGold}，碎银子${afterSilver}`);
+    }
+
+    if (haveCheckin && afterHaveCheckin){
+      webCheckinStr = 'Web端重复签到';
+    }
+    else if(!haveCheckin && afterHaveCheckin){
+      webCheckinStr = 'Web端签到成功';
     }
 
     subTitle = `${webCheckinStr} ${appCheckinStr}`;
@@ -730,5 +739,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         });
       };
     }
+
+    sleep(time) {
+      return new Promise((resolve) => setTimeout(resolve, time));
+    }
+    
   }(scriptName);
 }
