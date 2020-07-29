@@ -454,7 +454,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007220021' };
+    get version() { return '202007300021' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -503,7 +503,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
         this.del(key);
       }
       let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val) } catch {}
+      try { if (typeof val == 'string') val = JSON.parse(val) } catch(err) {}
       if (this.debug) this.log(`read data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
@@ -570,6 +570,11 @@ function MagicJS(scriptName='MagicJS', debug=false){
     }
 
     notify(title = scriptName, subTitle = '', body = ''){
+      if (arguments.length == 1){
+        title = scriptName;
+        subTitle = '',
+        body = arguments[0];
+      }
       if (this.isSurge || this.isLoon) {
         $notification.post(title, subTitle, body);
       }
