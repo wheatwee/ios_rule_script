@@ -428,7 +428,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
 
-    notify(title, subTitle = '', body = ''){
+    notify(title = scriptName, subTitle = '', body = ''){
       if (this.isSurge || this.isLoon) {
         $notification.post(title, subTitle, body);
       }
@@ -598,5 +598,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         });
       };
     }
+
+    sleep(time) {
+      return new Promise((resolve) => setTimeout(resolve, time));
+    }
+    
   }(scriptName);
 }
