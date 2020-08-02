@@ -1,9 +1,15 @@
-# 知乎去广告及黑名单增强
-^https?:\/\/118\.89\.204\.198.* url reject-200
-^https?://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad) url reject
-^https?:\/\/api\.zhihu\.com\/people\/ url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-^https?:\/\/api\.zhihu\.com\/(topstory|moments)\/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-^https?:\/\/api\.zhihu\.com\/v4\/questions url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-^https?:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message) url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+# 什么值得买去广告
 
-hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198,103.41.167.234,210.22.248.207,111.206.76.35
+^https://api.zhihu.com/people/ url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/moments/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/topstory/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https://api.zhihu.com/v4/questions url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https:\/\/api.zhihu.com\/notifications\/v3\/message\? url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+^https:\/\/api.zhihu.com\/notifications\/v3\/timeline\/entry\/system_message url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+
+# 知乎去除最常访问
+^https?:\/\/api\.zhihu\.com\/moments\/recent url reject-dict
+# 知乎去除未读消息红点
+^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
+
+hostname = api.zhihu.com,appcloud2.zhihu.com,www.zhihu.com,118.89.204.198

@@ -4,26 +4,23 @@
 Surge config
 
 [MITM]
-hostname = api.zhihu.com
+hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198,103.41.167.234,210.22.248.207,111.206.76.35
+
+[Map Local]
+# 知乎去除最常访问
+^https?:\/\/api\.zhihu\.com\/moments\/recent data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
 
 [Script]
-知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+# 知乎去广告及黑名单增强
+知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_回答去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 */
 
-let magicJS = MagicJS('知乎增强');
-let body = magicJS.response.body;
-try{
-  if (body.length > 0){
-    body=JSON.parse(body);
-  }
-}
-catch (err){
-  magicJS.log('[知乎去广告] 解析body出现异常：' + $response.body);
-  body = {};
-}
+let scriptName = '知乎增强';
+let magicJS = MagicJS(scriptName);
+
 
 const topstory_recommend_regex = /^https:\/\/api\.zhihu\.com\/topstory\/recommend\?/;
 const moments_recommend_regex = /^https:\/\/api.zhihu.com\/moments\/recommend/;
@@ -31,73 +28,132 @@ const mcn_userinfo = /^https:\/\/api.zhihu.com\/people\//;
 const question_regex = /^https:\/\/api.zhihu.com\/v4\/questions/;
 const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/timeline\/entry\/system_message/;
 const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
-const answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽'];
-const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
+const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
+const blocked_users_key = 'zhihu_blocked_users';
+let answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽', '知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
+let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
 
 
-if (topstory_recommend_regex.test(magicJS.request.url)){
-  body['data'].forEach((element, index)=> {
-    if(element['card_type']=='slot_event_card'||element.hasOwnProperty('ad')){      
-      body['data'].splice(index,1);
-    }
-  });
-}
-// 推荐功能去广告及黑名单增强
-else if (moments_recommend_regex.test(magicJS.request.url)){
-  let data = body['data'].filter((element) =>{
+async function main(){
+  // 知乎去广告及黑名单增强
+  if (magicJS.isResponse){
+    let body = magicJS.response ? magicJS.response.body: {};
     try{
-      if(element.hasOwnProperty('ad') == false || (
-          element.hasOwnProperty('common_card') && 
-          answer_blacklist.indexOf(element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']) < 0)){      
-        return true;
+      if (body.length > 0){
+        body=JSON.parse(body);
       }
     }
     catch (err){
-      magicJS.log('[知乎去广告] 推荐去广告出现异常：' + err);
-      return true;
+      magicJS.log(`解析body出现异常：${body}`);
+      body = {};
     }
-  });
-  body['data'] = data;
-}
-else if (mcn_userinfo.test(magicJS.request.url)){
-  delete body['mcn_user_info']
-}
-// 知乎黑名单增强，在回答列表里不会出现黑名单的答主
-else if (question_regex.test(magicJS.request.url)){
-  delete body['ad_info'];
-  let data = body['data'].filter((element) =>{
-    if (answer_blacklist.indexOf(element['author']['name']) < 0){
-      return true;
+    // 知乎推荐去广告与黑名单增强
+    if (topstory_recommend_regex.test(magicJS.request.url)){
+      let custom_black_users = magicJS.read(blocked_users_key);
+      answer_blacklist = !!custom_black_users ? custom_black_users : answer_blacklist;
+      let temp = JSON.stringify(answer_blacklist);
+        // magicJS.del(blocked_users_key); 
+        // magicJS.log(`获取黑名单：${temp}`);
+      let data = body['data'].filter((element) =>{
+        try{
+          if(element['card_type'] != 'slot_event_card' && element.hasOwnProperty('ad') == false && element.hasOwnProperty('common_card') && 
+              answer_blacklist.indexOf(element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']) < 0){      
+            return true;
+          }
+        }
+        catch (err){
+          magicJS.log('知乎推荐去广告出现异常：' + err);
+          return true;
+        }
+      });
+      body['data'] = data;
     }
-  })
-  body['data'] = data;
-}
-// 拦截官方账号推广消息
-else if (sysmsg_timeline_regex.test(magicJS.request.url) && body.hasOwnProperty('data')){
-  let data = body['data'].filter((element) =>{
-    if (sysmsg_blacklist.indexOf(element['content']['title']) < 0){
-      return true;
+    // 知乎关注去广告
+    else if (moments_recommend_regex.test(magicJS.request.url)){
+      let data = body['data'].filter((element) =>{
+        try{
+          if(element.hasOwnProperty('ad') == false){      
+            return true;
+          }
+        }
+        catch (err){
+          magicJS.log('知乎关注去广告出现异常：' + err);
+          return true;
+        }
+      });
+      body['data'] = data;
     }
-  })
-  body['data'] = data;
-} 
-else if (sysmsg_notifications_regex.test(magicJS.request.url)){
-  body['data'].forEach((element, index)=> {
-    if(element['detail_title']=='官方帐号消息'){
-      let unread_count = body['data'][index]['unread_count'];
-      if (unread_count > 0){
-        body['data'][index]['content']['text'] = '未读消息' + unread_count + '条';
+    else if (mcn_userinfo.test(magicJS.request.url)){
+      delete body['mcn_user_info']
+    }
+    // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
+    else if (question_regex.test(magicJS.request.url)){
+      delete body['ad_info'];
+      let data = body['data'].filter((element) =>{
+        if (answer_blacklist.indexOf(element['author']['name']) < 0){
+          return true;
+        }
+      })
+      body['data'] = data;
+    }
+    // 拦截官方账号推广消息
+    else if (sysmsg_timeline_regex.test(magicJS.request.url) && body.hasOwnProperty('data')){
+      let data = body['data'].filter((element) =>{
+        if (sysmsg_blacklist.indexOf(element['content']['title']) < 0){
+          return true;
+        }
+      })
+      body['data'] = data;
+    } 
+    else if (sysmsg_notifications_regex.test(magicJS.request.url)){
+      body['data'].forEach((element, index)=> {
+        if(element['detail_title']=='官方帐号消息'){
+          let unread_count = body['data'][index]['unread_count'];
+          if (unread_count > 0){
+            body['data'][index]['content']['text'] = '未读消息' + unread_count + '条';
+          }
+          else{
+            body['data'][index]['content']['text'] = '全部消息已读';
+          }
+          body['data'][index]['is_read'] = true;
+          body['data'][index]['unread_count'] = 0;
+        }
+      })
+    }
+    else if(blocked_users_regex.test(magicJS.request.url)){
+      try{
+        let obj = JSON.parse(magicJS.response.body);
+        let saved_black_users_list = magicJS.read(blocked_users_key);
+        saved_black_users_list = !!saved_black_users_list? saved_black_users_list : answer_blacklist;
+        let black_users_list = [];
+        if (!!obj['data']){
+          obj['data'].forEach(element => {
+            if (element['name'] != '[已重置]'){
+              black_users_list.push(element['name']);
+            }
+          });
+          // 更新黑名单
+          let new_blackusers = [...new Set(saved_black_users_list.concat(black_users_list))];
+          magicJS.write(blocked_users_key, new_blackusers);
+        }
+        else{
+          magicJS.log(`获取黑名单失败，接口响应不合法：${magicJS.response.body}`);
+        }
+        if (obj['paging']['is_end'] == true){
+          magicJS.notify('知乎黑名单获取结束');
+        }
       }
-      else{
-        body['data'][index]['content']['text'] = '全部消息已读';
+      catch(err){
+        magicJS.log(`获取黑名单失败，异常信息：${err}`);
+        magicJS.notify('获取黑名单失败，执行异常。')
       }
-      body['data'][index]['is_read'] = true;
-      body['data'][index]['unread_count'] = 0;
     }
-  })
+    body=JSON.stringify(body);
+    magicJS.done({body});
+  }
 }
-body=JSON.stringify(body);
-magicJS.done({body});
+
+main();
 
 function MagicJS(scriptName='MagicJS', debug=false){
   return new class{
@@ -113,7 +169,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007300021' };
+    get version() { return '202008020021' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -157,7 +213,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = data != null && data != undefined ? data: {};
       } 
       catch (err){ 
-        this.log(`Parse Data Error: ${err}`);
+        this.log(`raise exception: ${err}`);
         data = {};
         this.del(key);
       }
@@ -188,7 +244,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = data != null && data != undefined ? data: {};
       } 
       catch(err) { 
-        this.log(`Parse Data Error: ${err}`);
+        this.log(`raise exception: ${err}`);
         data = {};
         this.del(key);
       }
@@ -218,10 +274,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
 
     del(key){
       if (this.isSurge || this.isLoon) {
-        $persistentStore.write({}, key);
+        $persistentStore.write('{}', key);
       }
       else if (this.isQuanX) {
-        $prefs.setValueForKey({}, key);
+        $prefs.setValueForKey('{}', key);
       }
       else if (this.isNode || this.isJSBox){
         this.write(key, '');
