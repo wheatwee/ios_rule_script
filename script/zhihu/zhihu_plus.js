@@ -16,10 +16,31 @@ hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198,103.41.167.
 
 [Script]
 # 知乎去广告及黑名单增强
-知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_回答去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_回答去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+
+Loon Config
+
+[Rule]
+DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+
+[Remote Script]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
+
+QuanX Config
+
+[filter_local]
+USER-AGENT, AVOS*, reject
+DOMAIN-SUFFIX, 118.89.204.198, reject
+DOMAIN-SUFFIX, appcloud2.zhihu.com, reject
+
+[rewrite_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告及黑名单增强, update-interval=86400, opt-parser=false, enabled=true
 */
 
 let scriptName = '知乎增强';
@@ -184,7 +205,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202008020021' };
+    get version() { return '202008030033' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -193,7 +214,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
 
     get response() { 
       if (typeof $response !== 'undefined'){
@@ -222,10 +242,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse(data)[key];
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch (err){ 
         this.log(`raise exception: ${err}`);
@@ -253,10 +273,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch(err) { 
         this.log(`raise exception: ${err}`);
@@ -289,10 +309,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
 
     del(key){
       if (this.isSurge || this.isLoon) {
-        $persistentStore.write('{}', key);
+        $persistentStore.write('', key);
       }
       else if (this.isQuanX) {
-        $prefs.setValueForKey('{}', key);
+        $prefs.setValueForKey('', key);
       }
       else if (this.isNode || this.isJSBox){
         this.write(key, '');

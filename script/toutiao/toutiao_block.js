@@ -55,7 +55,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202007300021' };
+    get version() { return '202008030033' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -64,7 +64,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
 
     get response() { 
       if (typeof $response !== 'undefined'){
@@ -93,13 +92,13 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse(data)[key];
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch (err){ 
-        this.log(`Parse Data Error: ${err}`);
+        this.log(`raise exception: ${err}`);
         data = {};
         this.del(key);
       }
@@ -124,13 +123,13 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch(err) { 
-        this.log(`Parse Data Error: ${err}`);
+        this.log(`raise exception: ${err}`);
         data = {};
         this.del(key);
       }
@@ -160,10 +159,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
 
     del(key){
       if (this.isSurge || this.isLoon) {
-        $persistentStore.write({}, key);
+        $persistentStore.write('', key);
       }
       else if (this.isQuanX) {
-        $prefs.setValueForKey({}, key);
+        $prefs.setValueForKey('', key);
       }
       else if (this.isNode || this.isJSBox){
         this.write(key, '');
