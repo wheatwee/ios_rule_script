@@ -9,6 +9,10 @@ hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198,103.41.167.
 [Map Local]
 # 知乎去除最常访问
 ^https?:\/\/api\.zhihu\.com\/moments\/recent data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
+# 知乎去除未读消息红点
+^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
+# 知乎指南屏蔽
+^https?:\/\/api\.zhihu\.com\/me\/guides data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
 
 [Script]
 # 知乎去广告及黑名单增强
