@@ -1,6 +1,6 @@
 let magicJS = MagicJS();
 
-magicJS.done({});
+magicJS.done('{}');
 
 function MagicJS(scriptName='MagicJS', debug=false){
   return new class{

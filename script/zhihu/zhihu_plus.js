@@ -33,6 +33,7 @@ const question_regex = /^https:\/\/api.zhihu.com\/v4\/questions/;
 const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/timeline\/entry\/system_message/;
 const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
 const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
+const moments_recent_regex = /^https?:\/\/api\.zhihu\.com\/moments\/recent/;
 const blocked_users_key = 'zhihu_blocked_users';
 let answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽', '知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
@@ -124,7 +125,7 @@ async function main(){
         }
       })
     }
-    else if(blocked_users_regex.test(magicJS.request.url)){
+    else if (blocked_users_regex.test(magicJS.request.url)){
       try{
         let obj = JSON.parse(magicJS.response.body);
         let saved_black_users_list = magicJS.read(blocked_users_key);
@@ -151,6 +152,16 @@ async function main(){
         magicJS.log(`获取黑名单失败，异常信息：${err}`);
         magicJS.notify('获取黑名单失败，执行异常。')
       }
+    }
+    else if (moments_recent_regex.test(magicJS.request.url)){
+      magicJS.done({
+        "data": [],
+        "guide_text": "",
+        "is_show": false,
+        "style_type": "dot",
+        "top_unread_count": 0,
+        "total_unread_count": 0
+      });
     }
     body=JSON.stringify(body);
     magicJS.done({body});
