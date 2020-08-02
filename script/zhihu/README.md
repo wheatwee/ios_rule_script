@@ -15,10 +15,27 @@
 ##### **配置文件**
 
 ```ini
+[Rule]
+# 知乎去广告
+DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+AND,((USER-AGENT,ZhihuHybrid*), (URL-REGEX,.*recommend)),REJECT
+
+[Map Local]
+# 知乎去除最常访问
+^https?:\/\/api\.zhihu\.com\/moments\/recent data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
+# 知乎去除未读消息红点
+^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
+# 知乎指南屏蔽
+^https?:\/\/api\.zhihu\.com\/me\/guides data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
+
 [Script]
-知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https://api.zhihu.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_用户信息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_获取黑名单 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com\/settings\/blocked_users,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api.zhihu.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 
 [MITM]
@@ -31,11 +48,10 @@ hostname = www.zhihu.com, api.zhihu.com, link.zhihu.com, 118.89.204.198
 
 ```ini
 [Rule]
-# 知乎去广告
-DOMAIN,appcloud2.zhihu.com,reject
-DOMAIN,118.89.204.198,reject
-USER-AGENT,AVOS*,reject
-URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),reject
+DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
@@ -47,7 +63,6 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ```ini
 [filter_local]
-# 知乎广告拦截
 USER-AGENT, AVOS*, reject
 DOMAIN-SUFFIX, 118.89.204.198, reject
 DOMAIN-SUFFIX, appcloud2.zhihu.com, reject
