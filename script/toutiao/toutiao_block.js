@@ -1,42 +1,47 @@
 const SCRIPT_NAME = '今日头条内容过滤';
 const FEED_REGEX = /https:\/\/i.*\.snssdk\.com\/api\/news\/feed/;
+const DEBUG = false;
 
-let magicJS = MagicJS(SCRIPT_NAME, true);
-let blockKeyWords = new Set(['肖战', '陈情令']);
+let magicJS = MagicJS(SCRIPT_NAME,DEBUG);
+
+let blockKeyWords = ['家庭','婚姻','女性','女权','男权','直男','直女','离婚','嫁','娶','娘家','婆家','公公','婆婆','丈人','丈母娘','育儿','育婴','婴儿', 
+                     '男婴','女婴','宝妈','宝爸','恐婚','情侣','恋','老婆','老公','怀孕','月子','满月','国男','结婚','男性','矛盾','母婴','婆媳','翁婿',
+                     '岳父','岳母','震惊','沸腾','媳妇','堕胎','闺蜜','皮肤科','病','内科','肾','健康','出轨','一定要','暴露','挺住','勾引','赌','炸锅',
+                     '竟是','霸气','出大事','产检','警告','新婚','不料']
 
 function Main(){
-    if (magicJS.isResponse){
-        if (FEED_REGEX.test(magicJS.request.url)){
-            try{
-                let obj = JSON.parse(magicJS.response.body);
-                if (obj.message == 'success'){
-                    let data = obj['data'].filter((element) =>{
-                        let content = new Set([...element['content']]);
-                        let intersect = new Set([...content].filter(x => blockKeyWords.has(x)));
-                        if (intersect.size == 0){
-                          return true;
-                        }
-                        else{
-                          return false;
-                        }
-                    })
-                    // magicJS.log(`原有新闻${obj['total_number']}条，过滤后新闻${data.length}条`);
-                    obj['data'] = data;
-                    obj['total_number'] = data.length;
-                    let body = JSON.stringify(obj);
-                    magicJS.done({body});
-                }
-                else{
-                    magicJS.log(`过滤新闻出现异常，接口响应不合法：${magicJS.response.body}`);
-                    magicJS.done();
-                }
-            }
-            catch(err) {
-                magicJS.log(`过滤新闻出现异常，异常信息：${err}`);
-                magicJS.done();
-            }
+  if (magicJS.isResponse){
+    if (FEED_REGEX.test(magicJS.request.url)){
+      try{
+        let obj = JSON.parse(magicJS.response.body);
+        if (obj.message == 'success'){
+          let data = obj['data'].filter((element) =>{
+            let tag = true;
+            blockKeyWords.forEach(keyword => {
+              if (element['content'].indexOf(keyword) >= 0){
+                tag = false;
+                return;
+              }
+            });
+            return tag;
+          })
+          magicJS.log(`原有新闻${obj['total_number']}条，过滤后新闻${data.length}条`);
+          obj['data'] = data;
+          obj['total_number'] = data.length;
+          let body = JSON.stringify(obj);
+          magicJS.done({body});
         }
+        else{
+          magicJS.log(`过滤新闻出现异常，接口响应不合法：${magicJS.response.body}`);
+          magicJS.done();
+        }
+      }
+      catch(err) {
+        magicJS.log(`过滤新闻出现异常，异常信息：${err}`);
+        magicJS.done();
+      }
     }
+  }
 }
 
 Main();
