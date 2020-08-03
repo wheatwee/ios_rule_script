@@ -54,7 +54,7 @@ async function Main(){
       if (hisBody != magicJS.request.body){
         magicJS.write(LOGIN_BODY_KEY, magicJS.request.body);
         magicJS.log('获取登录Body成功。')
-        magicJS.notify('获取登录Body成功！！');
+        magicJS.notify('🎈获取登录Body成功！！');
       }
       else{
         magicJS.log('登录Body没有变化，无需更新。')
@@ -73,12 +73,12 @@ async function Main(){
           magicJS.write(USERNAME_KEY, username);
           magicJS.write(CHECKIN_COOKIE_KEY, cookie);
           magicJS.log('获取签到Cookie和Body成功。')
-          magicJS.notify('获取签到Cookie和Body成功！！');
+          magicJS.notify('🎈获取签到Cookie和Body成功！！');
         }
       }
       catch (err){
         magicJS.log(`获取签到Cookie和Body失败，执行异常${err}`);
-        magicJS.notify('获取签到Cookie和Body失败，执行异常！！');
+        magicJS.notify('❌获取签到Cookie和Body失败，执行异常！！');
 
       }
     }
@@ -105,20 +105,20 @@ async function Main(){
               }
               else{
                 magicJS.log(`登录失败，接口响应不合法：${data}`);
-                magicJS.notify('登录失败，接口响应不合法。');
+                magicJS.notify('❌登录失败，接口响应不合法。');
                 resolve(false);
               }
             }
             catch(err){
               magicJS.log(`登录失败，执行异常：${err}，接口响应：${data}`);
-              magicJS.notify('登录失败，执行异常。');
+              magicJS.notify('❌登录失败，执行异常。');
               resolve(false);
             }
           }
         })
       }
       else{
-        magicJS.notify('登录失败，请先获取Cookie和Body!!');
+        magicJS.notify('❌登录失败，请先获取登录Cookie和Body！！');
         resolve(false);
       }
     })
@@ -139,28 +139,28 @@ async function Main(){
               try{
                 let obj = JSON.parse(data);
                 if (obj['code'] == 1){
-                  magicJS.log(`签到成功，获得积分${obj['data']['jifen']}，连续签到${obj['data']['zt']}`);
-                  magicJS.notify(`签到成功\n获得积分${obj['data']['jifen']}，连续签到${obj['data']['zt']}`)
+                  magicJS.log(`签到成功，获得积分${obj['data']['jifen']}，已连续签到${obj['data']['zt']}天！！`);
+                  magicJS.notify(`🎉签到成功\n🎁获得积分${obj['data']['jifen']}，已连续签到${obj['data']['zt']}天！！`)
                 }
                 else if(obj['code'] == 0){
                   magicJS.log(`签到失败，可能是重复签到，接口响应：${data}`);
-                  magicJS.notify('签到失败，可能是重复签到。');
+                  magicJS.notify('❌签到失败，可能是重复签到！！');
                 }
                 else{
                   magicJS.log(`签到失败，接口响应不合法：${data}`);
-                  magicJS.notify('签到失败，接口响应不合法。');
+                  magicJS.notify('❌签到失败，接口响应不合法！！');
                 }
               }
               catch(err){
                 magicJS.log(`签到失败，执行异常：${err}，接口响应：${data}`);
-                magicJS.notify('签到失败，执行异常。');
+                magicJS.notify('❌签到失败，执行异常！！');
               }
             }
             resolve();
           })
         }
         else{
-          magicJS.notify('签到失败，请先获取Cookie和Body!!');
+          magicJS.notify('❌签到失败，请先获取签到Cookie！！');
           resolve();
         }
       })
