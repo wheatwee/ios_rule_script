@@ -1,4 +1,4 @@
 # 知乎去广告
-USER-AGENT, AVOS*, reject
-DOMAIN-SUFFIX, 118.89.204.198, reject
-DOMAIN-SUFFIX, appcloud2.zhihu.com, reject
+USER-AGENT, AVOS*, REJECT
+DOMAIN-SUFFIX, 118.89.204.198, REJECT
+DOMAIN-SUFFIX, appcloud2.zhihu.com, REJECT
