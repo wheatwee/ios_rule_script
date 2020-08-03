@@ -1,0 +1,5 @@
+# 知乎去广告
+DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
