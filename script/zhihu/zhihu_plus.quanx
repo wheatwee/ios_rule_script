@@ -1,5 +1,4 @@
-# 什么值得买去广告
-
+# 知乎去广告
 ^https:\/\/api\.zhihu\.com/people/ url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 ^https:\/\/api\.zhihu\.com/moments/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 ^https:\/\/api\.zhihu\.com/topstory/recommend url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
@@ -14,5 +13,7 @@
 ^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
 # 知乎指南屏蔽
 ^https?:\/\/api\.zhihu\.com\/me\/guides url reject-dict
+# 通用广告去除
+^https:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad) url reject
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198,103.41.167.234,210.22.248.207,111.206.76.35
