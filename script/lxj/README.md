@@ -10,8 +10,6 @@
 
 ## 支持版本
 
-Surge 4
-
 联享家 V5.6.05
 
 更新的版本接口可能会变化导致去广告失效，不建议更新联享家App，除非你喜欢看更多的广告。
@@ -35,9 +33,9 @@ DOMAIN-SUFFIX,kinglian.cn,REJECT
 [MITM]
 hostname = adfile.hori-gz.com, sso.lxjapp.com, nfys.kinglian.cn, bbs.hori-gz.com
 
-[Script]
-联享家_去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/adfile\.hori-gz\.com*,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
-联享家_检查更新 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.js
+[Map Local]
+# 联享家禁止检查更新
+^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
 ```
 
 ### Quantumult X
@@ -57,26 +55,13 @@ DOMAIN-SUFFIX,kinglian.cn,REJECT
 ^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet url reject-dict
 ```
 
+### Loon
 
+```ini
+[Remote Rule]
+https://assets.idreamtalk.com/ios_rule_script/script/lxj/lxj_remove_ads_surge.list, policy=REJECT, tag=联享家, enabled=true
 
-## 去广告效果
+[Remote Script]
+https://assets.idreamtalk.com/ios_rule_script/script/lxj/lxj_remove_ads.loon, tag=联享家_屏蔽更新检查, enabled=true
+```
 
-### 商城去广告
-
-<img src="https://github.com/blackmatrix7/ios_rule_script/raw/master/script/lxj/images/remove_ads_01.jpg" style="zoom:10%;" />
-
-### 特惠去广告
-
-<img src="https://github.com/blackmatrix7/ios_rule_script/raw/master/script/lxj/images/remove_ads_02.jpg" style="zoom:10%;" />
-
-### 资讯去广告
-
-<img src="https://github.com/blackmatrix7/ios_rule_script/raw/master/script/lxj/images/remove_ads_03.jpg" style="zoom:10%;" />
-
-### 我的去广告
-
-<img src="https://github.com/blackmatrix7/ios_rule_script/raw/master/script/lxj/images/remove_ads_04.jpg" style="zoom:10%;" />
-
-### 开锁去广告
-
-<img src="https://github.com/blackmatrix7/ios_rule_script/raw/master/script/lxj/images/remove_ads_05.jpg" style="zoom:10%;" />
