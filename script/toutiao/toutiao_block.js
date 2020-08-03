@@ -1,5 +1,5 @@
 const SCRIPT_NAME = '今日头条内容过滤';
-const FEED_REGEX = /https:\/\/i.*\.snssdk\.com\/api\/news\/feed/;
+const FEED_REGEX = /https?:\/\/.*\.snssdk\.com\/api\/news\/feed/;
 const DEBUG = false;
 
 let magicJS = MagicJS(SCRIPT_NAME,DEBUG);
@@ -7,11 +7,12 @@ let magicJS = MagicJS(SCRIPT_NAME,DEBUG);
 let blockKeyWords = ['家庭','婚姻','女性','女权','男权','直男','直女','离婚','嫁','娶','娘家','婆家','公公','婆婆','丈人','丈母娘','育儿','育婴','婴儿', 
                      '男婴','女婴','宝妈','宝爸','恐婚','情侣','恋','老婆','老公','怀孕','月子','满月','国男','结婚','男性','矛盾','母婴','婆媳','翁婿',
                      '岳父','岳母','震惊','沸腾','媳妇','堕胎','闺蜜','皮肤科','病','内科','肾','健康','出轨','一定要','暴露','挺住','勾引','赌','炸锅',
-                     '竟是','霸气','出大事','产检','警告','新婚','不料']
+                     '竟是','霸气','出大事','产检','警告','新婚','不料','出手']
 
 function Main(){
   if (magicJS.isResponse){
     if (FEED_REGEX.test(magicJS.request.url)){
+      magicJS.notify('正则命中!!');
       try{
         let obj = JSON.parse(magicJS.response.body);
         if (obj.message == 'success'){

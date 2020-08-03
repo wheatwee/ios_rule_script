@@ -2,7 +2,7 @@
 #!desc=今日头条内容过滤
 
 [MITM]
-hostname = %APPEND% is.snssdk.com
+hostname = %APPEND% *.snssdk.com
 
 [Script]
-今日头条_Feed过滤 = type=http-response,requires-body=1,max-size=0,pattern=https:\/\/(is|it)\.snssdk\.com\/api\/news\/feed,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/toutiao/toutiao_block.js
+今日头条_Feed过滤 = type=http-response,pattern=https?:\/\/.*\.snssdk\.com\/api\/news\/feed,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/toutiao/toutiao_block.js,script-update-interval=0
