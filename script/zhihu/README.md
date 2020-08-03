@@ -59,7 +59,7 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 配置文件
 
-force-policy=广告拦截，广告拦截是我的广告拦截策略，换成你的策略名。
+广告拦截是我的策略名，换成你的拦截广告的相关策略名。
 
 ```ini
 [filter_remote]
