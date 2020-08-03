@@ -12,7 +12,6 @@ let blockKeyWords = ['家庭','婚姻','女性','女权','男权','直男','直�
 function Main(){
   if (magicJS.isResponse){
     if (FEED_REGEX.test(magicJS.request.url)){
-      magicJS.notify('正则命中!!');
       try{
         let obj = JSON.parse(magicJS.response.body);
         if (obj.message == 'success'){
