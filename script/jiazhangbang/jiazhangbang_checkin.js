@@ -2,7 +2,7 @@ const GET_COOKIE_REGEX = /^https?:\/\/pgc-cms\.jzb\.com\/api\/channel\/recommend
 const DEVICE_ID_KEY = 'jzb_deviceod';
 const HEADERS_KEY = 'jzb_headers';
 const SCRIPT_NAME = '家长帮';
-const DEBUG = true;
+const DEBUG = false;
 
 let magicJS = MagicJS(SCRIPT_NAME, DEBUG);
 
