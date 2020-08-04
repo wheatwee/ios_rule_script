@@ -1,6 +1,6 @@
 const GET_COOKIE_REGEX = /^https?:\/\/pgc-cms\.jzb\.com\/api\/channel\/recommend/;
-const DEVICE_ID_KEY = 'jiazhangbang_deviceod';
-const HEADERS_KEY = 'jiazhangbang_headers';
+const DEVICE_ID_KEY = 'jzb_deviceod';
+const HEADERS_KEY = 'jzb_headers';
 const SCRIPT_NAME = '家长帮';
 const DEBUG = true;
 
@@ -14,7 +14,7 @@ async function Main(){
         let deviceId = magicJS.request.url.match(/deviceId=([^&]*)/)[1];
         let hisHeaders = magicJS.read(HEADERS_KEY);
         let headers = magicJS.request.headers;
-        if (hisDeviceId != deviceId || hisHeaders['Cookie'] != headers['Cookie']){
+        if (hisDeviceId != deviceId || hisHeaders['Authorization'] != headers['Authorization']){
           headers['Host'] = 'mp.jzb.com';
           magicJS.write(DEVICE_ID_KEY, deviceId);
           magicJS.write(HEADERS_KEY, headers);
@@ -33,7 +33,6 @@ async function Main(){
       let deviceId = magicJS.read(DEVICE_ID_KEY);
       let headers = magicJS.read(HEADERS_KEY);
       if (!!headers && deviceId){
-        headers['Host'] = 'mp.jzb.com';
         let options = {
           url: `https://mp.jzb.com/user/info/sign/?deviceId=${deviceId}`,
           headers: headers
