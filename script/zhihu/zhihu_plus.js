@@ -56,7 +56,7 @@ const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\
 const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
 const moments_recent_regex = /^https?:\/\/api\.zhihu\.com\/moments\/recent/;
 const blocked_users_key = 'zhihu_blocked_users';
-let answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽', '知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
+let answer_blacklist = ['盐选推荐', '盐选科普', '会员推荐', '故事档案局', '小蒜苗', '魏甚麽', '知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园', '战斗力旺盛的伯爵'];
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '创作者小助手', '知乎校园'];
 
 
@@ -77,9 +77,6 @@ async function main(){
     if (topstory_recommend_regex.test(magicJS.request.url)){
       let custom_black_users = magicJS.read(blocked_users_key);
       answer_blacklist = !!custom_black_users ? custom_black_users : answer_blacklist;
-      let temp = JSON.stringify(answer_blacklist);
-        // magicJS.del(blocked_users_key); 
-        // magicJS.log(`获取黑名单：${temp}`);
       let data = body['data'].filter((element) =>{
         try{
           if(element['card_type'] != 'slot_event_card' && element.hasOwnProperty('ad') == false && element.hasOwnProperty('common_card') && 
@@ -114,6 +111,8 @@ async function main(){
     }
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
+      let custom_black_users = magicJS.read(blocked_users_key);
+      answer_blacklist = !!custom_black_users ? custom_black_users : answer_blacklist;
       delete body['ad_info'];
       let data = body['data'].filter((element) =>{
         if (answer_blacklist.indexOf(element['author']['name']) < 0){
