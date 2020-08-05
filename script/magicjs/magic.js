@@ -1,4 +1,4 @@
-const SET_VALUE_REGEX = /http:\/\/magicjs\/value\/write/
+const SET_VALUE_REGEX = /http:\/\/(www\.)?magic\.js\/value\/write/
 
 let body = {}
 let magicJS = MagicJS();
@@ -9,30 +9,49 @@ if (magicJS.isRequest && SET_VALUE_REGEX.test(magicJS.request.url) ){
     let val = magicJS.request.url.match(/val=([^&]*)/)[1]
     magicJS.write(key, val);
     if (magicJS.read(key) == val){
+      magicJS.notify('变量写入成功');
       body = {'success': true, 'msg': '变量写入成功', 'key': key, 'val': val}
     }
     else{
+      magicJS.notify('变量写入失败');
       body = {'success': false, 'msg': '变量写入失败', 'key': key, 'val': magicJS.read(key)}
     }
   }
   catch (err){
+    magicJS.notify('变量写入失败');
     body = {'success': false, 'msg': '变量写入失败'};
   }
 }
 else{
+  magicJS.notify('请求格式错误');
   body = {'success': false, 'msg': '请求格式错误'};
 }
 
 body = JSON.stringify(body);
 
-magicJS.done({
-  response: {
+let resp = {}
+
+if (magicJS.isSurge || magicJS.isLoon){
+  resp = {
+    response: {
+      body: body, 
+      headers: {
+        'Content-type': 'application/json;charset=utf-8'
+      }
+    }
+  }
+}
+if (magicJS.isQuanX){
+  resp = {
     body: body, 
     headers: {
       'Content-type': 'application/json;charset=utf-8'
-    }
+    },
+    status: "HTTP/1.1 200 OK"
   }
-});
+}
+
+magicJS.done(resp);
 
 function MagicJS(scriptName='MagicJS', debug=false){
   return new class{
