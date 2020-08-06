@@ -277,7 +277,7 @@ function AppCheckin(){
             magicJS.log('签到成功');
             resolve([true, '签到成功', obj.prizeCount, obj.growthV, obj.flowerCount]);
           }
-          else if (data == '{}'){
+          else if (data == '{}' || obj.status == '0002'){
             magicJS.log('重复签到');
             resolve([true, '重复签到', null,null,null]);
           }
