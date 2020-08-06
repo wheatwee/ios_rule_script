@@ -487,14 +487,20 @@ function GetLotteryCount(){
           resolve(0);
         }
         else {
-          let obj = JSON.parse(data);
-          if (obj.hasOwnProperty('acFrequency')){
-            let lotteryCount = Number(obj['acFrequency']['totalAcFreq']);
-            magicJS.log('获取抽奖次数：' + lotteryCount);
-            resolve(lotteryCount);
+          try{
+            let obj = JSON.parse(data);
+            if (obj.hasOwnProperty('acFrequency')){
+              let lotteryCount = Number(obj['acFrequency']['totalAcFreq']);
+              magicJS.log('获取抽奖次数：' + lotteryCount);
+              resolve(lotteryCount);
+            }
+            else{
+              magicJS.log('获取抽奖次数异常，接口响应不合法：' + data);
+              resolve(0);
+            }
           }
-          else{
-            magicJS.log('获取抽奖次数异常，接口响应不合法：' + data);
+          catch(err){
+            magicJS.log(`获取抽奖次数异常，代码执行异常：${err}，接口响应：${data}`);
             resolve(0);
           }
         }
