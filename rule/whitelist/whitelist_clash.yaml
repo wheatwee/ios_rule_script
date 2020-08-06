@@ -1,0 +1,5 @@
+payload:
+  - DOMAIN-SUFFIX,f.video.weibocdn.com
+  - DOMAIN-SUFFIX,fus.cdn.krcom.cn
+  - DOMAIN,ad.10010.com
+  - IP-CIDR,10.10.10.10/32
