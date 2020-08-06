@@ -301,7 +301,7 @@ function AppCheckin(){
 // 新版签到
 function AppCheckinNewVersion(){
   // 联通App签到
-  return new Promise((resolve) =>{
+  return new Promise((resolve, reject) =>{
     let unicomCookie = magicJS.read(unicomCookieKey);
     daySingNewVersionOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingNewVersionOptions, (err, resp, data) => {
