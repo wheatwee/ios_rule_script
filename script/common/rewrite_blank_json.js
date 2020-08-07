@@ -1,6 +1,31 @@
 let magicJS = MagicJS();
 
-magicJS.done('{}');
+if (magicJS.isRequest){
+  let resp = {}
+  if (magicJS.isSurge || magicJS.isLoon){
+    resp = {
+      response: {
+        body: "{}", 
+        headers: {
+          "Content-type": "application/json;charset=utf-8"
+        }
+      }
+    }
+  }
+  else if (magicJS.isQuanX){
+    resp = {
+      body: "{}", 
+      headers: {
+        "Content-type": "application/json;charset=utf-8"
+      },
+      status: "HTTP/1.1 200 OK"
+    }
+  }
+  magicJS.done(resp);
+}
+else if (magicJS.isResponse){
+  magicJS.done("{}");
+}
 
 function MagicJS(scriptName='MagicJS', debug=false){
   return new class{
