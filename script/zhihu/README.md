@@ -14,20 +14,18 @@
 
 如果出现去广告无效的情况，一般是由于CDN服务器的IP没有加到MITM中引起的。
 
-目前测试，Surge没遇到去广告无效，Quantumult X有一定概率出现去广告无效，Loon有较小概率出现去广告无效。
-
 临时解决方法：
 
 1. 清理知乎的缓存
 2. 卸载知乎后重装
-3. ping api.zhihu.com，把得到的CDN地址加到MITM中
+3. 安装已经验证过的版本
 4. 增加一个 * 的MITM，慎用，100%能去广告，但是副作用非常大
 
-推荐第三种方法，不同地方ping api.zhihu.com得到的CDN服务器IP是不一样的，所以没办法一次性把所有CDN都加到MITIM里去。
+### 测试情况
 
-加完CDN的IP，再清理下缓存，基本上就没问题了。如果再次出现广告，再ping一次，把你所在地的CDN服务器IP逐步完善起来，后面出现去广告失效的概率会越来越低。
+2020年8月8日：
 
-如果你补充了新的CDN地址，麻烦提供给我，我会在配置中将它加上去。
+在知乎 V6.5.1.1(2518)、Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 中测试通过。
 
 ## 黑名单增强
 
@@ -37,11 +35,23 @@
 
 如果需要定向查看某个黑名单的用户，请搜索他的名称，然后点进去看他的回答。
 
-### 配置说明
+#### 自定义黑名单
+
+从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。
+
+不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“知乎黑名单获取结束”，表示黑名单获取完成。
+
+此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
+
+黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
+
+每次添加或移除黑名单用户，脚本存储的黑名单不会自动更新(主要是我懒)，需要再重新获取一次黑名单。
+
+## 配置说明
 
 #### Surge
 
-##### **配置文件**
+配置文件
 
 ```ini
 [Rule]
@@ -88,24 +98,11 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 配置文件
 
-广告拦截是我的策略名，换成你的拦截广告的相关策略名。
-
 ```ini
 [filter_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.quanx, tag=知乎去广告, force-policy=广告拦截, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.quanx, tag=知乎去广告, force-policy=REJECT, enabled=true
 
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告及黑名单增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
-### 黑名单增强
-
-从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。
-
-不断往下滑动，直到滑动到列表底部，滑动到底部后，会弹出通知“知乎黑名单获取结束”，表示黑名单获取完成。
-
-此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
-
-黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
-
-每次添加或移除黑名单用户，脚本存储的黑名单不会自动更新(主要是我懒)，需要再重新获取一次黑名单。
