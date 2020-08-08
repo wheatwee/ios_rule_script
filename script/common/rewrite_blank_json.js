@@ -5,6 +5,7 @@ if (magicJS.isRequest){
   if (magicJS.isSurge || magicJS.isLoon){
     resp = {
       response: {
+        status: 200,
         body: "{}", 
         headers: {
           "Content-type": "application/json;charset=utf-8"
@@ -41,7 +42,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202008020021' };
+    get version() { return '202008062035' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -50,7 +51,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
 
     get response() { 
       if (typeof $response !== 'undefined'){
@@ -79,10 +79,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse(data)[key];
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch (err){ 
         this.log(`raise exception: ${err}`);
@@ -110,10 +110,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
       try {
-        if (typeof data === 'string'){
+        if (!!data && typeof data === 'string'){
           data = JSON.parse(data);
         }
-        data = data != null && data != undefined ? data: {};
+        data = !!data ? data: {};
       } 
       catch(err) { 
         this.log(`raise exception: ${err}`);
@@ -146,10 +146,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
 
     del(key){
       if (this.isSurge || this.isLoon) {
-        $persistentStore.write('{}', key);
+        $persistentStore.write('', key);
       }
       else if (this.isQuanX) {
-        $prefs.setValueForKey('{}', key);
+        $prefs.setValueForKey('', key);
       }
       else if (this.isNode || this.isJSBox){
         this.write(key, '');
@@ -203,7 +203,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
         return this.node.request.get(options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
+        options = typeof options === 'string'? {'url': options} : Object.assign({}, options);
         options['header'] = options['headers'];
         delete options['headers']
         options['handler'] = (resp)=>{
@@ -237,7 +237,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
         return this.node.request.post(options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
+        options = typeof options === 'string'? {'url': options} : Object.assign({}, options);
         options['header'] = options['headers'];
         delete options['headers']
         options['handler'] = (resp)=>{
