@@ -145,7 +145,7 @@ async function main(){
         }
       })
     }
-    else if (blocked_users_regex.test(magicJS.request.url)){
+    else if (blocked_users_regex.test(magicJS.request.url) && magicJS.request.method == 'GET'){
       try{
         let obj = JSON.parse(magicJS.response.body);
         let saved_black_users_list = magicJS.read(blocked_users_key);
