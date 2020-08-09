@@ -6,7 +6,7 @@ iOS平台的去广告规则和一些自动化脚本。
 
 ## 支持情况
 
-不同平台支持情况如下：
+我的脚本在不同平台支持情况如下：
 
 |          | Surge       | Quantumult X | Loon        | JSBox       | Node.js          |
 | -------- | ----------- | ------------ | ----------- | ----------- | ---------------- |
@@ -22,15 +22,21 @@ iOS平台的去广告规则和一些自动化脚本。
 
 随缘支持：代码层面做兼容，不做测试
 
+**搬运其他作者的脚本，没办法进行任何维护和解答，有问题请联系原作者。**
+
 ## 脚本说明
 
-| 脚本                                                         | 介绍                                    |
-| ------------------------------------------------------------ | --------------------------------------- |
-| [什么值得买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/smzdm) | Web端和App端签到及去广告                |
-| [联通手机营业厅](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/10010) | 每日签到，4次抽奖，话费流量语音情况推送 |
-| [嘀嗒出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didachuxing) | 每日签到，自动收取贝壳                  |
-| [知乎](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/zhihu) | 去广告及黑名单增强                      |
-| [联享家](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/lxj) | 去广告、拦截检测更新                    |
+我的脚本介绍：
+
+| 脚本                                                         | 介绍                                                         |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| [什么值得买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/smzdm) | Web端和App端签到及去广告                                     |
+| [联通手机营业厅](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/10010) | 每日签到，100%抽美团外卖30-3优惠券，4次抽奖，话费流量语音情况推送 |
+| [嘀嗒出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didachuxing) | 每日签到，自动收取贝壳                                       |
+| [知乎](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/zhihu) | 去广告及黑名单增强                                           |
+| [联享家](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/lxj) | 去广告、拦截检测更新                                         |
+| [家长帮](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/jiazhangbang) | 每日签到                                                     |
+| [慢慢买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/manmanbuy) | 每日签到                                                     |
 
 ## 其他说明
 
