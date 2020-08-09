@@ -1,0 +1,15 @@
+[Rule]
+DOMAIN-SUFFIX,bbs.hori-gz.com,REJECT
+DOMAIN-SUFFIX,mms.hori-gz.com,REJECT
+DOMAIN-SUFFIX,yxhd.hori-gz.com,REJECT
+DOMAIN-SUFFIX,ad.hori-gz.com,REJECT
+DOMAIN-SUFFIX,adfile.hori-gz.com,REJECT
+DOMAIN-SUFFIX,shop17741405.m.youzan.com,REJECT
+DOMAIN-SUFFIX,pangolin.snssdk.com,REJECT
+DOMAIN-SUFFIX,kinglian.cn,REJECT
+
+[Script]
+http-response ^https?:\/\/sso\.lxjapp\.com\/\/chims\/servlet\/csGetLatestSoftwareVersionServlet script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/common/rewrite_blank_json.js, requires-body=true, timeout=10, tag=联享家_屏蔽更新
+
+[MITM]
+hostname = sso.lxjapp.com
