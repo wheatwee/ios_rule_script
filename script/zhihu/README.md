@@ -108,6 +108,39 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告及黑名单增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
-## 减少屏蔽数量
+## 我只想单纯的去个广告……
 
-知乎去除最常访问、知乎去除未读消息红点、知乎指南屏蔽、黑名单功能增强已不属于屏蔽广告范畴，如果只想单纯屏蔽广告，
+知乎去除最常访问、知乎去除未读消息红点、知乎指南屏蔽、黑名单功能增强已不属于屏蔽广告范畴，如果只想单纯去广告，使用下面的配置
+
+### Surge
+
+使用模块
+
+```ini
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.sgmodule
+```
+
+#### Quantumult X
+
+配置文件
+
+```ini
+[filter_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.quanx, tag=知乎去广告, force-policy=REJECT, enabled=true
+
+[rewrite_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
+```
+
+### Loon
+
+配置文件
+
+```ini
+[Remote Rule]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.loon, policy=REJECT, tag=知乎, enabled=true
+
+[Remote Script]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告及黑名单增强, enabled=true
+```
+
