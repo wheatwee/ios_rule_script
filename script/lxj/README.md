@@ -59,9 +59,9 @@ DOMAIN-SUFFIX,kinglian.cn,REJECT
 
 ```ini
 [Remote Rule]
-https://assets.idreamtalk.com/ios_rule_script/script/lxj/lxj_remove_ads_surge.list, policy=REJECT, tag=联享家, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads_surge.list, policy=REJECT, tag=联享家, enabled=true
 
 [Remote Script]
-https://assets.idreamtalk.com/ios_rule_script/script/lxj/lxj_remove_ads.loon, tag=联享家_屏蔽更新检查, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/lxj/lxj_remove_ads.loon, tag=联享家_屏蔽更新检查, enabled=true
 ```
 
