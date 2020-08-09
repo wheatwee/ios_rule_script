@@ -273,7 +273,7 @@ function AppCheckin(){
         let obj = {};
         try{
           obj = JSON.parse(data);
-          if (obj.status == "0000" && obj.msg == "ok"){
+          if (obj.status == "0000"){
             magicJS.log('签到成功');
             resolve([true, '签到成功', obj.prizeCount, obj.growthV, obj.flowerCount]);
           }
