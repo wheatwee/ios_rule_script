@@ -37,15 +37,17 @@
 
 #### 自定义黑名单
 
-从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。
-
-不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“知乎黑名单获取结束”，表示黑名单获取完成。
-
-此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
+首次使用时，请从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“知乎黑名单获取结束”，表示黑名单获取完成。此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
 
 黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
 
-每次添加或移除黑名单用户，脚本存储的黑名单不会自动更新(主要是我懒)，需要再重新获取一次黑名单。
+每次添加或移除黑名单用户，脚本内置的黑名单也会同步更新。
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/01.jpg)
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/03.jpg)
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/02.jpg)
 
 ## 配置说明
 
@@ -106,3 +108,6 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告及黑名单增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
+## 减少屏蔽数量
+
+知乎去除最常访问、知乎去除未读消息红点、知乎指南屏蔽、黑名单功能增强已不属于屏蔽广告范畴，如果只想单纯屏蔽广告，
