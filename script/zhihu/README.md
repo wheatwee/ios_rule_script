@@ -97,6 +97,13 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
 ```
 
+Loon 2.1.3(193) TF + 可以使用插件Plugin
+
+```ini
+[Plugin]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin
+```
+
 #### Quantumult X
 
 配置文件
@@ -145,3 +152,9 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true
 ```
 
+Loon 2.1.3(193) TF + 可以使用插件Plugin
+
+```ini
+[Plugin]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin
+```
