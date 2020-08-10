@@ -1,195 +1,306 @@
 const SET_VALUE_REGEX = /http:\/\/(www\.)?magic\.js\/value\/write/
 const GET_VALUE_REGEX = /http:\/\/(www\.)?magic\.js\/value\/read/
 const DEL_VALUE_REGEX = /http:\/\/(www\.)?magic\.js\/value\/del/
-
+const SCRIPT_NAME = "MagicJS";
 let body = {}
-let magicJS = MagicJS();
+let magicJS = MagicJS(SCRIPT_NAME, "DEBUG");
 
-if (magicJS.isRequest){
-  if (SET_VALUE_REGEX.test(magicJS.request.url)){
-    try{
-      let key = magicJS.request.url.match(/key=([^&]*)/)[1]
-      let val = magicJS.request.url.match(/val=([^&]*)/)[1]
-      magicJS.write(key, val);
-      if (magicJS.read(key) == val){
-        magicJS.notify('变量写入成功');
-        body = {'success': true, 'msg': '变量写入成功', 'key': key, 'val': val}
+
+async function Main(){
+  if (magicJS.isRequest){
+    if (SET_VALUE_REGEX.test(magicJS.request.url)){
+      try{
+        let key = magicJS.request.url.match(/key=([^&]*)/)[1]
+        let val = magicJS.request.url.match(/val=([^&]*)/)[1]
+        magicJS.write(key, val);
+        if (magicJS.read(key) == val){
+          magicJS.notify('变量写入成功');
+          body = {'success': true, 'msg': '变量写入成功', 'key': key, 'val': val}
+        }
+        else{
+          magicJS.notify('变量写入失败');
+          body = {'success': false, 'msg': '变量写入失败', 'key': key, 'val': magicJS.read(key)}
+        }
       }
-      else{
+      catch (err){
         magicJS.notify('变量写入失败');
-        body = {'success': false, 'msg': '变量写入失败', 'key': key, 'val': magicJS.read(key)}
+        body = {'success': false, 'msg': '变量写入失败'};
       }
     }
-    catch (err){
-      magicJS.notify('变量写入失败');
-      body = {'success': false, 'msg': '变量写入失败'};
+    else if (GET_VALUE_REGEX.test(magicJS.request.url)){
+      try{
+        let key = magicJS.request.url.match(/key=([^&]*)/)[1]
+        val = magicJS.read(key);
+        magicJS.notify('读取变量成功');
+        body = {'success': true, 'msg': '读取变量成功', 'key': key, 'val': val}
+      }
+      catch (err){
+        magicJS.notify('读取变量失败');
+        body = {'success': false, 'msg': '读取变量失败'};
+      }
     }
-  }
-  else if (GET_VALUE_REGEX.test(magicJS.request.url)){
-    try{
-      let key = magicJS.request.url.match(/key=([^&]*)/)[1]
-      val = magicJS.read(key);
-      magicJS.notify('读取变量成功');
-      body = {'success': true, 'msg': '读取变量成功', 'key': key, 'val': val}
-    }
-    catch (err){
-      magicJS.notify('读取变量失败');
-      body = {'success': false, 'msg': '读取变量失败'};
-    }
-  }
-  else if (DEL_VALUE_REGEX.test(magicJS.request.url)){
-    try{
-      let key = magicJS.request.url.match(/key=([^&]*)/)[1]
-      val = magicJS.del(key);
-      if (!!magicJS.read(key)){
+    else if (DEL_VALUE_REGEX.test(magicJS.request.url)){
+      try{
+        let key = magicJS.request.url.match(/key=([^&]*)/)[1]
+        val = magicJS.del(key);
+        if (!!magicJS.read(key)){
+          magicJS.notify('删除变量失败');
+          body = {'success': true, 'msg': '删除变量失败', 'key': key}
+        }
+        else{
+          magicJS.notify('删除变量成功');
+          body = {'success': true, 'msg': '删除变量成功', 'key': key}
+        }
+      }
+      catch (err){
         magicJS.notify('删除变量失败');
-        body = {'success': true, 'msg': '删除变量失败', 'key': key}
-      }
-      else{
-        magicJS.notify('删除变量成功');
-        body = {'success': true, 'msg': '删除变量成功', 'key': key}
+        body = {'success': false, 'msg': '删除变量失败'};
       }
     }
-    catch (err){
-      magicJS.notify('删除变量失败');
-      body = {'success': false, 'msg': '删除变量失败'};
+    else{
+      magicJS.notify('请求格式错误');
+      body = {'success': false, 'msg': '请求格式错误'};
+    }
+    body = JSON.stringify(body);
+    let resp = {}
+    if (magicJS.isSurge || magicJS.isLoon){
+      resp = {
+        response: {
+          status: 200,
+          body: body, 
+          headers: {
+            'Content-type': 'application/json;charset=utf-8'
+          }
+        }
+      }
+    }
+    if (magicJS.isQuanX){
+      resp = {
+        body: body, 
+        headers: {
+          'Content-type': 'application/json;charset=utf-8'
+        },
+        status: "HTTP/1.1 200 OK"
+      }
+    }
+    magicJS.done(resp);
+  }
+  else if(magicJS.isResponse){
+  
+  }
+  else{
+    const testKey = 'magicjs_test';
+    const testSessionKey = 'magicjs_session_test';
+    let val1 = new Date().getTime() + 'val1';
+    let val2 = new Date().getTime() + 'val2';
+    let readVal = null;
+    
+    // 读取错误的Key
+    magicJS.logDebug('开始测试读取无Session且错误的Key。');
+    readVal = magicJS.read('magicjs_error');
+    if (readVal === null){
+      magicJS.logDebug('✅测试读取无Session且错误的Key通过。');
+    }
+    else{
+      magicJS.logError('❌测试读取无Session且错误的Key失败。');
+    }
+    // 写入无Session变量
+    magicJS.write(testKey, val1);
+    // 读取无Session变量
+    readVal = magicJS.read(testKey);
+    if (readVal == val1){
+      magicJS.logDebug('✅无Session数据读写验证通过。');
+    }
+    else{
+      magicJS.logError('❌无Session数据读写验证失败。');
+    }
+    // 清理无Session变量
+    magicJS.del(testKey);
+    readVal = magicJS.read(testKey);
+    if (readVal === null){
+      magicJS.logDebug('✅无Session数据删除成功。');
+    }
+    else{
+      magicJS.logError('❌无Session数据删除失败。');
+    }
+  
+    // 读取有Session且错误的Key
+    magicJS.logDebug('开始测试读取有Session且错误的Key。');
+    readVal = magicJS.read('magicjs_session_error', 'session1');
+    if (readVal === null){
+      magicJS.logDebug('✅测试读取有Session且错误的Key通过。');
+    }
+    else{
+      magicJS.logError('❌测试读取有Session且错误的Key失败。');
+    }
+    // 写入有Session变量
+    magicJS.write(testSessionKey, val1, 'session1');
+    magicJS.write(testSessionKey, val2, 'session2');
+    // 读取有Session变量
+    readVal = magicJS.read(testSessionKey, 'session1');
+    if (readVal == val1){
+      magicJS.logDebug('✅有Session1数据读写验证通过。');
+    }
+    else{
+      magicJS.logError('❌有Session1数据读写验证失败。');
+    }
+    readVal = magicJS.read(testSessionKey, 'session2');
+    if (readVal == val2){
+      magicJS.logDebug('✅有Session2数据读写验证通过。');
+    }
+    else{
+      magicJS.logError('❌有Session2数据读写验证失败。');
+    }
+    // 清理有Session变量
+    magicJS.del(testSessionKey, 'session1');
+    readVal = magicJS.read(testSessionKey, 'session1');
+    if (readVal === null){
+      magicJS.logDebug('✅有Session数据删除成功。');
+    }
+    else{
+      magicJS.logError('❌有Session数据删除失败。');
+    }
+    // 测试正确的Key，错误的Session
+    readVal = magicJS.read(testSessionKey, 'err_session');
+    if (readVal === null){
+      magicJS.logDebug('✅正确的Key，错误的Session，读取通过。');
+    }
+    else{
+      magicJS.logError('❌正确的Key，错误的Session，读取失败。');
+    }
+    // 无session写入成功后，又改为有Session
+    magicJS.write(testSessionKey, val2);
+    magicJS.write(testSessionKey, val2, 'session2');
+    readVal = magicJS.read(testSessionKey, 'session2');
+    if (readVal == val2){
+      magicJS.logDebug('✅无session写入成功后，又改为有Session，验证通过。')
+    }
+    else{
+      magicJS.logError('❌无session写入成功后，又改为有Session，验证失败。')
+    }
+    magicJS.write(testSessionKey, val2);
+    readVal = magicJS.read(testSessionKey);
+    if (readVal == val2){
+      magicJS.logDebug('✅有session写入成功后，又改为无Session，验证通过。')
+    }
+    else{
+      magicJS.logError('❌有session写入成功后，又改为无Session，验证失败。')
+    }
+    // 无Seesion写入JSON字符串成功后，又改为有Session
+    magicJS.write(testSessionKey, JSON.stringify({hello: 'world'}));
+    readVal = magicJS.read(testSessionKey);
+    if (readVal.hello == 'world'){
+      magicJS.logDebug('✅无session时，写入JSON字符串，读取时为Object，测试通过。')
+    }
+    else{
+      magicJS.logDebug('❌无session时，写入JSON字符串，读取时为Object，测试失败。')
+    }
+    magicJS.write(testSessionKey, JSON.stringify({magicjs: true}), 'session2');
+    readVal = magicJS.read(testSessionKey, 'session2');
+    if (readVal.magicjs == true){
+      magicJS.logDebug('✅有session时，写入JSON字符串，读取时为Object，测试通过。')
+    }
+    else{
+      magicJS.logError('❌有session时，写入JSON字符串，读取时为Object，测试失败。')
+    }
+    magicJS.write(testSessionKey, {hello: 'world'});
+    readVal = magicJS.read(testSessionKey);
+    if (readVal.hello == 'world'){
+      magicJS.logDebug('✅无session时，写入Object，读取时为Object，测试通过。')
+    }
+    else{
+      magicJS.logError('❌无session时，写入Object，读取时为Object，测试失败。')
+    }
+    magicJS.write(testSessionKey, {hello: 'world'}, 'session3');
+    readVal = magicJS.read(testSessionKey);
+    if (readVal.hello == 'world'){
+      magicJS.logDebug('✅有session时，写入Object，读取时为Object，测试通过。')
+    }
+    else{
+      magicJS.logError('❌有session时，写入Object，读取时为Object，测试失败。')
     }
 
-  }
-  else{
-    magicJS.notify('请求格式错误');
-    body = {'success': false, 'msg': '请求格式错误'};
-  }
-}
-else if(magicJS.isResponse){
+    // 目前只有Surge能实现自己返回response，自己访问，原因不明，所以这里只测试Surge
+    if (magicJS.isSurge){
+      let key = 'test_key';
+      let val3 = new Date().getTime() + 'val3';
+      let url = 'http://www.magic.js/value';
 
-}
-else{
-  magicJS = MagicJS("MagicJS", "DEBUG");
-  const testKey = 'magicjs_test';
-  const testSessionKey = 'magicjs_session_test';
-  let val1 = new Date().getTime() + ' val1';
-  let val2 = new Date().getTime() + ' val2';
-  let readVal = null;
+      await new Promise((resolve)=>{
+        magicJS.get(`${url}/write?key=${key}&val=${val3}`, (err, resp, data)=>{
+          if (err){
+            magicJS.logError(`❌通过GET请求写入数据，测试失败，http请求异常：${err}`);
+          }
+          else{
+            let obj = JSON.parse(data);
+            if (obj.success && obj.val == val3){
+              magicJS.logError('✅通过GET请求写入数据，测试通过！');
+            }
+            else{
+              magicJS.logError(`❌通过GET请求写入数据，测试失败！接口响应：${data}。`);
+            }
+          }
+          resolve();
+        });
+      });
+      
+      await new Promise((resolve)=>{
+        magicJS.get(`${url}/read?key=${key}`, (err, resp, data)=>{
+          if (err){
+            magicJS.logError(`❌通过GET请求读取数据，测试失败，http请求异常：${err}`);
+          }
+          else{
+            let obj = JSON.parse(data);
+            if (obj.success && obj.val == val3){
+              magicJS.logError('✅通过GET请求读取数据，测试通过！');
+            }
+            else{
+              magicJS.logError(`❌通过GET请求读取数据，测试失败！接口响应：${data}。`);
+            }
+          }
+          resolve();
+        });
+      });
+
+      await new Promise((resolve)=>{
+        magicJS.get(`${url}/del??key=${key}`, (err, resp, data)=>{
+          if (err){
+            magicJS.logError(`❌通过GET删除读取数据，测试失败，http请求异常：${err}`);
+          }
+          else{
+            let obj = JSON.parse(data);
+            if (obj.success){
+              magicJS.logError('✅通过GET请求删除数据，测试通过！');
+            }
+            else{
+              magicJS.logError(`❌通过GET请求删除数据，测试失败！接口响应：${data}。`);
+            }
+          }
+          resolve();
+        });
+      });
+    }
+
+    // 测试通知
+    if (!magicJS.isNode){
+      magicJS.notify(SCRIPT_NAME, '01 测试标准通知成功', '这是一个最普通的通知。');
+      if (magicJS.isQuanX || magicJS.isLoon){
+        magicJS.notify(SCRIPT_NAME, '02 测试超链接通知成功', '这是一个传入Object的无效超链接。', {'open-url': ''});
+        magicJS.notify(SCRIPT_NAME, '03 测试超链接通知成功', '这是一个传入String的无效超链接。', '');
+        magicJS.notify(SCRIPT_NAME, '04 测试超链接通知成功', '这是一个传入String的有效超链接。', 'https://www.qq.com');
+        magicJS.notify(SCRIPT_NAME, '05 测试超链接通知成功', '这是一个传入Object的有效超链接。', {'open-url': 'https://www.qq.com'});
+        magicJS.notify(SCRIPT_NAME, '06 测试超链接通知成功', '这是一个url schemes的有效链接。\n点击打开Apple Store。', 'applestore://');
+      }
+      if (magicJS.isQuanX){
+        magicJS.notify(SCRIPT_NAME, '07 测试超链接与多媒体通知成功', '这是一个传入Object的有效超链接。\n点击打开Apple.com.cn。', {'open-url': 'https://www.apple.com.cn/', 'media-url': 'https://raw.githubusercontent.com/Orz-3/mini/master/Apple.png'});
+      }
+    }
   
-  magicJS.log('-----------------无Session数据操作开始-----------------')
-  
-  // 读取错误的Key
-  magicJS.logDebug('开始测试读取无Session且错误的Key。');
-  readVal = magicJS.read('magicjs_error');
-  if (readVal === null){
-    magicJS.logDebug('✅测试读取无Session且错误的Key通过。');
+    magicJS.done();
   }
-  else{
-    magicJS.logError('❌测试读取无Session且错误的Key失败。');
-  }
-  // 写入无Session变量
-  magicJS.write(testKey, val1);
-  // 读取无Session变量
-  readVal = magicJS.read(testKey);
-  if (readVal == val1){
-    magicJS.logDebug('✅无Session数据读写验证通过。');
-  }
-  else{
-    magicJS.logError('❌无Session数据读写验证失败。');
-  }
-  // 清理无Session变量
-  magicJS.del(testKey);
-  readVal = magicJS.read(testKey);
-  if (readVal === null){
-    magicJS.logDebug('✅无Session数据删除成功。');
-  }
-  else{
-    magicJS.logError('❌无Session数据删除失败。');
-  }
-
-  magicJS.log('-----------------无Session数据操作结束-----------------')
-
-  magicJS.log('-----------------有Session数据操作开始-----------------')
-
-  // 读取有Session且错误的Key
-  magicJS.logDebug('开始测试读取有Session且错误的Key。');
-  readVal = magicJS.read('magicjs_session_error', 'session1');
-  if (readVal === null){
-    magicJS.logDebug('✅测试读取有Session且错误的Key通过。');
-  }
-  else{
-    magicJS.logError('❌测试读取有Session且错误的Key失败。');
-  }
-  // 写入有Session变量
-  magicJS.write(testSessionKey, val1, 'session1');
-  magicJS.write(testSessionKey, val2, 'session2');
-  // 读取有Session变量
-  readVal = magicJS.read(testSessionKey, 'session1');
-  if (readVal == val1){
-    magicJS.logDebug('✅有Session1数据读写验证通过。');
-  }
-  else{
-    magicJS.logError('❌有Session1数据读写验证失败。');
-  }
-  readVal = magicJS.read(testSessionKey, 'session2');
-  if (readVal == val2){
-    magicJS.logDebug('✅有Session2数据读写验证通过。');
-  }
-  else{
-    magicJS.logError('❌有Session2数据读写验证失败。');
-  }
-  // 清理有Session变量
-  magicJS.del(testSessionKey, 'session1');
-  readVal = magicJS.read(testSessionKey, 'session1');
-  if (readVal === null){
-    magicJS.logDebug('✅有Session数据删除成功。');
-  }
-  else{
-    magicJS.logError('❌有Session数据删除失败。');
-  }
-  // 测试正确的Key，错误的Session
-  readVal = magicJS.read(testSessionKey, 'session3');
-  if (readVal === null){
-    magicJS.logDebug('✅正确的Key，错误的Session，读取通过。');
-  }
-  else{
-    magicJS.logError('❌正确的Key，错误的Session，读取失败。');
-  }
-  // 无session写入成功后，又改为有Session
-  magicJS.write(testSessionKey, val2);
-  magicJS.write(testSessionKey, val2, 'session2');
-  readVal = magicJS.read(testSessionKey, 'session2');
-  if (readVal == val2){
-    magicJS.logDebug('✅无session写入成功后，又改为有Session，验证通过。')
-  }
-  else{
-    magicJS.logError('❌无session写入成功后，又改为有Session，验证失败。')
-  }
-  magicJS.write(testSessionKey, val2);
-  readVal = magicJS.read(testSessionKey);
-  if (readVal == val2){
-    magicJS.logDebug('✅有session写入成功后，又改为无Session，验证通过。')
-  }
-  else{
-    magicJS.logError('❌有session写入成功后，又改为无Session，验证失败。')
-  }
-  // 无Seesion写入JSON字符串成功后，又改为有Session
-  magicJS.write(testSessionKey, JSON.stringify({hello: 'world'}));
-  magicJS.write(testSessionKey, {magicjs: true}, 'session2');
-  readVal = magicJS.read(testSessionKey, 'session2');
-  if (readVal.magicjs == true){
-    magicJS.logDebug('✅无session写入成功后，又改为有Session，验证通过。')
-  }
-  else{
-    magicJS.logError('❌无session写入成功后，又改为有Session，验证失败。')
-  }
-  magicJS.write(testSessionKey, {hello: 'world'});
-  readVal = magicJS.read(testSessionKey);
-  if (readVal.hello == 'world'){
-    magicJS.logDebug('✅有session写入成功后，又改为无Session，验证通过。')
-  }
-  else{
-    magicJS.logError('❌有session写入成功后，又改为无Session，验证失败。')
-  }
-  magicJS.log('-----------------有Session数据操作结束-----------------')
-  magicJS.done();
 }
+
+Main();
 
 function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
@@ -199,13 +310,31 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.logLevel = this.getLogLevels(logLevel.toUpperCase());
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
-        this.node.request = require('request');
-        this.node.data = require('./magic.json');
         this.node.fs = require('fs');
+        this.node.request = require('request');
+        try{
+          this.node.fs.accessSync('./magic.json');
+        }
+        catch(err){
+          this.logError(err);
+          this.node.fs.writeFileSync('./magic.json', '{}')
+        }
+        this.node.data = require('./magic.json');
+      }
+      if (this.isJSBox){
+        if (!$file.exists('drive://MagicJS')){
+          $file.mkdir('drive://MagicJS');
+        }
+        if (!$file.exists('drive://MagicJS/magic.json')){
+          $file.write({
+            data: $data({string: '{}'}),
+            path: 'drive://MagicJS/magic.json'
+          })
+        }
       }
     }
     
-    get version() { return '202008102255' };
+    get version() { return 'v2.1.3' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -270,7 +399,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         val = this.node.data;
       }
       else if (this.isJSBox){
-        val = $file.read('drive://magic.json').string;
+        val = $file.read('drive://MagicJS/magic.json').string;
       }
       try {
         // Node 和 JSBox数据处理
@@ -287,8 +416,8 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         val = !!session? {} : null;
         this.del(key);
       }
-      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
       if (typeof val === 'undefined') val = null;
+      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
       this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
@@ -306,7 +435,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         data = this.node.data;
       }
       else if (this.isJSBox){
-        data = JSON.parse($file.read('drive://magic.json').string);
+        data = JSON.parse($file.read('drive://MagicJS/magic.json').string);
       }
       if (!!session){
         // 有Session，要求所有数据都是Object
@@ -367,7 +496,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       }
       // 数据回写
-      data = JSON.stringify(data);
+      if (typeof data === 'object') data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
         $persistentStore.write(data, key);
       }
@@ -375,12 +504,10 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $prefs.setValueForKey(data, key);
       }
       else if (this.isNode){
-        this.node.fs.writeFileSync('./magic.json', data, (err) =>{
-          this.logError(err);
-        })
+        this.node.fs.writeFileSync('./magic.json', data)
       }
       else if (this.isJSBox){
-        $file.write({data: $data({string: data}), path: 'drive://magic.json'});
+        $file.write({data: $data({string: data}), path: 'drive://MagicJS/magic.json'});
       }
       this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
@@ -390,27 +517,60 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.write(key, undefined, session);
     }
 
-    notify(title = scriptName, subTitle = '', body = ''){
+    /**
+     * iOS系统通知
+     * @param {*} title 通知标题
+     * @param {*} subTitle 通知副标题
+     * @param {*} body 通知内容
+     * @param {*} options 通知选项，目前支持传入超链接或Object
+     * Surge不支持通知选项，Loon仅支持打开URL，QuantumultX支持打开URL和多媒体通知
+     * options "applestore://" 打开Apple Store
+     * options "https://www.apple.com.cn/" 打开Apple.com.cn
+     * options {'open-url': 'https://www.apple.com.cn/'} 打开Apple.com.cn
+     * options {'open-url': 'https://www.apple.com.cn/', 'media-url': 'https://raw.githubusercontent.com/Orz-3/mini/master/Apple.png'} 打开Apple.com.cn，显示一个苹果Logo
+     */ 
+    notify(title=this.scriptName, subTitle='', body='', options=''){
+      let convertOptions = (_options) =>{
+        let newOptions = '';
+        if (typeof _options === 'string'){
+          if (this.isLoon) newOptions = _options;
+          else if (this.isQuanX) newOptions = {'open-url': _options};
+        }
+        else if (typeof _options === 'object'){
+          if (this.isLoon) newOptions = !!_options['open-url'] ? _options['open-url'] : '';
+          else if (this.isQuanX) newOptions = !!_options['open-url'] || !!_options['media-url'] ? _options : {};
+        }
+        return newOptions;
+      }
+      options = convertOptions(options);
+      // 支持单个参数通知
       if (arguments.length == 1){
-        title = scriptName;
+        title = this.scriptName;
         subTitle = '',
         body = arguments[0];
       }
-      if (this.isSurge || this.isLoon) {
+      if (this.isSurge){
         $notification.post(title, subTitle, body);
       }
+      else if (this.isLoon){
+        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个logDebug，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
+        this.logDebug(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
+        if (!!options) $notification.post(title, subTitle, body, options);
+        else $notification.post(title, subTitle, body);
+      }
       else if (this.isQuanX) {
-         $notify(title, subTitle, body);
+         $notify(title, subTitle, body, options);
       }
       else if (this.isNode) {
         this.log(`${title} ${subTitle}\n${body}`);
       }
       else if (this.isJSBox){
-        $push.schedule({
+        let push = {
           title: title,
-          body: subTitle ? `${subTitle}\n${body}` : body
-        });
-      }
+          body: !!subTitle ? `${subTitle}\n${body}` : body,
+        }
+        $push.schedule(push);
+      } 
     }
     
     log(msg, level="INFO"){
@@ -432,7 +592,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     logError(msg){
       this.log(msg, "ERROR");
     }
-
+    
     get(options, callback){
       let _options = typeof options === 'object'? Object.assign({}, options): options;
       this.logDebug(`http get: ${JSON.stringify(_options)}`);
@@ -539,7 +699,6 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
     /**
      * 重试方法
-     *
      * @param {*} fn 需要重试的函数
      * @param {number} [retries=5] 重试次数
      * @param {number} [interval=0] 每次重试间隔

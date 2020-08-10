@@ -876,13 +876,31 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.logLevel = this.getLogLevels(logLevel.toUpperCase());
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
-        this.node.request = require('request');
-        this.node.data = require('./magic.json');
         this.node.fs = require('fs');
+        this.node.request = require('request');
+        try{
+          this.node.fs.accessSync('./magic.json');
+        }
+        catch(err){
+          this.logError(err);
+          this.node.fs.writeFileSync('./magic.json', '{}')
+        }
+        this.node.data = require('./magic.json');
+      }
+      if (this.isJSBox){
+        if (!$file.exists('drive://MagicJS')){
+          $file.mkdir('drive://MagicJS');
+        }
+        if (!$file.exists('drive://MagicJS/magic.json')){
+          $file.write({
+            data: $data({string: '{}'}),
+            path: 'drive://MagicJS/magic.json'
+          })
+        }
       }
     }
     
-    get version() { return '202008102255' };
+    get version() { return 'v2.1.3' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -947,7 +965,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         val = this.node.data;
       }
       else if (this.isJSBox){
-        val = $file.read('drive://magic.json').string;
+        val = $file.read('drive://MagicJS/magic.json').string;
       }
       try {
         // Node 和 JSBox数据处理
@@ -964,8 +982,8 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         val = !!session? {} : null;
         this.del(key);
       }
-      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
       if (typeof val === 'undefined') val = null;
+      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
       this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
@@ -983,7 +1001,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         data = this.node.data;
       }
       else if (this.isJSBox){
-        data = JSON.parse($file.read('drive://magic.json').string);
+        data = JSON.parse($file.read('drive://MagicJS/magic.json').string);
       }
       if (!!session){
         // 有Session，要求所有数据都是Object
@@ -1044,7 +1062,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       }
       // 数据回写
-      data = JSON.stringify(data);
+      if (typeof data === 'object') data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
         $persistentStore.write(data, key);
       }
@@ -1052,12 +1070,10 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $prefs.setValueForKey(data, key);
       }
       else if (this.isNode){
-        this.node.fs.writeFileSync('./magic.json', data, (err) =>{
-          this.logError(err);
-        })
+        this.node.fs.writeFileSync('./magic.json', data)
       }
       else if (this.isJSBox){
-        $file.write({data: $data({string: data}), path: 'drive://magic.json'});
+        $file.write({data: $data({string: data}), path: 'drive://MagicJS/magic.json'});
       }
       this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
@@ -1067,27 +1083,60 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.write(key, undefined, session);
     }
 
-    notify(title = scriptName, subTitle = '', body = ''){
+    /**
+     * iOS系统通知
+     * @param {*} title 通知标题
+     * @param {*} subTitle 通知副标题
+     * @param {*} body 通知内容
+     * @param {*} options 通知选项，目前支持传入超链接或Object
+     * Surge不支持通知选项，Loon仅支持打开URL，QuantumultX支持打开URL和多媒体通知
+     * options "applestore://" 打开Apple Store
+     * options "https://www.apple.com.cn/" 打开Apple.com.cn
+     * options {'open-url': 'https://www.apple.com.cn/'} 打开Apple.com.cn
+     * options {'open-url': 'https://www.apple.com.cn/', 'media-url': 'https://raw.githubusercontent.com/Orz-3/mini/master/Apple.png'} 打开Apple.com.cn，显示一个苹果Logo
+     */ 
+    notify(title=this.scriptName, subTitle='', body='', options=''){
+      let convertOptions = (_options) =>{
+        let newOptions = '';
+        if (typeof _options === 'string'){
+          if (this.isLoon) newOptions = _options;
+          else if (this.isQuanX) newOptions = {'open-url': _options};
+        }
+        else if (typeof _options === 'object'){
+          if (this.isLoon) newOptions = !!_options['open-url'] ? _options['open-url'] : '';
+          else if (this.isQuanX) newOptions = !!_options['open-url'] || !!_options['media-url'] ? _options : {};
+        }
+        return newOptions;
+      }
+      options = convertOptions(options);
+      // 支持单个参数通知
       if (arguments.length == 1){
-        title = scriptName;
+        title = this.scriptName;
         subTitle = '',
         body = arguments[0];
       }
-      if (this.isSurge || this.isLoon) {
+      if (this.isSurge){
         $notification.post(title, subTitle, body);
       }
+      else if (this.isLoon){
+        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个logDebug，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
+        this.logDebug(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
+        if (!!options) $notification.post(title, subTitle, body, options);
+        else $notification.post(title, subTitle, body);
+      }
       else if (this.isQuanX) {
-         $notify(title, subTitle, body);
+         $notify(title, subTitle, body, options);
       }
       else if (this.isNode) {
         this.log(`${title} ${subTitle}\n${body}`);
       }
       else if (this.isJSBox){
-        $push.schedule({
+        let push = {
           title: title,
-          body: subTitle ? `${subTitle}\n${body}` : body
-        });
-      }
+          body: !!subTitle ? `${subTitle}\n${body}` : body,
+        }
+        $push.schedule(push);
+      } 
     }
     
     log(msg, level="INFO"){
@@ -1109,7 +1158,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     logError(msg){
       this.log(msg, "ERROR");
     }
-
+    
     get(options, callback){
       let _options = typeof options === 'object'? Object.assign({}, options): options;
       this.logDebug(`http get: ${JSON.stringify(_options)}`);
@@ -1216,7 +1265,6 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
     /**
      * 重试方法
-     *
      * @param {*} fn 需要重试的函数
      * @param {number} [retries=5] 重试次数
      * @param {number} [interval=0] 每次重试间隔
