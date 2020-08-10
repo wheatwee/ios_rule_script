@@ -13,9 +13,7 @@ const didaGetCookieRegex = /^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeik
 const didaCidKey = 'dida_cid';
 const didaCookieKey = 'dida_cookie';
 const didaUserAgentKey = 'dida_useragent';
-const didaCinfoKey = 'dida_cinfo';
 const didaAccessTokenKey = 'dida_access_token';
-const didaUserCidKey = 'dida_user_cid';
 const scriptName = '嘀嗒出行';
 
 let magicJS = MagicJS(scriptName);
@@ -64,12 +62,12 @@ let getBeikeAccountOptions = {
 // 检查cookie完整性
 function CheckCookie(){
   if (didaAccessToken == null){
-    didaAccessToken = magicJS.read(didaAccessTokenKey);      
-    didaCookie = magicJS.read(didaCookieKey);
-    didaUserAgent = magicJS.read(didaUserAgentKey);
-    didaCinfo = magicJS.read(didaCookieKey);
-    didaAccessToken = magicJS.read(didaAccessTokenKey);
-    didaCid = magicJS.read(didaCidKey);
+    didaAccessToken = magicJS.read(didaAccessTokenKey, 'default');      
+    didaCookie = magicJS.read(didaCookieKey, 'default');
+    didaUserAgent = magicJS.read(didaUserAgentKey, 'default');
+    didaCinfo = magicJS.read(didaCookieKey, 'default');
+    didaAccessToken = magicJS.read(didaAccessTokenKey, 'default');
+    didaCid = magicJS.read(didaCidKey, 'default');
     if (didaAccessToken == null || didaAccessToken == '' || didaAccessToken == {}){
         magicJS.log('没有读取到嘀嗒出行有效cookie，请先访问贝壳广场进行获取。');
         magicJS.notify(scriptName, '', '❓没有读取到cookie，请先访问贝壳广场进行获取。')
@@ -109,17 +107,17 @@ function Checkin() {
           if (checkin_obj.hasOwnProperty('code') && checkin_obj.hasOwnProperty('ret') && checkin_obj['code'] == 0){
             if (typeof checkin_obj['ret'] == 'object'){
               checkinLog = `签到成功，连续签到${checkin_obj['ret']['continueSign']}天，${checkin_obj['ret']['toast']}`;
-              checkinNotify = `🎉${checkinLog}\n`;
+              checkinNotify = `🎉${checkinLog}`;
               didaNotifyContent += checkinNotify;
               magicJS.log(checkinLog);
               resolve(checkinLog);
             }
             else if (typeof checkin_obj['ret'] == 'string'){
               if (checkin_obj['ret'] == '已经签到过'){
-                checkinNotify = `🎉本日已经签到过，不要重复签到哦\n`;
+                checkinNotify = `🎉本日已经签到过，不要重复签到哦！！`;
               }
               else{
-                checkinNotify = `🎉${checkinLog}\n`;
+                checkinNotify = `🎉${checkinLog}`;
               }
               checkinLog = checkin_obj['ret'];
               didaNotifyContent += checkinNotify;
@@ -128,7 +126,7 @@ function Checkin() {
             }
             else {
               checkinLog = '签到出现异常:' + data;
-              checkinNotify = '❌签到出现异常，请查看日志\n';
+              checkinNotify = '❌签到出现异常，请查看日志';
               didaNotifyContent += checkinNotify;
               magicJS.log(checkinLog);
               resolve(checkinLog);
@@ -136,7 +134,7 @@ function Checkin() {
           }
           else{
             checkinLog = '签到出现异常:' + data;
-            checkinNotify = '❌签到出现异常，请查看日志\n';
+            checkinNotify = '❌签到出现异常，请查看日志';
             didaNotifyContent += checkinNotify;
             magicJS.log(checkinLog);
             resolve(checkinLog);
@@ -238,14 +236,14 @@ async function GetAccountAllBeike(){
     }
     if (didaGetBeikeResult.length > 0 && didaGetBeikeCount > 0){
       magicJS.log(`本次共拾取贝壳${didaGetBeikeCount}个，详细情况如下：${JSON.stringify(didaGetBeikeResult)}`);
-      didaNotifyContent += `🏖本次共拾取贝壳${didaGetBeikeCount}，左滑查看详情`;
+      didaNotifyContent += `\n🏖本次共拾取贝壳${didaGetBeikeCount}，左滑查看详情`;
       didaGetBeikeResult.forEach(element => {
         didaNotifyContent += `\n${element['beikeType']}：${element['changeAmount']}个`;
       });
     }
   }
   else{
-    didaNotifyContent += '🏖本次没有发现待拾取的贝壳';
+    didaNotifyContent += '\n🏖本次没有发现待拾取的贝壳';
     magicJS.log('没有待拾取的贝壳');
   }
 }
@@ -262,20 +260,19 @@ async function Main(){
       didaCinfo = magicJS.request.headers['ddcinfo'];
       didaAccessToken = magicJS.request.headers['x-access-token'];
 
-      let didaHisAccessToken = magicJS.read(didaAccessTokenKey);
-      let didaHisCid = magicJS.read(didaCidKey);
-      let didaHisCookie = magicJS.read(didaCookieKey);
+      let didaHisAccessToken = magicJS.read(didaAccessTokenKey, 'default');
+      let didaHisCid = magicJS.read(didaCidKey, 'default');
+      let didaHisCookie = magicJS.read(didaCookieKey, 'default');
 
       if (didaHisAccessToken == didaAccessToken){
         magicJS.log('token与cookie没有变化，无需更新。');
-        // magicJS.notify(scriptName, '', '🎈token与cookie没有变化，无需更新。')
       }
-      else if (didaHisCid == null || didaHisCid != didaCid || didaHisAccessToken == null || didaHisAccessToken != didaAccessToken || didaHisCookie == null || didaHisCookie != didaCookie  ){
-        magicJS.write(didaCidKey, didaCid);
-        magicJS.write(didaCookieKey, didaCookie);
-        magicJS.write(didaUserAgentKey, didaUserAgent);
-        magicJS.write(didaCookieKey, didaCinfo);
-        magicJS.write(didaAccessTokenKey, didaAccessToken);
+      else if (didaHisCid == null || didaHisCid != didaCid || didaHisAccessToken == null || didaHisAccessToken != didaAccessToken || didaHisCookie == null || didaHisCookie != didaCookie){
+        magicJS.write(didaCidKey, didaCid, 'default');
+        magicJS.write(didaCookieKey, didaCookie, 'default');
+        magicJS.write(didaUserAgentKey, didaUserAgent, 'default');
+        magicJS.write(didaCookieKey, didaCinfo, 'default');
+        magicJS.write(didaAccessTokenKey, didaAccessToken, 'default');
         magicJS.log('获取嘀嗒出行token成功。');
         magicJS.notify(scriptName, '', '🎈获取token与cookie成功。')
       }
@@ -289,7 +286,7 @@ async function Main(){
     
     await Checkin();
     
-    await GetAccountAllBeike();
+    // await GetAccountAllBeike();
 
     magicJS.notify(scriptName, '', didaNotifyContent);
 
@@ -299,12 +296,12 @@ async function Main(){
 
 Main();
 
-function MagicJS(scriptName='MagicJS', debug=false){
-  return new class{
+function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
+  return new class{
     constructor(){
       this.scriptName = scriptName;
-      this.debug = debug;
+      this.logLevel = this.getLogLevels(logLevel.toUpperCase());
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
@@ -313,7 +310,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202008030033' };
+    get version() { return '202008102255' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -322,7 +319,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
     get response() { 
       if (typeof $response !== 'undefined'){
         if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
@@ -334,44 +330,81 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
 
-    read(key, session='default'){
-      let data = '';
+    get logLevels(){
+      return {
+        DEBUG: 4,
+        INFO: 3,
+        WARNING: 2,
+        ERROR: 1,
+        CRITICAL: 0
+      };
+    } 
+
+    getLogLevels(level){
+      try{
+        if (this.isNumber(level)){
+          return level;
+        }
+        else{
+          let levelNum = this.logLevels[level];
+          if (typeof levelNum === 'undefined'){
+            this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}。`)
+            return this.logLevels.DEBUG;
+          }
+          else{
+            return levelNum;
+          }
+        }
+      }
+      catch(err){
+        this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}，异常信息：${err}。`)
+        return this.logLevels.DEBUG;
+      }
+    }
+
+    read(key, session=''){
+      let val = '';
+      // 读取原始数据
       if (this.isSurge || this.isLoon) {
-        data = $persistentStore.read(key);
+        val = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
-        data = $prefs.valueForKey(key);
+        val = $prefs.valueForKey(key);
       }
       else if (this.isNode){
-        data = this.node.data[key];
+        val = this.node.data;
       }
       else if (this.isJSBox){
-        data = $file.read('drive://magic.json').string;
-        data = JSON.parse(data)[key];
+        val = $file.read('drive://magic.json').string;
       }
       try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+        // Node 和 JSBox数据处理
+        if (this.isNode) val = val[key]
+        if (this.isJSBox) val = JSON.parse(val)[key];
+        // 带Session的情况
+        if (!!session){
+          if(typeof val === 'string') val = JSON.parse(val);
+          val = !!val && typeof val === 'object' ? val[session]: null;
         }
-        data = !!data ? data: {};
       } 
       catch (err){ 
-        this.log(`raise exception: ${err}`);
-        data = {};
+        this.logError(`raise exception: ${err}`);
+        val = !!session? {} : null;
         this.del(key);
       }
-      let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val) } catch(err) {}
-      if (this.debug) this.log(`read data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
+      if (typeof val === 'undefined') val = null;
+      this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
-    write(key, val, session='default'){
-      let data = '';
-      if (this.isSurge || this.isLoon) {
+    write(key, val, session=''){
+      let data = !!session ? {} : '';
+      // 读取原先存储的JSON格式数据
+      if (!!session && (this.isSurge || this.isLoon)) {
         data = $persistentStore.read(key);
       }
-      else if (this.isQuanX) {
+      else if (!!session && this.isQuanX) {
         data = $prefs.valueForKey(key);
       }
       else if (this.isNode){
@@ -380,23 +413,65 @@ function MagicJS(scriptName='MagicJS', debug=false){
       else if (this.isJSBox){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
-      try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+      if (!!session){
+        // 有Session，要求所有数据都是Object
+        try {
+          if (typeof data === 'string') data = JSON.parse(data)
+          data = typeof data === 'object' ? data : {};
         }
-        data = !!data ? data: {};
-      } 
-      catch(err) { 
-        this.log(`raise exception: ${err}`);
-        data = {};
-        this.del(key);
+        catch(err){
+          this.logError(`raise exception: ${err}`);
+          this.del(key); 
+          data = {};
+        };
+        if (this.isJSBox || this.isNode){
+          // 构造数据
+          if (!data.hasOwnProperty(key) || typeof data[key] != 'object'){
+            data[key] = {};
+          }
+          if (!data[key].hasOwnProperty(session)){
+            data[key][session] = null;
+          }
+          // 写入或删除数据
+          if (typeof val === 'undefined'){
+            delete data[key][session];
+          }
+          else{
+            data[key][session] = val;
+          }
+        }
+        else {
+          // 写入或删除数据      
+          if (typeof val === 'undefined'){
+            delete data[session];
+          }
+          else{
+            data[session] = val;
+          }
+        }
       }
-      if (this.isNode || this.isJSBox){
-        data[key][session] = val;
-      }
+      // 没有Session时
       else{
-        data[session] = val;
+        if (this.isNode || this.isJSBox){
+          // 删除数据
+          if (typeof val === 'undefined'){
+            delete data[key];
+          }
+          else{
+            data[key] = val;
+          }
+        }        
+        else{    
+          // 删除数据      
+          if (typeof val === 'undefined'){
+            data = null;
+          }
+          else{
+            data = val;
+          }
+        }
       }
+      // 数据回写
       data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
         $persistentStore.write(data, key);
@@ -406,25 +481,18 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
       else if (this.isNode){
         this.node.fs.writeFileSync('./magic.json', data, (err) =>{
-          this.log(err);
+          this.logError(err);
         })
       }
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://magic.json'});
       }
-      if (this.debug) this.log(`write data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
 
-    del(key){
-      if (this.isSurge || this.isLoon) {
-        $persistentStore.write('', key);
-      }
-      else if (this.isQuanX) {
-        $prefs.setValueForKey('', key);
-      }
-      else if (this.isNode || this.isJSBox){
-        this.write(key, '');
-      }
+    del(key, session=''){
+      this.logDebug(`delete key [${key}]${!!session ? `[${session}]`:''}`);
+      this.write(key, undefined, session);
     }
 
     notify(title = scriptName, subTitle = '', body = ''){
@@ -450,19 +518,36 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    log(msg){
-      console.log(`[${this.scriptName}]\n${msg}\n`)
+    log(msg, level="INFO"){
+      if (this.logLevel >= this.getLogLevels(level.toUpperCase())) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`)
+    }
+
+    logDebug(msg){
+      this.log(msg, "DEBUG");
+    }
+
+    logInfo(msg){
+      this.log(msg, "INFO");
+    }
+
+    logWarning(msg){
+      this.log(msg, "WARNING");
+    }
+
+    logError(msg){
+      this.log(msg, "ERROR");
     }
 
     get(options, callback){
-      if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http get: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.get(options, callback);
+        $httpClient.get(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        options['method'] = 'GET'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        _options['method'] = 'GET'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -471,31 +556,32 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        return this.node.request.get(options, callback);
+        return this.node.request.get(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} :_options;
+        options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.get(options);
+        $http.get(_options);
       }
     }
 
     post(options, callback){
-      if (this.debug) this.log(`http post: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http post: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.post(options, callback);
+        $httpClient.post(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        if (options.hasOwnProperty('body') && typeof options['body'] !== 'string') options['body'] = JSON.stringify(options['body']);
-        options['method'] = 'POST'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
+        _options['method'] = 'POST'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -504,19 +590,19 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
-        return this.node.request.post(options, callback);
+        if (typeof _options.body === 'object') _options.body = JSON.stringify(_options.body);
+        return this.node.request.post(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} : _options;
+        _options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.post(options);
+        $http.post(_options);
       }
     }
 
@@ -542,6 +628,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
             return false;
         }
       }
+    }
+
+    isNumber(val) {
+      return parseFloat(val).toString() === "NaN"? false: true;
     }
 
     /**

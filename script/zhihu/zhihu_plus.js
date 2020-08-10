@@ -7,8 +7,7 @@ const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/time
 const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
 const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
 let scriptName = '知乎增强';
-let debug = false;
-let magicJS = MagicJS(scriptName, debug);
+let magicJS = MagicJS(scriptName, "INFO");
 let answer_blocked_users = {'盐选推荐': 'default', '盐选科普': 'default', '会员推荐': 'default', '故事档案局': 'default'};
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 
@@ -16,7 +15,7 @@ let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知�
 async function main(){
   let custom_blocked_users = {};
   try{
-    custom_blocked_users = magicJS.read(blocked_users_key);
+    custom_blocked_users = magicJS.read(blocked_users_key, 'default');
     // 对旧的黑名单数据进行清理
     if (!!custom_blocked_users && custom_blocked_users instanceof Array){
       magicJS.del(blocked_users_key);
@@ -24,7 +23,7 @@ async function main(){
       magicJS.notify("因数据格式变化，当前脚本黑名单已清空。\n请访问知乎App中的黑名单列表重新获取。");
     }
     custom_blocked_users = !!custom_blocked_users ? custom_blocked_users : answer_blocked_users;
-    if (debug) magicJS.log(`获取脚本黑名单列表成功，当前黑名单：${JSON.stringify(custom_blocked_users)}。`)
+    magicJS.logDebug(`获取脚本黑名单列表成功，当前黑名单：${JSON.stringify(custom_blocked_users)}。`)
   }
   catch (err){
     magicJS.del(blocked_users_key);
@@ -47,7 +46,7 @@ async function main(){
     // 知乎推荐去广告与黑名单增强
     if (topstory_recommend_regex.test(magicJS.request.url)){
       temp_blocked_users = Object.keys(custom_blocked_users);
-      if (debug) magicJS.log(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
+      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       let data = body['data'].filter((element) =>{
         try{
           if(element['card_type'] != 'slot_event_card' && element.hasOwnProperty('ad') == false && element.hasOwnProperty('common_card') && 
@@ -83,7 +82,7 @@ async function main(){
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
       temp_blocked_users = Object.keys(custom_blocked_users);
-      if (debug) magicJS.log(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
+      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       delete body['ad_info'];
       let data = body['data'].filter((element) =>{
         if (temp_blocked_users.indexOf(element['author']['name']) < 0){
@@ -129,10 +128,10 @@ async function main(){
                 custom_blocked_users[element['name']] = element['id'];
               }
             });
-            magicJS.write(blocked_users_key, custom_blocked_users);
+            magicJS.write(blocked_users_key, custom_blocked_users, 'default');
             if (obj['paging']['is_end'] == true){
               magicJS.notify(`获取脚本黑名单结束，当前黑名单共${Object.keys(custom_blocked_users).length}人！`);
-              if (debug) magicJS.log(`脚本黑名单内容：${JSON.stringify(custom_blocked_users)}。`);
+              magicJS.logDebug(`脚本黑名单内容：${JSON.stringify(custom_blocked_users)}。`);
             }
           }
           else{
@@ -151,7 +150,7 @@ async function main(){
           let obj = JSON.parse(magicJS.response.body);
           if (obj.hasOwnProperty('name') && obj.hasOwnProperty('id')){
             custom_blocked_users[obj['name']] = obj['id'];
-            magicJS.write(blocked_users_key, custom_blocked_users);
+            magicJS.write(blocked_users_key, custom_blocked_users, 'default');
             magicJS.log(`${obj['name']}写入脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
             magicJS.notify(`已将用户 ${obj['name']} 写入脚本黑名单。`);
           }
@@ -174,7 +173,7 @@ async function main(){
             for (let username in custom_blocked_users){
               if (custom_blocked_users[username] == user_id){
                 delete custom_blocked_users[username];
-                magicJS.write(blocked_users_key, custom_blocked_users)
+                magicJS.write(blocked_users_key, custom_blocked_users, 'default')
                 magicJS.log(`${obj['name']}移出脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
                 magicJS.notify(`已将用户 ${username} 移出脚本黑名单！`);
                 break;
@@ -199,12 +198,12 @@ async function main(){
 
 main();
 
-function MagicJS(scriptName='MagicJS', debug=false){
-  return new class{
+function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
+  return new class{
     constructor(){
       this.scriptName = scriptName;
-      this.debug = debug;
+      this.logLevel = this.getLogLevels(logLevel.toUpperCase());
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
@@ -213,7 +212,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202008030033' };
+    get version() { return '202008102255' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -222,7 +221,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
     get response() { 
       if (typeof $response !== 'undefined'){
         if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
@@ -234,44 +232,81 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
 
-    read(key, session='default'){
-      let data = '';
+    get logLevels(){
+      return {
+        DEBUG: 4,
+        INFO: 3,
+        WARNING: 2,
+        ERROR: 1,
+        CRITICAL: 0
+      };
+    } 
+
+    getLogLevels(level){
+      try{
+        if (this.isNumber(level)){
+          return level;
+        }
+        else{
+          let levelNum = this.logLevels[level];
+          if (typeof levelNum === 'undefined'){
+            this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}。`)
+            return this.logLevels.DEBUG;
+          }
+          else{
+            return levelNum;
+          }
+        }
+      }
+      catch(err){
+        this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}，异常信息：${err}。`)
+        return this.logLevels.DEBUG;
+      }
+    }
+
+    read(key, session=''){
+      let val = '';
+      // 读取原始数据
       if (this.isSurge || this.isLoon) {
-        data = $persistentStore.read(key);
+        val = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
-        data = $prefs.valueForKey(key);
+        val = $prefs.valueForKey(key);
       }
       else if (this.isNode){
-        data = this.node.data[key];
+        val = this.node.data;
       }
       else if (this.isJSBox){
-        data = $file.read('drive://magic.json').string;
-        data = JSON.parse(data)[key];
+        val = $file.read('drive://magic.json').string;
       }
       try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+        // Node 和 JSBox数据处理
+        if (this.isNode) val = val[key]
+        if (this.isJSBox) val = JSON.parse(val)[key];
+        // 带Session的情况
+        if (!!session){
+          if(typeof val === 'string') val = JSON.parse(val);
+          val = !!val && typeof val === 'object' ? val[session]: null;
         }
-        data = !!data ? data: {};
       } 
       catch (err){ 
-        this.log(`raise exception: ${err}`);
-        data = {};
+        this.logError(`raise exception: ${err}`);
+        val = !!session? {} : null;
         this.del(key);
       }
-      let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val) } catch(err) {}
-      if (this.debug) this.log(`read data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
+      if (typeof val === 'undefined') val = null;
+      this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
-    write(key, val, session='default'){
-      let data = '';
-      if (this.isSurge || this.isLoon) {
+    write(key, val, session=''){
+      let data = !!session ? {} : '';
+      // 读取原先存储的JSON格式数据
+      if (!!session && (this.isSurge || this.isLoon)) {
         data = $persistentStore.read(key);
       }
-      else if (this.isQuanX) {
+      else if (!!session && this.isQuanX) {
         data = $prefs.valueForKey(key);
       }
       else if (this.isNode){
@@ -280,23 +315,65 @@ function MagicJS(scriptName='MagicJS', debug=false){
       else if (this.isJSBox){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
-      try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+      if (!!session){
+        // 有Session，要求所有数据都是Object
+        try {
+          if (typeof data === 'string') data = JSON.parse(data)
+          data = typeof data === 'object' ? data : {};
         }
-        data = !!data ? data: {};
-      } 
-      catch(err) { 
-        this.log(`raise exception: ${err}`);
-        data = {};
-        this.del(key);
+        catch(err){
+          this.logError(`raise exception: ${err}`);
+          this.del(key); 
+          data = {};
+        };
+        if (this.isJSBox || this.isNode){
+          // 构造数据
+          if (!data.hasOwnProperty(key) || typeof data[key] != 'object'){
+            data[key] = {};
+          }
+          if (!data[key].hasOwnProperty(session)){
+            data[key][session] = null;
+          }
+          // 写入或删除数据
+          if (typeof val === 'undefined'){
+            delete data[key][session];
+          }
+          else{
+            data[key][session] = val;
+          }
+        }
+        else {
+          // 写入或删除数据      
+          if (typeof val === 'undefined'){
+            delete data[session];
+          }
+          else{
+            data[session] = val;
+          }
+        }
       }
-      if (this.isNode || this.isJSBox){
-        data[key][session] = val;
-      }
+      // 没有Session时
       else{
-        data[session] = val;
+        if (this.isNode || this.isJSBox){
+          // 删除数据
+          if (typeof val === 'undefined'){
+            delete data[key];
+          }
+          else{
+            data[key] = val;
+          }
+        }        
+        else{    
+          // 删除数据      
+          if (typeof val === 'undefined'){
+            data = null;
+          }
+          else{
+            data = val;
+          }
+        }
       }
+      // 数据回写
       data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
         $persistentStore.write(data, key);
@@ -306,25 +383,18 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
       else if (this.isNode){
         this.node.fs.writeFileSync('./magic.json', data, (err) =>{
-          this.log(err);
+          this.logError(err);
         })
       }
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://magic.json'});
       }
-      if (this.debug) this.log(`write data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
 
-    del(key){
-      if (this.isSurge || this.isLoon) {
-        $persistentStore.write('', key);
-      }
-      else if (this.isQuanX) {
-        $prefs.setValueForKey('', key);
-      }
-      else if (this.isNode || this.isJSBox){
-        this.write(key, '');
-      }
+    del(key, session=''){
+      this.logDebug(`delete key [${key}]${!!session ? `[${session}]`:''}`);
+      this.write(key, undefined, session);
     }
 
     notify(title = scriptName, subTitle = '', body = ''){
@@ -350,19 +420,36 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    log(msg){
-      console.log(`[${this.scriptName}]\n${msg}\n`)
+    log(msg, level="INFO"){
+      if (this.logLevel >= this.getLogLevels(level.toUpperCase())) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`)
+    }
+
+    logDebug(msg){
+      this.log(msg, "DEBUG");
+    }
+
+    logInfo(msg){
+      this.log(msg, "INFO");
+    }
+
+    logWarning(msg){
+      this.log(msg, "WARNING");
+    }
+
+    logError(msg){
+      this.log(msg, "ERROR");
     }
 
     get(options, callback){
-      if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http get: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.get(options, callback);
+        $httpClient.get(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        options['method'] = 'GET'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        _options['method'] = 'GET'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -371,31 +458,32 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        return this.node.request.get(options, callback);
+        return this.node.request.get(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} :_options;
+        options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.get(options);
+        $http.get(_options);
       }
     }
 
     post(options, callback){
-      if (this.debug) this.log(`http post: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http post: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.post(options, callback);
+        $httpClient.post(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        if (options.hasOwnProperty('body') && typeof options['body'] !== 'string') options['body'] = JSON.stringify(options['body']);
-        options['method'] = 'POST'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
+        _options['method'] = 'POST'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -404,19 +492,19 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
-        return this.node.request.post(options, callback);
+        if (typeof _options.body === 'object') _options.body = JSON.stringify(_options.body);
+        return this.node.request.post(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} : _options;
+        _options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.post(options);
+        $http.post(_options);
       }
     }
 
@@ -442,6 +530,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
             return false;
         }
       }
+    }
+
+    isNumber(val) {
+      return parseFloat(val).toString() === "NaN"? false: true;
     }
 
     /**

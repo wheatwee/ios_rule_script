@@ -13,7 +13,7 @@ const encryptMobileKey = 'unicom_encrypt_mobile'
 const cityCodeKey = 'city_code'
 const scriptName = '中国联通';
 
-let magicJS = MagicJS(scriptName,false);
+let magicJS = MagicJS(scriptName);
 
 let userLoginOptions = {
   url: "http://m.client.10010.com/dailylottery/static/textdl/userLogin?flag=1",
@@ -225,7 +225,7 @@ let meituanCouponOptions = {
 function UserLogin(){
   // 联通App签到
   return new Promise((resolve) =>{
-    let cookie = magicJS.read(unicomCookieKey);
+    let cookie = magicJS.read(unicomCookieKey, 'default');
     if (cookie){
       userLoginOptions.headers['Cookie'] = cookie;
       magicJS.get(userLoginOptions, (err, resp, data) =>{
@@ -260,7 +260,7 @@ function UserLogin(){
 function AppCheckin(){
   // 联通App签到
   return new Promise((resolve, reject) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
     daySingOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingOptions, (err, resp, data) => {
       if (err){
@@ -302,7 +302,7 @@ function AppCheckin(){
 function AppCheckinNewVersion(){
   // 联通App签到
   return new Promise((resolve, reject) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
     daySingNewVersionOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(daySingNewVersionOptions, (err, resp, data) => {
       if (err){
@@ -343,7 +343,7 @@ function AppCheckinNewVersion(){
 // 获取连续签到天数
 function GetContinueCount(){
   return new Promise((resolve, reject) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
     getContinueCountOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getContinueCountOptions, (err, resp, data) => {
       if (err){
@@ -374,7 +374,7 @@ function GetContinueCount(){
 // 获取当前积分(弃用)
 function GetScoreTotal(){
   return new Promise((resolve) =>{
-    let unicomCookie =  magicJS.read(unicomCookieKey);
+    let unicomCookie =  magicJS.read(unicomCookieKey, 'default');
     getScoreTotalOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getScoreTotalOptions, (err, resp, data) => {
       if (err){
@@ -399,7 +399,7 @@ function GetScoreTotal(){
 // 获取当前金币(弃用)
 function GetGoldTotal(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
     getGoldTotalOptions.headers['Cookie'] = unicomCookie;
     magicJS.post(getGoldTotalOptions, (err, resp, data) => {
       if (err){
@@ -424,9 +424,9 @@ function GetGoldTotal(){
 // 获取用户信息
 function GetUserInfo(){
   return new Promise((resolve, reject) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
     if (unicomCookie){
-      let mobile = magicJS.read(mobileKey);
+      let mobile = magicJS.read(mobileKey, 'default');
       getUserInfoOptions.headers['Cookie'] = unicomCookie;
       getUserInfoOptions.url = getUserInfoOptions.url.replace(/desmobiel=[0-9a-zA-Z]*/, `desmobiel=${mobile}`);
       magicJS.get(getUserInfoOptions, (err, resp, data) => {
@@ -474,9 +474,9 @@ function GetUserInfo(){
 // 获取抽奖次数
 function GetLotteryCount(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
-    let encryptMobile = magicJS.read(encryptMobileKey);
-    let areaCode = magicJS.read(cityCodeKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
+    let encryptMobile = magicJS.read(encryptMobileKey, 'default');
+    let areaCode = magicJS.read(cityCodeKey, 'default');
     getLotteryCountOptions.headers['Cookie'] = unicomCookie;
     getLotteryCountOptions.headers['Referer'] = getLotteryCountOptions.headers['Referer'].replace(/encryptmobile=.*/, `encryptmobile=${encryptMobile}`);
     getLotteryCountOptions.url = getLotteryCountOptions.url.replace(/mobile=[0-9a-zA-Z]*/, `mobile=${encryptMobile}`).replace(/areaCode=[0-9]*/, `areaCode=${areaCode}`);
@@ -512,9 +512,9 @@ function GetLotteryCount(){
 // 新版获取抽奖次数
 function GetLotteryCountNewVersion(){
   return new Promise((resolve) =>{
-    let unicomCookie = magicJS.read(unicomCookieKey);
-    let encryptMobile = magicJS.read(encryptMobileKey);
-    let areaCode = magicJS.read(cityCodeKey);
+    let unicomCookie = magicJS.read(unicomCookieKey, 'default');
+    let encryptMobile = magicJS.read(encryptMobileKey, 'default');
+    let areaCode = magicJS.read(cityCodeKey, 'default');
     getLotteryCountNewVersionOptions.headers['Cookie'] = unicomCookie;
     getLotteryCountNewVersionOptions.headers['Referer'] = getLotteryCountNewVersionOptions.headers['Referer'].replace(/encryptmobile=.*/, `encryptmobile=${encryptMobile}`);
     getLotteryCountNewVersionOptions.url = getLotteryCountNewVersionOptions.url.replace(/mobile=.*/, `mobile=${encryptMobile}`).replace(/areaCode=[0-9]*/, `areaCode=${areaCode}`);;
@@ -545,8 +545,8 @@ function GetLotteryCountNewVersion(){
 function DailyLottery(){
   return new Promise((resolve) =>{
     // 签到的cookie就可以用
-    let lotteryCookie = magicJS.read(unicomCookieKey);
-    let encryptMobile = magicJS.read(encryptMobileKey);
+    let lotteryCookie = magicJS.read(unicomCookieKey, 'default');
+    let encryptMobile = magicJS.read(encryptMobileKey, 'default');
     if (lotteryCookie && encryptMobile){
       dailyLotteryOptions.headers['Cookie'] = lotteryCookie;
       dailyLotteryOptions.headers['Referer'] = dailyLotteryOptions.headers['Referer'].replace(/encryptmobile=.*/, `encryptmobile=${encryptMobile}`);
@@ -587,8 +587,8 @@ function DailyLottery(){
 function DailyLotteryNewVersion(){
   return new Promise((resolve) =>{
     // 签到的cookie就可以用
-    let lotteryCookie = magicJS.read(unicomCookieKey);
-    let encryptMobile = magicJS.read(encryptMobileKey);
+    let lotteryCookie = magicJS.read(unicomCookieKey, 'default');
+    let encryptMobile = magicJS.read(encryptMobileKey, 'default');
     if (lotteryCookie && encryptMobile){
       dailyLotteryNewVersionOptions.headers['Cookie'] = lotteryCookie;
       dailyLotteryNewVersionOptions.headers['Referer'] = dailyLotteryNewVersionOptions.headers['Referer'].replace(/encryptmobile=.*/, `encryptmobile=${encryptMobile}`);
@@ -663,7 +663,7 @@ async function StartDailyLotteryNewVersion(lotteryCount){
 function GetMeituanCoupon(){
   return new Promise((resolve, reject) =>{
     // 签到的cookie就可以用
-    let meituanCookie = magicJS.read(unicomCookieKey);
+    let meituanCookie = magicJS.read(unicomCookieKey, 'default');
     if (meituanCookie){
       meituanCouponOptions.headers['Cookie'] = meituanCookie;
       magicJS.get(meituanCouponOptions, (err, resp, data) => {
@@ -714,16 +714,16 @@ async function Main(){
     if(getLotteryCookieRegex.test(magicJS.request.url) && magicJS.request.headers.hasOwnProperty('savedata') == false){
       // 获取cookie
       let cookie = magicJS.request.headers['Cookie'];
-      let hisCookie = magicJS.read(unicomCookieKey);
+      let hisCookie = magicJS.read(unicomCookieKey, 'default');
       // 获取手机号
       let mobile = /c_mobile=([0-9]{11})/.exec(cookie)[1];
-      let hisMobile = magicJS.read(mobileKey);
+      let hisMobile = magicJS.read(mobileKey, 'default');
       // 获取加密手机号
       let encryptMobile = /encryptmobile=([a-zA-Z0-9]*)/.exec(magicJS.request.url)[1];
-      let hisEncryptMobile = magicJS.read(encryptMobileKey);
+      let hisEncryptMobile = magicJS.read(encryptMobileKey, 'default');
       let cityCode = /city=([0-9]*)/.exec(magicJS.request.headers['Cookie'])[1]
       // 获取城市代码
-      let hisCityCode = magicJS.read(cityCodeKey);
+      let hisCityCode = magicJS.read(cityCodeKey, 'default');
       let notifyContent = '';
       magicJS.log(`新的cookie：${cookie}\n\n旧的cookie：${hisCookie}`);
       magicJS.log(`新的手机号：${mobile}\n旧的手机号：${hisMobile}`);
@@ -731,7 +731,7 @@ async function Main(){
       magicJS.log(`新的城市代码：${cityCode}\n旧的城市代码：${hisCityCode}`);
       // cookie
       if (cookie != hisCookie){
-        magicJS.write(unicomCookieKey, cookie);
+        magicJS.write(unicomCookieKey, cookie, 'default');
         if (!hisCookie){
           magicJS.log('首次获取联通cookie成功：' + cookie);
           notifyContent += '🍩联通cookie:获取成功';
@@ -747,7 +747,7 @@ async function Main(){
       }
       // 手机号
       if (mobile != hisMobile){
-        magicJS.write(mobileKey, mobile);
+        magicJS.write(mobileKey, mobile, 'default');
         if (!hisMobile){
           notifyContent += ' 📱手机号:获取成功';
         }
@@ -761,7 +761,7 @@ async function Main(){
       }
       // 手机号密文
       if (hisEncryptMobile != encryptMobile){
-        magicJS.write(encryptMobileKey, encryptMobile);
+        magicJS.write(encryptMobileKey, encryptMobile, 'default');
         if (!hisEncryptMobile){
           notifyContent += '\n🗳手机号密文:获取成功';
         }
@@ -774,7 +774,7 @@ async function Main(){
         notifyContent += '\n🗳手机号密文:没有变化';
       }
       if (cityCode != hisCityCode){
-        magicJS.write(cityCodeKey, cityCode);
+        magicJS.write(cityCodeKey, cityCode, 'default');
         if (!hisCityCode){
           magicJS.log('首次获取联通城市代码成功：' + cityCode);
           notifyContent += ' 🌃城市:获取成功';
@@ -868,12 +868,12 @@ async function Main(){
 
 Main();
 
-function MagicJS(scriptName='MagicJS', debug=false){
-  return new class{
+function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
+  return new class{
     constructor(){
       this.scriptName = scriptName;
-      this.debug = debug;
+      this.logLevel = this.getLogLevels(logLevel.toUpperCase());
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
       if (this.isNode){
         this.node.request = require('request');
@@ -882,7 +882,7 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    get version() { return '202008030033' };
+    get version() { return '202008102255' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -891,7 +891,6 @@ function MagicJS(scriptName='MagicJS', debug=false){
     get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
     get isResponse() { return typeof $response !== 'undefined' }
     get request() { return (typeof $request !== 'undefined') ? $request : undefined }
-
     get response() { 
       if (typeof $response !== 'undefined'){
         if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
@@ -903,44 +902,81 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
 
-    read(key, session='default'){
-      let data = '';
+    get logLevels(){
+      return {
+        DEBUG: 4,
+        INFO: 3,
+        WARNING: 2,
+        ERROR: 1,
+        CRITICAL: 0
+      };
+    } 
+
+    getLogLevels(level){
+      try{
+        if (this.isNumber(level)){
+          return level;
+        }
+        else{
+          let levelNum = this.logLevels[level];
+          if (typeof levelNum === 'undefined'){
+            this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}。`)
+            return this.logLevels.DEBUG;
+          }
+          else{
+            return levelNum;
+          }
+        }
+      }
+      catch(err){
+        this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}，异常信息：${err}。`)
+        return this.logLevels.DEBUG;
+      }
+    }
+
+    read(key, session=''){
+      let val = '';
+      // 读取原始数据
       if (this.isSurge || this.isLoon) {
-        data = $persistentStore.read(key);
+        val = $persistentStore.read(key);
       }
       else if (this.isQuanX) {
-        data = $prefs.valueForKey(key);
+        val = $prefs.valueForKey(key);
       }
       else if (this.isNode){
-        data = this.node.data[key];
+        val = this.node.data;
       }
       else if (this.isJSBox){
-        data = $file.read('drive://magic.json').string;
-        data = JSON.parse(data)[key];
+        val = $file.read('drive://magic.json').string;
       }
       try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+        // Node 和 JSBox数据处理
+        if (this.isNode) val = val[key]
+        if (this.isJSBox) val = JSON.parse(val)[key];
+        // 带Session的情况
+        if (!!session){
+          if(typeof val === 'string') val = JSON.parse(val);
+          val = !!val && typeof val === 'object' ? val[session]: null;
         }
-        data = !!data ? data: {};
       } 
       catch (err){ 
-        this.log(`raise exception: ${err}`);
-        data = {};
+        this.logError(`raise exception: ${err}`);
+        val = !!session? {} : null;
         this.del(key);
       }
-      let val = data[session];
-      try { if (typeof val == 'string') val = JSON.parse(val) } catch(err) {}
-      if (this.debug) this.log(`read data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
+      if (typeof val === 'undefined') val = null;
+      this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
-    write(key, val, session='default'){
-      let data = '';
-      if (this.isSurge || this.isLoon) {
+    write(key, val, session=''){
+      let data = !!session ? {} : '';
+      // 读取原先存储的JSON格式数据
+      if (!!session && (this.isSurge || this.isLoon)) {
         data = $persistentStore.read(key);
       }
-      else if (this.isQuanX) {
+      else if (!!session && this.isQuanX) {
         data = $prefs.valueForKey(key);
       }
       else if (this.isNode){
@@ -949,23 +985,65 @@ function MagicJS(scriptName='MagicJS', debug=false){
       else if (this.isJSBox){
         data = JSON.parse($file.read('drive://magic.json').string);
       }
-      try {
-        if (!!data && typeof data === 'string'){
-          data = JSON.parse(data);
+      if (!!session){
+        // 有Session，要求所有数据都是Object
+        try {
+          if (typeof data === 'string') data = JSON.parse(data)
+          data = typeof data === 'object' ? data : {};
         }
-        data = !!data ? data: {};
-      } 
-      catch(err) { 
-        this.log(`raise exception: ${err}`);
-        data = {};
-        this.del(key);
+        catch(err){
+          this.logError(`raise exception: ${err}`);
+          this.del(key); 
+          data = {};
+        };
+        if (this.isJSBox || this.isNode){
+          // 构造数据
+          if (!data.hasOwnProperty(key) || typeof data[key] != 'object'){
+            data[key] = {};
+          }
+          if (!data[key].hasOwnProperty(session)){
+            data[key][session] = null;
+          }
+          // 写入或删除数据
+          if (typeof val === 'undefined'){
+            delete data[key][session];
+          }
+          else{
+            data[key][session] = val;
+          }
+        }
+        else {
+          // 写入或删除数据      
+          if (typeof val === 'undefined'){
+            delete data[session];
+          }
+          else{
+            data[session] = val;
+          }
+        }
       }
-      if (this.isNode || this.isJSBox){
-        data[key][session] = val;
-      }
+      // 没有Session时
       else{
-        data[session] = val;
+        if (this.isNode || this.isJSBox){
+          // 删除数据
+          if (typeof val === 'undefined'){
+            delete data[key];
+          }
+          else{
+            data[key] = val;
+          }
+        }        
+        else{    
+          // 删除数据      
+          if (typeof val === 'undefined'){
+            data = null;
+          }
+          else{
+            data = val;
+          }
+        }
       }
+      // 数据回写
       data = JSON.stringify(data);
       if (this.isSurge || this.isLoon) {
         $persistentStore.write(data, key);
@@ -975,25 +1053,18 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
       else if (this.isNode){
         this.node.fs.writeFileSync('./magic.json', data, (err) =>{
-          this.log(err);
+          this.logError(err);
         })
       }
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://magic.json'});
       }
-      if (this.debug) this.log(`write data [${key}][${session}](${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
 
-    del(key){
-      if (this.isSurge || this.isLoon) {
-        $persistentStore.write('', key);
-      }
-      else if (this.isQuanX) {
-        $prefs.setValueForKey('', key);
-      }
-      else if (this.isNode || this.isJSBox){
-        this.write(key, '');
-      }
+    del(key, session=''){
+      this.logDebug(`delete key [${key}]${!!session ? `[${session}]`:''}`);
+      this.write(key, undefined, session);
     }
 
     notify(title = scriptName, subTitle = '', body = ''){
@@ -1019,19 +1090,36 @@ function MagicJS(scriptName='MagicJS', debug=false){
       }
     }
     
-    log(msg){
-      console.log(`[${this.scriptName}]\n${msg}\n`)
+    log(msg, level="INFO"){
+      if (this.logLevel >= this.getLogLevels(level.toUpperCase())) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`)
+    }
+
+    logDebug(msg){
+      this.log(msg, "DEBUG");
+    }
+
+    logInfo(msg){
+      this.log(msg, "INFO");
+    }
+
+    logWarning(msg){
+      this.log(msg, "WARNING");
+    }
+
+    logError(msg){
+      this.log(msg, "ERROR");
     }
 
     get(options, callback){
-      if (this.debug) this.log(`http get: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http get: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.get(options, callback);
+        $httpClient.get(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        options['method'] = 'GET'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        _options['method'] = 'GET'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -1040,31 +1128,32 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        return this.node.request.get(options, callback);
+        return this.node.request.get(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} :_options;
+        options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.get(options);
+        $http.get(_options);
       }
     }
 
     post(options, callback){
-      if (this.debug) this.log(`http post: ${JSON.stringify(options)}`);
+      let _options = typeof options === 'object'? Object.assign({}, options): options;
+      this.logDebug(`http post: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
-        $httpClient.post(options, callback);
+        $httpClient.post(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof options === 'string') options = { url: options }
-        if (options.hasOwnProperty('body') && typeof options['body'] !== 'string') options['body'] = JSON.stringify(options['body']);
-        options['method'] = 'POST'
-        $task.fetch(options).then(
+        if (typeof _options === 'string') _options = { url: _options }
+        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
+        _options['method'] = 'POST'
+        $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
             callback(null, resp, resp.body)
@@ -1073,19 +1162,19 @@ function MagicJS(scriptName='MagicJS', debug=false){
         )
       }
       else if(this.isNode){
-        if (typeof options.body === 'object') options.body = JSON.stringify(options.body);
-        return this.node.request.post(options, callback);
+        if (typeof _options.body === 'object') _options.body = JSON.stringify(_options.body);
+        return this.node.request.post(_options, callback);
       }
       else if(this.isJSBox){
-        options = typeof options === 'string'? {'url': options} : options;
-        options['header'] = options['headers'];
-        delete options['headers']
-        options['handler'] = (resp)=>{
+        _options = typeof _options === 'string'? {'url': _options} : _options;
+        _options['header'] = _options['headers'];
+        delete _options['headers']
+        _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
           callback(err, resp.response, data);
         }
-        $http.post(options);
+        $http.post(_options);
       }
     }
 
@@ -1111,6 +1200,10 @@ function MagicJS(scriptName='MagicJS', debug=false){
             return false;
         }
       }
+    }
+
+    isNumber(val) {
+      return parseFloat(val).toString() === "NaN"? false: true;
     }
 
     /**
