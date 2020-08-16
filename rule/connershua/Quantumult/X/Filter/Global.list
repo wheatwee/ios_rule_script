@@ -1,5 +1,6 @@
 # (DNS Cache Pollution Protection)
 # > Google
+DOMAIN-SUFFIX,ampproject.org,PROXY
 DOMAIN-SUFFIX,appspot.com,PROXY
 DOMAIN-SUFFIX,blogger.com,PROXY
 DOMAIN-SUFFIX,getoutline.org,PROXY
@@ -53,15 +54,13 @@ DOMAIN-SUFFIX,tdesktop.com,PROXY
 DOMAIN-SUFFIX,telegra.ph,PROXY
 DOMAIN-SUFFIX,telegram.me,PROXY
 DOMAIN-SUFFIX,telegram.org,PROXY
-IP-CIDR,67.198.55.0/24,PROXY
+DOMAIN-SUFFIX,telesco.pe,PROXY
 IP-CIDR,91.108.4.0/22,PROXY
 IP-CIDR,91.108.8.0/22,PROXY
 IP-CIDR,91.108.12.0/22,PROXY
 IP-CIDR,91.108.16.0/22,PROXY
 IP-CIDR,91.108.56.0/22,PROXY
-IP-CIDR,109.239.140.0/24,PROXY
 IP-CIDR,149.154.160.0/20,PROXY
-IP-CIDR,205.172.60.0/22,PROXY
 # > Line
 DOMAIN-SUFFIX,line.me,PROXY
 DOMAIN-SUFFIX,line-apps.com,PROXY
@@ -204,6 +203,7 @@ DOMAIN-SUFFIX,icij.org,PROXY
 DOMAIN-SUFFIX,icoco.com,PROXY
 DOMAIN-SUFFIX,imgur.com,PROXY
 DOMAIN-SUFFIX,initiummall.com,PROXY
+DOMAIN-SUFFIX,inoreader.com,PROXY
 DOMAIN-SUFFIX,insecam.org,PROXY
 DOMAIN-SUFFIX,ipfs.io,PROXY
 DOMAIN-SUFFIX,issuu.com,PROXY
@@ -293,6 +293,7 @@ DOMAIN-SUFFIX,readmoo.com,PROXY
 DOMAIN-SUFFIX,redbubble.com,PROXY
 DOMAIN-SUFFIX,reddit.com,PROXY
 DOMAIN-SUFFIX,redditmedia.com,PROXY
+DOMAIN-SUFFIX,redditstatic.com,PROXY
 DOMAIN-SUFFIX,resilio.com,PROXY
 DOMAIN-SUFFIX,reuters.com,PROXY
 DOMAIN-SUFFIX,reutersmedia.net,PROXY
@@ -346,6 +347,7 @@ DOMAIN-SUFFIX,washingtonpost.com,PROXY
 DOMAIN-SUFFIX,wattpad.com,PROXY
 DOMAIN-SUFFIX,whoer.net,PROXY
 DOMAIN-SUFFIX,wikimapia.org,PROXY
+DOMAIN-SUFFIX,wikimedia.org,PROXY
 DOMAIN-SUFFIX,wikipedia.org,PROXY
 DOMAIN-SUFFIX,wikiquote.org,PROXY
 DOMAIN-SUFFIX,wikiwand.com,PROXY
@@ -443,15 +445,6 @@ DOMAIN,hls.itunes.apple.com,PROXY
 DOMAIN,api-glb-sea.smoot.apple.com,PROXY
 # >> Dictionary
 DOMAIN,lookup-api.apple.com,PROXY
-# >> Apple News and Apple Map TOMTOM Version
-DOMAIN,gspe1-ssl.ls.apple.com,PROXY
-USER-AGENT,AppleNews*,PROXY
-USER-AGENT,com.apple.news*,PROXY
-DOMAIN-SUFFIX,apple.news,PROXY
-DOMAIN,news-client.apple.com,PROXY
-DOMAIN,news-edge.apple.com,PROXY
-DOMAIN,news-events.apple.com,PROXY
-DOMAIN,apple.comscoreresearch.com,PROXY
 # > Google
 DOMAIN-SUFFIX,abc.xyz,PROXY
 DOMAIN-SUFFIX,android.com,PROXY
@@ -485,6 +478,7 @@ DOMAIN-SUFFIX,admin.recaptcha.net,PROXY
 DOMAIN-SUFFIX,recaptcha.net,PROXY
 DOMAIN-SUFFIX,shattered.io,PROXY
 DOMAIN-SUFFIX,synergyse.com,PROXY
+DOMAIN-SUFFIX,telephony.goog,PROXY
 DOMAIN-SUFFIX,tensorflow.org,PROXY
 DOMAIN-SUFFIX,tfhub.dev,PROXY
 DOMAIN-SUFFIX,tiltbrush.com,PROXY
@@ -544,7 +538,6 @@ DOMAIN-SUFFIX,ifixit.com,PROXY
 DOMAIN-SUFFIX,iphone4hongkong.com,PROXY
 DOMAIN-SUFFIX,iphonetaiwan.org,PROXY
 DOMAIN-SUFFIX,iptvbin.com,PROXY
-DOMAIN-SUFFIX,jtvnw.net,PROXY
 DOMAIN-SUFFIX,linksalpha.com,PROXY
 DOMAIN-SUFFIX,manyvids.com,PROXY
 DOMAIN-SUFFIX,myactimes.com,PROXY
