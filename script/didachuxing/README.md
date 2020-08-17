@@ -20,8 +20,8 @@ Surge推荐使用模块进行部署，模块地址：https://raw.githubuserconte
 
 ```ini
 [Script]
-嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,,type=cron,cronexp=10 0 * * *
-嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
+嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,type=cron,cronexp=10 0 * * *
+嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
 
 [MITM]
 hostname = www.didapinche.com
