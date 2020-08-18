@@ -16,7 +16,7 @@
 
 临时解决方法：
 
-1. **将去广告规则的优先级排到最前面**
+1. **将去广告规则的优先级调整到最高**
 2. 清理知乎的缓存
 3. 卸载知乎后重装
 4. 安装已经验证过的版本
@@ -109,11 +109,17 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 配置文件
 
 ```ini
-[filter_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.quanx, tag=知乎去广告, force-policy=REJECT, enabled=true
+[filter_local]
+# 知乎去广告
+IP-CIDR,118.89.204.198/32,REJECT
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
 
 [rewrite_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告及黑名单增强, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 ## 我只想单纯的去个广告……
@@ -133,8 +139,14 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 配置文件
 
 ```ini
-[filter_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.quanx, tag=知乎去广告, force-policy=REJECT, enabled=true
+[filter_local]
+# 知乎去广告
+IP-CIDR,118.89.204.198/32,REJECT
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
+USER-AGENT,AVOS*,REJECT
+DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
 
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
