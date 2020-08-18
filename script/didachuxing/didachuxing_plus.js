@@ -328,7 +328,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       }
     }
     
-    get version() { return 'v2.1.3' };
+    get version() { return 'v2.1.4' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -435,7 +435,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         // 有Session，要求所有数据都是Object
         try {
           if (typeof data === 'string') data = JSON.parse(data)
-          data = typeof data === 'object' ? data : {};
+          data = typeof data === 'object' && !!data ? data : {};
         }
         catch(err){
           this.logError(`raise exception: ${err}`);
@@ -547,8 +547,8 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $notification.post(title, subTitle, body);
       }
       else if (this.isLoon){
-        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个logDebug，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
-        this.logDebug(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
+        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个log，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
+        this.logInfo(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
         if (!!options) $notification.post(title, subTitle, body, options);
         else $notification.post(title, subTitle, body);
       }
@@ -741,8 +741,27 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       };
     }
 
+    formatTime(time, fmt="yyyy-MM-dd hh:mm:ss") {
+      var o = {
+        "M+": time.getMonth() + 1,
+        "d+": time.getDate(),
+        "h+": time.getHours(),
+        "m+": time.getMinutes(),
+        "s+": time.getSeconds(),
+        "q+": Math.floor((time.getMonth() + 3) / 3),
+        "S": time.getMilliseconds()
+      };
+      if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (time.getFullYear() + "").substr(4 - RegExp.$1.length));
+      for (let k in o) if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+      return fmt;
+    };
+
+    now(){
+      return this.formatTime(new Date(), "yyyy-MM-dd hh:mm:ss");
+    }
+
     sleep(time) {
-      return new Promise((resolve) => setTimeout(resolve, time));
+      return new Promise(resolve => setTimeout(resolve, time));
     }
     
   }(scriptName);
