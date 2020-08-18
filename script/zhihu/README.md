@@ -170,3 +170,9 @@ Loon 2.1.3(193) TF + 可以使用插件Plugin
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin
 ```
+
+## 感谢
+
+[@onewayticket255](https://github.com/onewayticket255/Surge-Script)
+
+[@fiiir](https://github.com/fiiir)
