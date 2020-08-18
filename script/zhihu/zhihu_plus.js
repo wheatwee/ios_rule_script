@@ -7,7 +7,7 @@ const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/time
 const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
 const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
 let scriptName = '知乎增强';
-let magicJS = MagicJS(scriptName, "INFO");
+let magicJS = MagicJS(scriptName, "DEBUG");
 let answer_blocked_users = {'盐选推荐': 'default', '盐选科普': 'default', '会员推荐': 'default', '故事档案局': 'default'};
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 
@@ -19,7 +19,7 @@ async function main(){
     // 对旧的黑名单数据进行清理
     if (!!custom_blocked_users && custom_blocked_users instanceof Array){
       magicJS.del(blocked_users_key);
-      magicJS.log(`因数据格式变化，当前脚本黑名单已清空，请重新获取。脚本黑名单清空前数据：${JSON.stringify(custom_blocked_users)}`);
+      magicJS.logInfo(`因数据格式变化，当前脚本黑名单已清空，请重新获取。脚本黑名单清空前数据：${JSON.stringify(custom_blocked_users)}`);
       magicJS.notify("因数据格式变化，当前脚本黑名单已清空。\n请访问知乎App中的黑名单列表重新获取。");
     }
     custom_blocked_users = !!custom_blocked_users ? custom_blocked_users : answer_blocked_users;
@@ -27,7 +27,7 @@ async function main(){
   }
   catch (err){
     magicJS.del(blocked_users_key);
-    magicJS.log(`获取脚本黑名单出现异常，已重置脚本黑名单，异常信息：${err}`);
+    magicJS.logError(`获取脚本黑名单出现异常，已重置脚本黑名单，异常信息：${err}`);
     magicJS.notify("获取脚本黑名单出现异常，已清空脚本黑名单。\n请访问知乎App中的黑名单列表重新获取。")
   }
 
@@ -40,7 +40,7 @@ async function main(){
       }
     }
     catch (err){
-      magicJS.log(`解析body出现异常：${body}`);
+      magicJS.logError(`解析body出现异常：${body}`);
       body = {};
     }
     // 知乎推荐去广告与黑名单增强
@@ -55,7 +55,7 @@ async function main(){
           }
         }
         catch (err){
-          magicJS.log('知乎推荐去广告出现异常：' + err);
+          magicJS.logError('知乎推荐去广告出现异常：' + err);
           return true;
         }
       });
@@ -70,7 +70,7 @@ async function main(){
           }
         }
         catch (err){
-          magicJS.log('知乎关注去广告出现异常：' + err);
+          magicJS.logError('知乎关注去广告出现异常：' + err);
           return true;
         }
       });
@@ -135,12 +135,12 @@ async function main(){
             }
           }
           else{
-            magicJS.log(`获取黑名单失败，接口响应不合法：${magicJS.response.body}`);
+            magicJS.logWarning(`获取黑名单失败，接口响应不合法：${magicJS.response.body}`);
           }
         }
         catch(err){
           magicJS.del(blocked_users_key);
-          magicJS.log(`获取黑名单失败，异常信息：${err}`);
+          magicJS.logError(`获取黑名单失败，异常信息：${err}`);
           magicJS.notify('获取黑名单失败，执行异常，已清空黑名单。');
         }
       }
@@ -151,16 +151,16 @@ async function main(){
           if (obj.hasOwnProperty('name') && obj.hasOwnProperty('id')){
             custom_blocked_users[obj['name']] = obj['id'];
             magicJS.write(blocked_users_key, custom_blocked_users, 'default');
-            magicJS.log(`${obj['name']}写入脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
+            magicJS.logInfo(`${obj['name']}写入脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
             magicJS.notify(`已将用户 ${obj['name']} 写入脚本黑名单。`);
           }
           else{
-            magicJS.log(`写入黑名单失败，接口响应不合法：${magicJS.response.body}`);
+            magicJS.logWarning(`写入黑名单失败，接口响应不合法：${magicJS.response.body}`);
             magicJS.notify('写入脚本黑名单失败，接口返回不合法。');
           }
         }
         catch (err){
-          magicJS.log(`写入黑名单失败，异常信息：${err}`);
+          magicJS.logError(`写入黑名单失败，异常信息：${err}`);
           magicJS.notify('写入脚本黑名单失败，执行异常，请查阅日志。');
         }
       }
@@ -174,19 +174,19 @@ async function main(){
               if (custom_blocked_users[username] == user_id){
                 delete custom_blocked_users[username];
                 magicJS.write(blocked_users_key, custom_blocked_users, 'default')
-                magicJS.log(`${obj['name']}移出脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
+                magicJS.logInfo(`${obj['name']}移出脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
                 magicJS.notify(`已将用户 ${username} 移出脚本黑名单！`);
                 break;
               }
             }
           }
           else{
-            magicJS.log(`移出黑名单失败，接口响应不合法：${magicJS.response.body}`);
+            magicJS.logWarning(`移出黑名单失败，接口响应不合法：${magicJS.response.body}`);
             magicJS.notify('移出脚本黑名单失败，接口返回不合法。');
           }
         }
         catch (err){
-          magicJS.log(`移出黑名单失败，异常信息：${err}`);
+          magicJS.logError(`移出黑名单失败，异常信息：${err}`);
           magicJS.notify('移出脚本黑名单失败，执行异常，请查阅日志。');
         }
       }
@@ -230,7 +230,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       }
     }
     
-    get version() { return 'v2.1.3' };
+    get version() { return 'v2.1.4' };
     get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
     get isQuanX() { return typeof $task !== 'undefined' };
     get isLoon() { return typeof $loon !== 'undefined' };
@@ -337,7 +337,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         // 有Session，要求所有数据都是Object
         try {
           if (typeof data === 'string') data = JSON.parse(data)
-          data = typeof data === 'object' ? data : {};
+          data = typeof data === 'object' && !!data ? data : {};
         }
         catch(err){
           this.logError(`raise exception: ${err}`);
@@ -449,8 +449,8 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $notification.post(title, subTitle, body);
       }
       else if (this.isLoon){
-        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个logDebug，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
-        this.logDebug(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
+        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个log，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
+        this.logInfo(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
         if (!!options) $notification.post(title, subTitle, body, options);
         else $notification.post(title, subTitle, body);
       }
@@ -643,8 +643,27 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       };
     }
 
+    formatTime(time, fmt="yyyy-MM-dd hh:mm:ss") {
+      var o = {
+        "M+": time.getMonth() + 1,
+        "d+": time.getDate(),
+        "h+": time.getHours(),
+        "m+": time.getMinutes(),
+        "s+": time.getSeconds(),
+        "q+": Math.floor((time.getMonth() + 3) / 3),
+        "S": time.getMilliseconds()
+      };
+      if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (time.getFullYear() + "").substr(4 - RegExp.$1.length));
+      for (let k in o) if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+      return fmt;
+    };
+
+    now(){
+      return this.formatTime(new Date(), "yyyy-MM-dd hh:mm:ss");
+    }
+
     sleep(time) {
-      return new Promise((resolve) => setTimeout(resolve, time));
+      return new Promise(resolve => setTimeout(resolve, time));
     }
     
   }(scriptName);
