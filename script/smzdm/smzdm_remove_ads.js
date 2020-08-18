@@ -17,20 +17,24 @@ let article_regex = /^https:\/\/article-api.smzdm.com\/article\/index_home_page/
 
 // 去除首页推荐广告
 if (homepage_regex.test($request.url)){
-  if (body['data'].hasOwnProperty('banner')){
-    if (body['data']['banner'].hasOwnProperty('big_banner')){
-      delete body['data']['banner']['big_banner'];
+  if (!!body){
+    if (body['data'].hasOwnProperty('banner')){
+      if (body['data']['banner'].hasOwnProperty('big_banner')){
+        delete body['data']['banner']['big_banner'];
+      }
+      if (body['data']['banner'].hasOwnProperty('tonglan_banner')){
+        delete body['data']['banner']['tonglan_banner'];
+      }
     }
-    if (body['data']['banner'].hasOwnProperty('tonglan_banner')){
-      delete body['data']['banner']['tonglan_banner'];
+    if (body.hasOwnProperty('data') && body['data'].hasOwnProperty('rows')){
+      let rows = body['data']['rows'].filter((item) =>{
+        if (item['model_type'] != 'ads'){
+          return true;
+        }
+      })
+      body['data']['rows'] = rows;
     }
   }
-  let rows = body['data']['rows'].filter((item) =>{
-    if (item['model_type'] != 'ads'){
-      return true;
-    }
-  })
-  body['data']['rows'] = rows;
 }
 // 好价去广告
 else if(haojia_regex.test($request.url)){
