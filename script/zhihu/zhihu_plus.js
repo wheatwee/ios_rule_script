@@ -7,7 +7,7 @@ const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/time
 const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
 const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
 let scriptName = '知乎增强';
-let magicJS = MagicJS(scriptName, "DEBUG");
+let magicJS = MagicJS(scriptName, "INFO");
 let answer_blocked_users = {'盐选推荐': 'default', '盐选科普': 'default', '会员推荐': 'default', '故事档案局': 'default'};
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 
