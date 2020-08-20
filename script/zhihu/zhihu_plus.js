@@ -1,11 +1,11 @@
 const blocked_users_key = 'zhihu_blocked_users';
 const topstory_recommend_regex = /^https:\/\/api\.zhihu\.com\/topstory\/recommend\?/;
-const moments_recommend_regex = /^https:\/\/api.zhihu.com\/moments\/recommend/;
-const mcn_userinfo = /^https:\/\/api.zhihu.com\/people\//;
-const question_regex = /^https:\/\/api.zhihu.com\/v4\/questions/;
-const sysmsg_timeline_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/timeline\/entry\/system_message/;
-const sysmsg_notifications_regex = /^https:\/\/api.zhihu.com\/notifications\/v3\/message\?/;
-const blocked_users_regex = /^https:\/\/api.zhihu.com\/settings\/blocked_users/;
+const moments_recommend_regex = /^https:\/\/api\.zhihu\.com\/moments\/recommend/;
+const mcn_userinfo = /^https:\/\/api\.zhihu\.com\/people\//;
+const question_regex = /^https:\/\/api\.zhihu\.com\/v4\/questions/;
+const sysmsg_timeline_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/timeline\/entry\/system_message/;
+const sysmsg_notifications_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/message\?/;
+const blocked_users_regex = /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/;
 let scriptName = '知乎增强';
 let magicJS = MagicJS(scriptName, "INFO");
 let answer_blocked_users = {'盐选推荐': 'default', '盐选科普': 'default', '会员推荐': 'default', '故事档案局': 'default'};
@@ -31,20 +31,25 @@ async function main(){
     magicJS.notify("获取脚本黑名单出现异常，已清空脚本黑名单。\n请访问知乎App中的黑名单列表重新获取。")
   }
 
-  // 知乎去广告及黑名单增强
-  if (magicJS.isResponse){
-    let body = magicJS.response ? magicJS.response.body: {};
+  function body2obj(body){
+    let obj = {}
     try{
       if (body.length > 0){
-        body=JSON.parse(body);
+        obj=JSON.parse(body);
       }
     }
     catch (err){
       magicJS.logError(`解析body出现异常：${body}`);
-      body = {};
+      obj = {};
     }
+    return obj;
+  }
+
+  // 知乎去广告及黑名单增强
+  if (magicJS.isResponse){
     // 知乎推荐去广告与黑名单增强
     if (topstory_recommend_regex.test(magicJS.request.url)){
+      body = body2obj(magicJS.response.body);
       temp_blocked_users = Object.keys(custom_blocked_users);
       magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       let data = body['data'].filter((element) =>{
@@ -60,9 +65,12 @@ async function main(){
         }
       });
       body['data'] = data;
+      body=JSON.stringify(body);
+      magicJS.done({body});
     }
     // 知乎关注去广告
     else if (moments_recommend_regex.test(magicJS.request.url)){
+      body = body2obj(magicJS.response.body);
       let data = body['data'].filter((element) =>{
         try{
           if(element.hasOwnProperty('ad') == false){      
@@ -75,12 +83,19 @@ async function main(){
         }
       });
       body['data'] = data;
+      body=JSON.stringify(body);
+      magicJS.done({body});
     }
+    // 去除MCN信息
     else if (mcn_userinfo.test(magicJS.request.url)){
+      body = body2obj(magicJS.response.body);
       delete body['mcn_user_info']
+      body=JSON.stringify(body);
+      magicJS.done({body});
     }
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
+      body = body2obj(magicJS.response.body);
       temp_blocked_users = Object.keys(custom_blocked_users);
       magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       delete body['ad_info'];
@@ -91,18 +106,24 @@ async function main(){
         }
       })
       body['data'] = data;
+      body=JSON.stringify(body);
+      magicJS.done({body});
     }
     // 拦截官方账号推广消息
     else if (sysmsg_timeline_regex.test(magicJS.request.url) && body.hasOwnProperty('data')){
+      body = body2obj(magicJS.response.body);
       let data = body['data'].filter((element) =>{
         if (sysmsg_blacklist.indexOf(element['content']['title']) < 0){
           return true;
         }
       })
       body['data'] = data;
+      body=JSON.stringify(body);
+      magicJS.done({body});
     } 
     // 屏蔽一些官方的营销消息
     else if (sysmsg_notifications_regex.test(magicJS.request.url)){
+      body = body2obj(magicJS.response.body);
       body['data'].forEach((element, index)=> {
         if(element['detail_title']=='官方帐号消息'){
           let unread_count = body['data'][index]['unread_count'];
@@ -116,6 +137,8 @@ async function main(){
           body['data'][index]['unread_count'] = 0;
         }
       })
+      body=JSON.stringify(body);
+      magicJS.done({body});
     }
     // 黑名单管理
     else if (blocked_users_regex.test(magicJS.request.url)){
@@ -191,9 +214,11 @@ async function main(){
           magicJS.notify('移出脚本黑名单失败，执行异常，请查阅日志。');
         }
       }
+      magicJS.done();
     }
-    body=JSON.stringify(body);
-    magicJS.done({body});
+    else{
+      magicJS.done();
+    }
   }
 }
 
