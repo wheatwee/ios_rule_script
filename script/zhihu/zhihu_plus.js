@@ -84,6 +84,7 @@ async function main(){
       temp_blocked_users = Object.keys(custom_blocked_users);
       magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       delete body['ad_info'];
+      delete body['roundtable_info'];
       let data = body['data'].filter((element) =>{
         if (temp_blocked_users.indexOf(element['author']['name']) < 0){
           return true;
