@@ -96,8 +96,15 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 配置文件
 
 ```ini
-[Remote Rule]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.loon, policy=REJECT, tag=知乎, enabled=true
+[Rule]
+# 知乎去广告
+IP-CIDR,118.89.204.198/32,REJECT,no-resolve
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
+DOMAIN,appcloud2.zhihu.com,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
@@ -163,8 +170,15 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 配置文件
 
 ```ini
-[Remote Rule]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.loon, policy=REJECT, tag=知乎, enabled=true
+[Rule]
+# 知乎去广告
+IP-CIDR,118.89.204.198/32,REJECT,no-resolve
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
+DOMAIN,appcloud2.zhihu.com,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,https:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true

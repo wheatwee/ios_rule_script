@@ -1,13 +1,13 @@
 # 知乎去广告及黑名单增强
 
 [Rule]
-IP-CIDR, 118.89.204.198/32, REJECT
-DOMAIN, 118.89.204.198, REJECT
-DOMAIN-SUFFIX, 118.89.204.198, REJECT
-DOMAIN-KEYWORD, 118.89.204.198, REJECT
+IP-CIDR,118.89.204.198/32,REJECT,no-resolve
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
 DOMAIN,appcloud2.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,https://api.zhihu.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,https:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [Script]
 http-response ^https?:\/\/api\.zhihu\.com\/people requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_去除MCN信息
