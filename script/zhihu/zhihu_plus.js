@@ -1,6 +1,6 @@
 const blocked_users_key = 'zhihu_blocked_users';
 const topstory_recommend_regex = /^https:\/\/api\.zhihu\.com\/topstory\/recommend\?/;
-const moments_recommend_regex = /^https:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=)/;
+const moments_recommend_regex = /^https:\/\/api\.zhihu\.com\/moments(\/|\?)?(recommend|action=|feed_type=)/;
 const mcn_userinfo = /^https:\/\/api\.zhihu\.com\/people\//;
 const question_regex = /^https:\/\/api\.zhihu\.com\/v4\/questions/;
 const sysmsg_timeline_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/timeline\/entry\/system_message/;
