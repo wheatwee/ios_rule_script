@@ -3,3 +3,5 @@ DOMAIN-SUFFIX,f.video.weibocdn.com
 DOMAIN-SUFFIX,fus.cdn.krcom.cn
 DOMAIN,ad.10010.com
 DOMAIN-KEYWORD,wb_ad
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/entry
+URL-REGEX,^https?+:\/\/capis(?:-slb)?+\.didapinche\.com\/ad\/
