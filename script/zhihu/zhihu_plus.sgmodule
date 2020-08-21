@@ -1,5 +1,6 @@
 #!name=知乎
 #!desc=知乎去广告及黑名单增强
+#!system=ios
 
 [Rule]
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.surge,REJECT

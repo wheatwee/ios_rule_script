@@ -8,61 +8,20 @@ const sysmsg_notifications_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v
 const blocked_users_regex = /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/;
 let scriptName = '知乎增强';
 let magicJS = MagicJS(scriptName, "INFO");
-let answer_blocked_users = {'盐选推荐': 'default', '盐选科普': 'default', '会员推荐': 'default', '故事档案局': 'default'};
 let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 
 
 async function main(){
-  let custom_blocked_users = {};
-  try{
-    custom_blocked_users = magicJS.read(blocked_users_key, 'default');
-    // 对旧的黑名单数据进行清理
-    if (!!custom_blocked_users && custom_blocked_users instanceof Array){
-      magicJS.del(blocked_users_key);
-      magicJS.logInfo(`因数据格式变化，当前脚本黑名单已清空，请重新获取。脚本黑名单清空前数据：${JSON.stringify(custom_blocked_users)}`);
-      magicJS.notify("因数据格式变化，当前脚本黑名单已清空。\n请访问知乎App中的黑名单列表重新获取。");
-    }
-    custom_blocked_users = !!custom_blocked_users ? custom_blocked_users : answer_blocked_users;
-    magicJS.logDebug(`获取脚本黑名单列表成功，当前黑名单：${JSON.stringify(custom_blocked_users)}。`)
-  }
-  catch (err){
-    magicJS.del(blocked_users_key);
-    magicJS.logError(`获取脚本黑名单出现异常，已重置脚本黑名单，异常信息：${err}`);
-    magicJS.notify("获取脚本黑名单出现异常，已清空脚本黑名单。\n请访问知乎App中的黑名单列表重新获取。")
-  }
-
-  function body2obj(body){
-    let obj = {}
-    try{
-      if (body.length > 0){
-        obj=JSON.parse(body);
-      }
-    }
-    catch (err){
-      magicJS.logError(`解析body出现异常：${body}`);
-      obj = {};
-    }
-    return obj;
-  }
 
   // 知乎去广告及黑名单增强
   if (magicJS.isResponse){
     // 知乎推荐去广告与黑名单增强
     if (topstory_recommend_regex.test(magicJS.request.url)){
-      body = body2obj(magicJS.response.body);
-      temp_blocked_users = Object.keys(custom_blocked_users);
-      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
+      let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+      body = JSON.parse(magicJS.response.body);
       let data = body['data'].filter((element) =>{
-        try{
-          if(element['card_type'] != 'slot_event_card' && element.hasOwnProperty('ad') == false && element.hasOwnProperty('common_card') && 
-          temp_blocked_users.indexOf(element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']) < 0){      
-            return true;
-          }
-        }
-        catch (err){
-          magicJS.logError('知乎推荐去广告出现异常：' + err);
-          return true;
-        }
+        return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
+        !custom_blocked_users[element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']]
       });
       body['data'] = data;
       body=JSON.stringify(body);
@@ -70,62 +29,44 @@ async function main(){
     }
     // 知乎关注去广告
     else if (moments_recommend_regex.test(magicJS.request.url)){
-      body = body2obj(magicJS.response.body);
-      let data = body['data'].filter((element) =>{
-        try{
-          if(element.hasOwnProperty('ad') == false){      
-            return true;
-          }
-        }
-        catch (err){
-          magicJS.logError('知乎关注去广告出现异常：' + err);
-          return true;
-        }
-      });
+      body = JSON.parse(magicJS.response.body);
+      let data = body['data'].filter((element) =>{return !element['ad']});
       body['data'] = data;
       body=JSON.stringify(body);
       magicJS.done({body});
     }
     // 去除MCN信息
     else if (mcn_userinfo.test(magicJS.request.url)){
-      body = body2obj(magicJS.response.body);
+      body = JSON.parse(magicJS.response.body);
       delete body['mcn_user_info']
       body=JSON.stringify(body);
       magicJS.done({body});
     }
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
-      body = body2obj(magicJS.response.body);
-      temp_blocked_users = Object.keys(custom_blocked_users);
+      let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+      body = JSON.parse(magicJS.response.body);
       magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
       delete body['ad_info'];
       delete body['roundtable_info'];
-      let data = body['data'].filter((element) =>{
-        if (temp_blocked_users.indexOf(element['author']['name']) < 0){
-          return true;
-        }
-      })
+      let data = body['data'].filter((element) =>{ return !custom_blocked_users[element['author']['name']]})
       body['data'] = data;
       body=JSON.stringify(body);
       magicJS.done({body});
     }
     // 拦截官方账号推广消息
     else if (sysmsg_timeline_regex.test(magicJS.request.url) && body.hasOwnProperty('data')){
-      body = body2obj(magicJS.response.body);
-      let data = body['data'].filter((element) =>{
-        if (sysmsg_blacklist.indexOf(element['content']['title']) < 0){
-          return true;
-        }
-      })
+      body = JSON.parse(magicJS.response.body);
+      let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
       body['data'] = data;
       body=JSON.stringify(body);
       magicJS.done({body});
     } 
     // 屏蔽一些官方的营销消息
     else if (sysmsg_notifications_regex.test(magicJS.request.url)){
-      body = body2obj(magicJS.response.body);
+      body = JSON.parse(magicJS.response.body);
       body['data'].forEach((element, index)=> {
-        if(element['detail_title']=='官方帐号消息'){
+        if(element['detail_title'] === '官方帐号消息'){
           let unread_count = body['data'][index]['unread_count'];
           if (unread_count > 0){
             body['data'][index]['content']['text'] = '未读消息' + unread_count + '条';
@@ -142,13 +83,15 @@ async function main(){
     }
     // 黑名单管理
     else if (blocked_users_regex.test(magicJS.request.url)){
+      let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+      custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
       // 获取黑名单
       if (magicJS.request.method == 'GET'){
         try{
           let obj = JSON.parse(magicJS.response.body);
           if (!!obj['data']){
             obj['data'].forEach(element => {
-              if (element['name'] != '[已重置]' && !custom_blocked_users.hasOwnProperty(element['name'])){
+              if (element['name'] != '[已重置]' && !custom_blocked_users[element['name']]){
                 custom_blocked_users[element['name']] = element['id'];
               }
             });
