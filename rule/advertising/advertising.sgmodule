@@ -727,7 +727,6 @@
 ^https?:\/\/api\.vistopia\.com\.cn\/api\/(v1|v\/d)\/home\/advertisement - reject
 ^https?:\/\/g\.cdn\.pengpengla\.com\/starfantuan\/boot-screen-info\/ - reject
 ^https?:\/\/api\.qbb6\.com\/ad\/ - reject
-^https?:\/\/www\.didapinche\.com\/app\/adstat\/ - reject
 ^https?:\/\/capis\.didapinche\.com\/ad\/ - reject
 ^https?:\/\/mcupdate\.gstarcad\.com\/api\/v2\/ - reject
 ^https?:\/\/mi\.gdt\.qq\.com\/gdt_mview.\fcg - reject
