@@ -123,6 +123,10 @@ DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
+[URL Rewrite]
+# 知乎直播修正
+^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
+
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
 ```
@@ -202,6 +206,10 @@ DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
+[URL Rewrite]
+# 知乎直播修正
+^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
+
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true
 ```
@@ -217,13 +225,37 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ### 知乎直播无法访问
 
-我这套配置**不会导致知乎直播无法访问**。目前已知部分通用的去广告规则，会导致知乎直播无法访问。
+我这套配置**不会导致知乎直播无法访问**。目前已知部分大而全的去广告规则集合，会导致知乎直播无法访问。
 
 我已经在Surge模块和Loon插件中对知乎直播无法访问的问题做了修正，但由于优先级的问题，不一定会生效。
 
 Quantumult X这方面的拦截，是在url复写中的，暂时没有办法通过更高优先级的规则来修正它，只有等复写规则的作者更新。
 
 如果出现知乎直播无法访问的情况，请开启抓包/调试/记录日志等功能，确认是哪条规则影响知乎直播的正常访问，将其删除或编写修正规则覆盖掉它。
+
+#### Surge/Loon
+
+Surge和Loon的知乎直播修正，提供两种方案。
+
+一种是在本地规则中修改，覆盖掉远程引用的规则集，适用于远程规则集配置错误导致知乎直播无法访问的情况。
+
+```ini
+[Rule]
+# 知乎直播修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
+```
+
+一种是在url复写中进行修改，覆盖掉远程的订阅复写，适用于Loon远程订阅复写配置错误导致知乎直播无法访问的情况。
+
+```ini
+[URL Rewrite]
+# 知乎直播修正
+^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
+```
+
+根据实际情况二选一即可。如果使用插件，为覆盖各种场景，两个规则都写入到插件中了。
+
+如果远程错误的规则是在模块或插件中的，由于模块和插件优先级很高，上面的修正可能不会生效，建议联系插件作者修改。
 
 ## 感谢
 
