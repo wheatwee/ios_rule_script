@@ -1,18 +1,29 @@
 # 知乎增强
 
+## 介绍
+
 去除知乎广告，提供黑名单增强等功能。
+
+分为Plus和Lite两个版本，带✨号的为Plus版本的功能。
 
 目前已实现：
 
-1. 去除关注、推荐信息流的广告
-2. 去除回答列表中的广告
-3. 去除官方账号消息的广告
-4. 去除推荐信息流中黑名单用户的回答
-5. 去除回答列表中黑名单用户的回答
-6. 去除回答列表中的圆桌
-7. 去除关注顶部的最常访问
-8. 去除未读消息的红点
-9. 去除知乎指南提示
+1. 去除关注列表的广告
+2. 去除推荐列表的广告
+3. 去除回答列表的广告
+4. 去除回答列表的圆桌
+5. 去除官方账号的推广消息✨
+6. 去除推荐列表中黑名单用户的回答✨
+7. 去除回答列表中黑名单用户的回答✨
+8. 去除关注顶部的最常访问✨
+9. 去除未读消息的红点✨
+10. 去除知乎指南提示✨
+
+## 最近更新
+
+1. 解决关注列表切换为”时间排序“时去广告失效的问题
+2. 解决知乎直播无法访问的问题
+3. 去除回答列表的圆桌
 
 ## 去广告
 
@@ -28,11 +39,11 @@
 4. 安装已经验证过的版本
 5. 增加一个 * 的MITM，慎用，100%能去广告，但是副作用非常大
 
-### 测试情况
+### 验证情况
 
 2020年8月8日：
 
-在知乎 V6.5.1.1(2518)、Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 中测试通过。
+在知乎 V6.5.1.1(2518)、Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 中验证通过。
 
 ## 黑名单增强
 
@@ -58,6 +69,8 @@
 
 ## 配置说明
 
+配置说明以Plus版本为主，Lite版本的配置说明见文末。
+
 #### Surge
 
 配置文件
@@ -75,11 +88,11 @@ RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/s
 ^https?:\/\/api\.zhihu\.com\/me\/guides data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
 
 [Script]
-知乎_去除MCN信息 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/people/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/(moments|topstory)/recommend,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_获取黑名单 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com\/settings\/blocked_users,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com/v4/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_去除MCN信息 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/people\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_获取黑名单 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/settings\/blocked_users,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/v4\/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 
 [MITM]
 hostname = www.zhihu.com, api.zhihu.com, link.zhihu.com, 118.89.204.198
@@ -98,13 +111,16 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 ```ini
 [Rule]
 # 知乎去广告
+DOMAIN,118.89.204.198,REJECT,no-resolve
+DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
+DOMAIN-KEYWORD,118.89.204.198,REJECT,no-resolve
 IP-CIDR,118.89.204.198/32,REJECT,no-resolve
-DOMAIN,118.89.204.198,REJECT
-DOMAIN-SUFFIX,118.89.204.198,REJECT
-DOMAIN-KEYWORD,118.89.204.198,REJECT
 DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,https?:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+# 知乎直播入口修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
@@ -124,12 +140,13 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 ```ini
 [filter_local]
 # 知乎去广告
-IP-CIDR,118.89.204.198/32,REJECT
 DOMAIN,118.89.204.198,REJECT
 DOMAIN-SUFFIX,118.89.204.198,REJECT
 DOMAIN-KEYWORD,118.89.204.198,REJECT
+IP-CIDR,118.89.204.198/32,REJECT
 USER-AGENT,AVOS*,REJECT
 DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
+DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
@@ -137,7 +154,7 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ## 我只想单纯的去个广告……
 
-知乎去除最常访问、知乎去除未读消息红点、知乎指南屏蔽、黑名单功能增强已不属于屏蔽广告范畴，如果只想单纯去广告，使用下面的配置
+知乎去除最常访问、知乎去除未读消息红点、知乎指南屏蔽、黑名单功能增强已不属于屏蔽广告范畴，如果只想单纯去广告，使用下面的Lite版本的配置
 
 ### Surge
 
@@ -154,12 +171,13 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 ```ini
 [filter_local]
 # 知乎去广告
-IP-CIDR,118.89.204.198/32,REJECT
 DOMAIN,118.89.204.198,REJECT
 DOMAIN-SUFFIX,118.89.204.198,REJECT
 DOMAIN-KEYWORD,118.89.204.198,REJECT
+IP-CIDR,118.89.204.198/32,REJECT
 USER-AGENT,AVOS*,REJECT
 DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
+DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
@@ -172,13 +190,16 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 ```ini
 [Rule]
 # 知乎去广告
+DOMAIN,118.89.204.198,REJECT,no-resolve
+DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
+DOMAIN-KEYWORD,118.89.204.198,REJECT,no-resolve
 IP-CIDR,118.89.204.198/32,REJECT,no-resolve
-DOMAIN,118.89.204.198,REJECT
-DOMAIN-SUFFIX,118.89.204.198,REJECT
-DOMAIN-KEYWORD,118.89.204.198,REJECT
 DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,https?:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+# 知乎直播入口修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true
@@ -190,6 +211,16 @@ Loon 2.1.3(193) TF + 可以使用插件Plugin
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin
 ```
+
+## 已知问题
+
+### 知乎直播无法访问
+
+目前已知此条正则`^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad)`，会导致知乎直播无法访问。
+
+修正如下为`^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad)`。
+
+但这条正则不止在我的去广告配置里存在，在很多通用的去广告配置中都存在。在我这里做修正不一定能解决问题。如果更新到最新的脚本，还是无法访问知乎直播的话，务必开启抓包功能，确认是被哪条规则拦截，删除对应的规则或增加修正规则覆盖掉它。
 
 ## 感谢
 
