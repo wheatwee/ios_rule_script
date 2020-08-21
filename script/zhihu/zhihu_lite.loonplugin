@@ -1,16 +1,17 @@
 # 知乎去广告及黑名单增强
 
 [Rule]
+# 知乎直播修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎去广告
 DOMAIN,118.89.204.198,REJECT,no-resolve
 DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
 DOMAIN-KEYWORD,118.89.204.198,REJECT,no-resolve
 IP-CIDR,118.89.204.198/32,REJECT,no-resolve
 DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
-# 知乎直播入口修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 [Script]
 http-response ^https?:\/\/api\.zhihu\.com\/people requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_去除MCN信息
