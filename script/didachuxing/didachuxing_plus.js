@@ -1,15 +1,4 @@
-/*
-Surge Config
-
-[Script]
-嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_checkin.js,type=cron,cronexp=15 0 * * *
-嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_checkin.js,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
-
-[MITM]
-hostname = www.didapinche.com
-*/
-
-const didaGetCookieRegex = /^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*/;
+const didaGetCookieRegex = /^https?:\/\/www\.didapinche\.com\/hapis\/api\/t\/Jifen\/getSignInInfo\?userCid=.*/;
 const didaCidKey = 'dida_cid';
 const didaCookieKey = 'dida_cookie';
 const didaUserAgentKey = 'dida_useragent';
