@@ -21,9 +21,10 @@
 
 ## 最近更新
 
-1. 解决关注列表切换为”时间排序“时去广告失效的问题
-2. 解决知乎直播无法访问的问题
-3. 去除回答列表的圆桌
+1. 去除脚本内置的答主黑名单，现在屏蔽谁完全由你决定。如果出现屏蔽失效，请重新获取黑名单。
+2. 解决关注列表切换为”时间排序“时去广告失效的问题
+3. 解决知乎直播无法访问的问题
+4. 去除回答列表的圆桌
 
 ## 去广告
 
@@ -110,6 +111,8 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ```ini
 [Rule]
+# 知乎直播修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎去广告
 DOMAIN,118.89.204.198,REJECT,no-resolve
 DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
@@ -119,8 +122,6 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
-# 知乎直播入口修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
@@ -189,6 +190,8 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ```ini
 [Rule]
+# 知乎直播修正
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎去广告
 DOMAIN,118.89.204.198,REJECT,no-resolve
 DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
@@ -198,8 +201,6 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
-# 知乎直播入口修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true
@@ -212,15 +213,17 @@ Loon 2.1.3(193) TF + 可以使用插件Plugin
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin
 ```
 
-## 已知问题
+## 其他问题
 
 ### 知乎直播无法访问
 
-目前已知此条正则`^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad)`，会导致知乎直播无法访问。
+我这套配置**不会导致知乎直播无法访问**。目前已知部分通用的去广告规则，会导致知乎直播无法访问。
 
-修正如下为`^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad)`。
+我已经在Surge模块和Loon插件中对知乎直播无法访问的问题做了修正，但由于优先级的问题，不一定会生效。
 
-但这条正则不止在我的去广告配置里存在，在很多通用的去广告配置中都存在。在我这里做修正不一定能解决问题。如果更新到最新的脚本，还是无法访问知乎直播的话，务必开启抓包功能，确认是被哪条规则拦截，删除对应的规则或增加修正规则覆盖掉它。
+Quantumult X这方面的拦截，是在url复写中的，暂时没有办法通过更高优先级的规则来修正它，只有等复写规则的作者更新。
+
+如果出现知乎直播无法访问的情况，请开启抓包/调试/记录日志等功能，确认是哪条规则影响知乎直播的正常访问，将其删除或编写修正规则覆盖掉它。
 
 ## 感谢
 
