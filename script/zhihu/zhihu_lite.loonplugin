@@ -7,12 +7,12 @@ DOMAIN-SUFFIX,118.89.204.198,REJECT
 DOMAIN-KEYWORD,118.89.204.198,REJECT
 DOMAIN,appcloud2.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,https:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,https?:\/\/api\.zhihu\.com/(ad|drama|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [Script]
 http-response ^https?:\/\/api\.zhihu\.com\/people requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_去除MCN信息
-http-response ^https?:\/\/api\.zhihu\.com\/(moments|topstory)\/recommend requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_信息流去广告
-http-response ^https?:\/\/api\.zhihu\.com\/v4/questions requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_回答去广告
+http-response ^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=) requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_信息流去广告
+http-response ^https?:\/\/api\.zhihu\.com\/v4\/questions requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_回答去广告
 
 
 [MITM]
