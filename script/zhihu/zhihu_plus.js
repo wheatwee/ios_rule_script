@@ -18,6 +18,7 @@ async function main(){
     // 知乎推荐去广告与黑名单增强
     if (topstory_recommend_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+      custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
       body = JSON.parse(magicJS.response.body);
       let data = body['data'].filter((element) =>{
         return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
@@ -45,8 +46,9 @@ async function main(){
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+      custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
       body = JSON.parse(magicJS.response.body);
-      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(temp_blocked_users)}`);
+      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
       delete body['ad_info'];
       delete body['roundtable_info'];
       let data = body['data'].filter((element) =>{ return !custom_blocked_users[element['author']['name']]})
