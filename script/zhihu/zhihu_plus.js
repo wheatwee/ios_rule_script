@@ -6,17 +6,24 @@ const question_regex = /^https:\/\/api\.zhihu\.com\/v4\/questions/;
 const sysmsg_timeline_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/timeline\/entry\/system_message/;
 const sysmsg_notifications_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/message\?/;
 const blocked_users_regex = /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/;
-let scriptName = '知乎增强';
+const scriptName = '知乎增强';
+const answer_blocked_users = ['会员推荐'];
+const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 let magicJS = MagicJS(scriptName, "INFO");
-let sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 
 
 async function main(){
-
-  // 知乎去广告及黑名单增强
+  // 去广告和黑名单增强
   if (magicJS.isResponse){
+    // 去除MCN信息
+    if (mcn_userinfo.test(magicJS.request.url)){
+      body = JSON.parse(magicJS.response.body);
+      delete body['mcn_user_info']
+      body=JSON.stringify(body);
+      magicJS.done({body});
+    }
     // 知乎推荐去广告与黑名单增强
-    if (topstory_recommend_regex.test(magicJS.request.url)){
+    else if (topstory_recommend_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
       custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
       body = JSON.parse(magicJS.response.body);
@@ -36,13 +43,6 @@ async function main(){
       body=JSON.stringify(body);
       magicJS.done({body});
     }
-    // 去除MCN信息
-    else if (mcn_userinfo.test(magicJS.request.url)){
-      body = JSON.parse(magicJS.response.body);
-      delete body['mcn_user_info']
-      body=JSON.stringify(body);
-      magicJS.done({body});
-    }
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
@@ -57,7 +57,7 @@ async function main(){
       magicJS.done({body});
     }
     // 拦截官方账号推广消息
-    else if (sysmsg_timeline_regex.test(magicJS.request.url) && body.hasOwnProperty('data')){
+    else if (sysmsg_timeline_regex.test(magicJS.request.url)){
       body = JSON.parse(magicJS.response.body);
       let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
       body['data'] = data;
@@ -87,13 +87,16 @@ async function main(){
     else if (blocked_users_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
       custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
+      answer_blocked_users.forEach(element => {
+        custom_blocked_users[element] = '';
+      });
       // 获取黑名单
       if (magicJS.request.method == 'GET'){
         try{
           let obj = JSON.parse(magicJS.response.body);
           if (!!obj['data']){
             obj['data'].forEach(element => {
-              if (element['name'] != '[已重置]' && !custom_blocked_users[element['name']]){
+              if (element['name'] != '[已重置]'){
                 custom_blocked_users[element['name']] = element['id'];
               }
             });
@@ -161,10 +164,9 @@ async function main(){
       }
       magicJS.done();
     }
-    else{
-      magicJS.done();
-    }
   }
+  // 兜底
+  magicJS.done();
 }
 
 main();

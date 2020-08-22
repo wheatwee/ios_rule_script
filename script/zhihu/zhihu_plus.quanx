@@ -5,6 +5,8 @@
 ^https?:\/\/api\.zhihu\.com\/settings\/blocked_users url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 ^https?:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message) url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 
+# 知乎直播修正
+^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
 # 知乎去除最常访问
 ^https?:\/\/api\.zhihu\.com\/moments\/recent url reject-dict
 # 知乎去除未读消息红点
