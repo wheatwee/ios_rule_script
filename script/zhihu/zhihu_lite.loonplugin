@@ -22,6 +22,5 @@ http-response ^https?:\/\/api\.zhihu\.com\/people requires-body=1,script-path=ht
 http-response ^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=) requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_信息流去广告
 http-response ^https?:\/\/api\.zhihu\.com\/v4\/questions requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_回答去广告
 
-
 [MITM]
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
