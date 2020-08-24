@@ -1,0 +1,7 @@
+# 白名单复写，解决引用第三方复写脚本导致的异常
+# Bilibili 启动开屏画面设置
+^https?:\/\/app\.bilibili\.com\/x\/v2\/splash\/brand\/set url 307 https://app.bilibili.com/x/v2splash/brand/set
+# 滴答出行无法购买优惠券
+^https?:\/\/www\.didapinche\.com\/app\/adstat url 307 https://www.didapinche.com/app/adstat
+# 知乎直播无法点击
+^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
