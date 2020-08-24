@@ -10,3 +10,5 @@ DOMAIN,ad.10010.com
 URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/
 # 嘀嗒出行购买优惠券
 URL-REGEX,^https?:\/\/www\.didapinche\.com\/app\/adstat
+# Bilibili启动开屏画面选择
+URL-REGEX,^https?:\/\/app\.bilibili\.com\/x\/v2\/splash\/brand\/set
