@@ -15,5 +15,7 @@
 ^https?:\/\/api\.zhihu\.com\/me\/guides url reject-dict
 # 通用广告去除
 ^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad) url reject
+# 会员页面弹出广告
+^https?:\/\/api\.zhihu\.com\/market\/popovers url reject-dict
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198

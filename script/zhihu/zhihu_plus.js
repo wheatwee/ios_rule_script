@@ -5,8 +5,9 @@ const mcn_userinfo = /^https:\/\/api\.zhihu\.com\/people\//;
 const question_regex = /^https:\/\/api\.zhihu\.com\/v4\/questions/;
 const sysmsg_timeline_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/timeline\/entry\/system_message/;
 const sysmsg_notifications_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v3\/message\?/;
+const answer_appview_regex = /^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\//;
 const blocked_users_regex = /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/;
-const scriptName = '知乎增强';
+const scriptName = '知乎助手';
 const answer_blocked_users = ['会员推荐'];
 const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 let magicJS = MagicJS(scriptName, "INFO");
@@ -55,6 +56,27 @@ async function main(){
       body['data'] = data;
       body=JSON.stringify(body);
       magicJS.done({body});
+    }
+    // 付费内容提醒
+    else if (answer_appview_regex.test(magicJS.request.url)){
+      try{
+        let html = magicJS.response.body;
+        if (html.indexOf('元/天开通会员') >= 0 && html.indexOf('paid') >= 0){
+          let richText = html.match(/(richText[^<]*>)(.)/);
+          let matchStr = richText[1];
+          let start = html.lastIndexOf(matchStr) + matchStr.length;
+          let insertText = '<div class="Labels LabelContainer"><div class="Labels-item"><div class="ThanksForInvitingLabel"><span class="ThanksForInvitingLabel-icon"><span style="display: inline-flex; align-items: center;"></span>✿ 知乎助手</span><a href="https://github.com/blackmatrix7/ios_rule_script/tree/master/script/zhihu">本文为付费内容。</a></div></div></div>'
+          html = html.slice(0, start) + insertText + html.slice(start);
+          magicJS.done({body: html});
+        }
+        else{
+          magicJS.done();
+        }
+      }
+      catch(err){
+        magicJS.logError(err);
+        magicJS.done();
+      }
     }
     // 拦截官方账号推广消息
     else if (sysmsg_timeline_regex.test(magicJS.request.url)){
@@ -174,10 +196,28 @@ main();
 function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
   return new class{
+
     constructor(){
+      this.version = '2.2.1'
       this.scriptName = scriptName;
-      this.logLevel = this.getLogLevels(logLevel.toUpperCase());
+      this.logLevels = {
+        DEBUG: 5,
+        INFO: 4,
+        NOTIFY: 3,
+        WARNING: 2,
+        ERROR: 1,
+        CRITICAL: 0,
+        NONE: -1
+      };
+      this.isLoon = typeof $loon !== 'undefined';
+      this.isQuanX = typeof $task !== 'undefined';
+      this.isJSBox = typeof $drive !== 'undefined';
+      this.isNode = typeof module !== 'undefined' && !this.isJSBox;
+      this.isSurge = typeof $httpClient !== 'undefined' && !this.isLoon;
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
+      this.iOSUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Mobile/15E148 Safari/604.1';
+      this.pcUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36 Edg/84.0.522.59';
+      this.logLevel = logLevel;
       if (this.isNode){
         this.node.fs = require('fs');
         this.node.request = require('request');
@@ -185,12 +225,11 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
           this.node.fs.accessSync('./magic.json');
         }
         catch(err){
-          this.logError(err);
           this.node.fs.writeFileSync('./magic.json', '{}')
         }
         this.node.data = require('./magic.json');
       }
-      if (this.isJSBox){
+      else if (this.isJSBox){
         if (!$file.exists('drive://MagicJS')){
           $file.mkdir('drive://MagicJS');
         }
@@ -202,16 +241,12 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       }
     }
-    
-    get version() { return 'v2.1.4' };
-    get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
-    get isQuanX() { return typeof $task !== 'undefined' };
-    get isLoon() { return typeof $loon !== 'undefined' };
-    get isJSBox() { return typeof $drive !== 'undefined'};
-    get isNode() { return typeof module !== 'undefined' && !this.isJSBox };
-    get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+
+    set logLevel(level) {this._logLevel = typeof level === 'string'? level.toUpperCase(): 'DEBUG'};
+    get logLevel() {return this._logLevel};
+    get isRequest() { return typeof $request !== 'undefined' && typeof $response === 'undefined'}
     get isResponse() { return typeof $response !== 'undefined' }
-    get request() { return (typeof $request !== 'undefined') ? $request : undefined }
+    get request() { return typeof $request !== 'undefined' ? $request : undefined }
     get response() { 
       if (typeof $response !== 'undefined'){
         if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
@@ -222,37 +257,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         return undefined;
       }
     }
-
-    get logLevels(){
-      return {
-        DEBUG: 4,
-        INFO: 3,
-        WARNING: 2,
-        ERROR: 1,
-        CRITICAL: 0
-      };
-    } 
-
-    getLogLevels(level){
-      try{
-        if (this.isNumber(level)){
-          return level;
-        }
-        else{
-          let levelNum = this.logLevels[level];
-          if (typeof levelNum === 'undefined'){
-            this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}。`)
-            return this.logLevels.DEBUG;
-          }
-          else{
-            return levelNum;
-          }
-        }
-      }
-      catch(err){
-        this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}，异常信息：${err}。`)
-        return this.logLevels.DEBUG;
-      }
+    get platform(){
+      if (this.isSurge) return "Surge"
+      else if (this.isQuanX) return "Quantumult X"
+      else if (this.isLoon) return "Loon"
+      else if (this.isJSBox) return "JSBox"
+      else if (this.isNode) return "Node.js"
+      else return "unknown"
     }
 
     read(key, session=''){
@@ -281,13 +292,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       } 
       catch (err){ 
-        this.logError(`raise exception: ${err}`);
+        this.logError(err);
         val = !!session? {} : null;
         this.del(key);
       }
       if (typeof val === 'undefined') val = null;
       try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
-      this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`READ DATA [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
@@ -307,13 +318,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         data = JSON.parse($file.read('drive://MagicJS/magic.json').string);
       }
       if (!!session){
-        // 有Session，要求所有数据都是Object
+        // 有Session，所有数据都是Object
         try {
           if (typeof data === 'string') data = JSON.parse(data)
           data = typeof data === 'object' && !!data ? data : {};
         }
         catch(err){
-          this.logError(`raise exception: ${err}`);
+          this.logError(err);
           this.del(key); 
           data = {};
         };
@@ -378,11 +389,11 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://MagicJS/magic.json'});
       }
-      this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`WRITE DATA [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
 
     del(key, session=''){
-      this.logDebug(`delete key [${key}]${!!session ? `[${session}]`:''}`);
+      this.logDebug(`DELETE KEY [${key}]${!!session ? `[${session}]`:''}`);
       this.write(key, undefined, session);
     }
 
@@ -399,6 +410,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
      * options {'open-url': 'https://www.apple.com.cn/', 'media-url': 'https://raw.githubusercontent.com/Orz-3/mini/master/Apple.png'} 打开Apple.com.cn，显示一个苹果Logo
      */ 
     notify(title=this.scriptName, subTitle='', body='', options=''){
+      this.logNotify(`title:${title}\nsubTitle:${subTitle}\nbody:${body}\noptions:${typeof options === 'object'? JSON.stringify(options) : options}`);
       let convertOptions = (_options) =>{
         let newOptions = '';
         if (typeof _options === 'string'){
@@ -422,8 +434,6 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $notification.post(title, subTitle, body);
       }
       else if (this.isLoon){
-        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个log，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
-        this.logInfo(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
         if (!!options) $notification.post(title, subTitle, body, options);
         else $notification.post(title, subTitle, body);
       }
@@ -443,7 +453,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     }
     
     log(msg, level="INFO"){
-      if (this.logLevel >= this.getLogLevels(level.toUpperCase())) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`)
+      if (!(this.logLevels[this._logLevel] < this.logLevels[level.toUpperCase()])) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`);
     }
 
     logDebug(msg){
@@ -454,6 +464,10 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.log(msg, "INFO");
     }
 
+    logNotify(msg){
+      this.log(msg, "NOTIFY");
+    }
+
     logWarning(msg){
       this.log(msg, "WARNING");
     }
@@ -461,16 +475,196 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     logError(msg){
       this.log(msg, "ERROR");
     }
+
+    /**
+     * 对传入的Http Options根据不同环境进行适配
+     * @param {*} options 
+     */
+    adapterHttpOptions(options, method){
+      let _options = typeof options === 'object'? Object.assign({}, options): {'url': options, 'headers': {}};
+      
+      if (_options.hasOwnProperty('header') && !_options.hasOwnProperty('headers')){
+        _options['headers'] = _options['header'];
+        delete _options['header'];
+      }
+
+      // 规范化的headers
+      const headersMap = {
+        'accept': 'Accept',
+        'accept-ch': 'Accept-CH',
+        'accept-charset': 'Accept-Charset',
+        'accept-features': 'Accept-Features',
+        'accept-encoding': 'Accept-Encoding',
+        'accept-language': 'Accept-Language',
+        'accept-ranges': 'Accept-Ranges',
+        'access-control-allow-credentials': 'Access-Control-Allow-Credentials',
+        'access-control-allow-origin': 'Access-Control-Allow-Origin',
+        'access-control-allow-methods': 'Access-Control-Allow-Methods',
+        'access-control-allow-headers': 'Access-Control-Allow-Headers',
+        'access-control-max-age': 'Access-Control-Max-Age',
+        'access-control-expose-headers': 'Access-Control-Expose-Headers',
+        'access-control-request-method': 'Access-Control-Request-Method',
+        'access-control-request-headers': 'Access-Control-Request-Headers',
+        'age': 'Age',
+        'allow': 'Allow',
+        'alternates': 'Alternates',
+        'authorization': 'Authorization',
+        'cache-control': 'Cache-Control',
+        'connection': 'Connection',
+        'content-encoding': 'Content-Encoding',
+        'content-language': 'Content-Language',
+        'content-length': 'Content-Length',
+        'content-location': 'Content-Location',
+        'content-md5': 'Content-MD5',
+        'content-range': 'Content-Range',
+        'content-security-policy': 'Content-Security-Policy',
+        'content-type': 'Content-Type',
+        'cookie': 'Cookie',
+        'dnt': 'DNT',
+        'date': 'Date',
+        'etag': 'ETag',
+        'expect': 'Expect',
+        'expires': 'Expires',
+        'from': 'From',
+        'host': 'Host',
+        'if-match': 'If-Match',
+        'if-modified-since': 'If-Modified-Since',
+        'if-none-match': 'If-None-Match',
+        'if-range': 'If-Range',
+        'if-unmodified-since': 'If-Unmodified-Since',
+        'last-event-id': 'Last-Event-ID',
+        'last-modified': 'Last-Modified',
+        'link': 'Link',
+        'location': 'Location',
+        'max-forwards': 'Max-Forwards',
+        'negotiate': 'Negotiate',
+        'origin': 'Origin',
+        'pragma': 'Pragma',
+        'proxy-authenticate': 'Proxy-Authenticate',
+        'proxy-authorization': 'Proxy-Authorization',
+        'range': 'Range',
+        'referer': 'Referer',
+        'retry-after': 'Retry-After',
+        'sec-websocket-extensions': 'Sec-Websocket-Extensions',
+        'sec-websocket-key': 'Sec-Websocket-Key',
+        'sec-websocket-origin': 'Sec-Websocket-Origin',
+        'sec-websocket-protocol': 'Sec-Websocket-Protocol',
+        'sec-websocket-version': 'Sec-Websocket-Version',
+        'server': 'Server',
+        'set-cookie': 'Set-Cookie',
+        'set-cookie2': 'Set-Cookie2',
+        'strict-transport-security': 'Strict-Transport-Security',
+        'tcn': 'TCN',
+        'te': 'TE',
+        'trailer': 'Trailer',
+        'transfer-encoding': 'Transfer-Encoding',
+        'upgrade': 'Upgrade',
+        'user-agent': 'User-Agent',
+        'variant-vary': 'Variant-Vary',
+        'vary': 'Vary',
+        'via': 'Via',
+        'warning': 'Warning',
+        'www-authenticate': 'WWW-Authenticate',
+        'x-content-duration': 'X-Content-Duration',
+        'x-content-security-policy': 'X-Content-Security-Policy',
+        'x-dnsprefetch-control': 'X-DNSPrefetch-Control',
+        'x-frame-options': 'X-Frame-Options',
+        'x-requested-with': 'X-Requested-With',
+        'x-surge-skip-scripting':'X-Surge-Skip-Scripting'
+      }
+      if (typeof _options.headers === 'object'){
+        for (let key in _options.headers){
+          if (headersMap[key]) {
+            _options.headers[headersMap[key]] = _options.headers[key];
+            delete _options.headers[key];
+          }
+        }
+      }
+
+      // 自动补完User-Agent，减少请求特征
+      if (!!!_options.headers || typeof _options.headers !== 'object' || !!!_options.headers['User-Agent']){
+        if (!!!_options.headers || typeof _options.headers !== 'object') _options.headers = {};
+        if (this.isNode) _options.headers['User-Agent'] = this.pcUserAgent;
+        else  _options.headers['User-Agent'] = this.iOSUserAgent
+      }
+
+      // 判断是否跳过脚本处理
+      let skipScripting = false;
+      if ((typeof _options['opts'] === 'object' && (_options['opts']['hints'] === true || _options['opts']['Skip-Scripting'] === true)) || 
+          (typeof _options['headers'] === 'object' && _options['headers']['X-Surge-Skip-Scripting'] === true)){
+        skipScripting = true;
+      }
+      if (!skipScripting){
+        if (this.isSurge) _options.headers['X-Surge-Skip-Scripting'] = false;
+        // 目前对Loon的处理暂时无用，会被强制覆盖掉，等待作者更新
+        else if (this.isLoon) _options.headers['X-Requested-With'] = 'XMLHttpRequest'; 
+        else if (this.isQuanX){
+          if (typeof _options['opts'] !== 'object') _options.opts = {};
+          _options.opts['hints'] = false;
+        }
+      }
+
+      // 对请求数据做清理
+      if (!this.isSurge || skipScripting) delete _options.headers['X-Surge-Skip-Scripting'];
+      if (!this.isQuanX && _options.hasOwnProperty('opts')) delete _options['opts'];
+      if (this.isQuanX && _options.hasOwnProperty('opts')) delete _options['opts']['Skip-Scripting'];
+      
+      // GET请求将body转换成QueryString(beta)
+      if (method === 'GET' && !this.isNode && !!_options.body){
+        let qs = Object.keys(_options.body).map(key=>{
+          if (typeof _options.body === 'undefined') return ''
+          return `${encodeURIComponent(key)}=${encodeURIComponent(_options.body[key])}`
+        }).join('&');
+        if (_options.url.indexOf('?') < 0) _options.url += '?'
+        if (_options.url.lastIndexOf('&')+1 != _options.url.length && _options.url.lastIndexOf('?')+1 != _options.url.length) _options.url += '&'
+        _options.url += qs;
+        delete _options.body;
+      }
+
+      // 适配多环境
+      if (this.isQuanX){
+        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
+        _options['method'] = method;
+      }
+      else if (this.isNode){
+        delete _options.headers['Accept-Encoding'];
+        if (typeof _options.body === 'object'){
+          if (method === 'GET'){
+            _options.qs = _options.body;
+            delete _options.body
+          }
+          else if (method === 'POST'){
+            _options['json'] = true;
+            _options.body = _options.body;
+          }
+        }
+      }
+      else if (this.isJSBox){
+        _options['header'] = _options['headers'];
+        delete _options['headers']
+      }
+
+      return _options;
+    }
     
+    /**
+     * Http客户端发起GET请求
+     * @param {*} options 
+     * @param {*} callback 
+     * options可配置参数headers和opts，用于判断由脚本发起的http请求是否跳过脚本处理。
+     * 支持Surge和Quantumult X两种配置方式。
+     * 以下几种配置会跳过脚本处理，options没有opts或opts的值不匹配，则不跳过脚本处理
+     * {opts:{"hints": true}}
+     * {opts:{"Skip-Scripting": true}}
+     * {headers: {"X-Surge-Skip-Scripting": true}}
+     */
     get(options, callback){
-      let _options = typeof options === 'object'? Object.assign({}, options): options;
-      this.logDebug(`http get: ${JSON.stringify(_options)}`);
+      let _options = this.adapterHttpOptions(options, 'GET');
+      this.logDebug(`HTTP GET: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.get(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof _options === 'string') _options = { url: _options }
-        _options['method'] = 'GET'
         $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
@@ -483,9 +677,6 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         return this.node.request.get(_options, callback);
       }
       else if(this.isJSBox){
-        _options = typeof _options === 'string'? {'url': _options} :_options;
-        options['header'] = _options['headers'];
-        delete _options['headers']
         _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
@@ -495,16 +686,24 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       }
     }
 
+    /**
+     * Http客户端发起POST请求
+     * @param {*} options 
+     * @param {*} callback 
+     * options可配置参数headers和opts，用于判断由脚本发起的http请求是否跳过脚本处理。
+     * 支持Surge和Quantumult X两种配置方式。
+     * 以下几种配置会跳过脚本处理，options没有opts或opts的值不匹配，则不跳过脚本处理
+     * {opts:{"hints": true}}
+     * {opts:{"Skip-Scripting": true}}
+     * {headers: {"X-Surge-Skip-Scripting": true}}
+     */
     post(options, callback){
-      let _options = typeof options === 'object'? Object.assign({}, options): options;
-      this.logDebug(`http post: ${JSON.stringify(_options)}`);
+      let _options = this.adapterHttpOptions(options, 'POST');
+      this.logDebug(`HTTP POST: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.post(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof _options === 'string') _options = { url: _options }
-        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
-        _options['method'] = 'POST'
         $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
@@ -514,13 +713,9 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         )
       }
       else if(this.isNode){
-        if (typeof _options.body === 'object') _options.body = JSON.stringify(_options.body);
         return this.node.request.post(_options, callback);
       }
       else if(this.isJSBox){
-        _options = typeof _options === 'string'? {'url': _options} : _options;
-        _options['header'] = _options['headers'];
-        delete _options['headers']
         _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
@@ -560,11 +755,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
     /**
      * 对await执行中出现的异常进行捕获并返回，避免写过多的try catch语句
+     * 示例：let [err,val] = await magicJS.attempt(func(), 'defaultvalue');
+     * 或者：let [err, [val1,val2]] = await magicJS.attempt(func(), ['defaultvalue1', 'defaultvalue2']);
      * @param {*} promise Promise 对象
      * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.logError(ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
@@ -582,6 +779,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
               result => {
                 if (typeof callback === 'function'){
                   Promise.resolve().then(()=>callback(result)).then(()=>{resolve(result)}).catch(ex=>{
+                    this.logError(ex);
                     if (retries >= 1 && interval > 0){
                       setTimeout(() => _retry.apply(this, args), interval);
                     }
@@ -599,6 +797,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
                 }
               }
               ).catch(ex=>{
+              this.logError(ex);
               if (retries >= 1 && interval > 0){
                 setTimeout(() => _retry.apply(this, args), interval);
               }

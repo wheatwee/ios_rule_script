@@ -1,4 +1,4 @@
-# 知乎增强
+# 知乎助手
 
 ## 介绍
 
@@ -13,20 +13,24 @@
 3. 去除推荐列表的广告
 4. 去除回答列表的广告
 5. 去除回答列表的圆桌
-6. 去除回答列表的会员推荐✨
-7. 去除官方账号的推广消息✨
-8. 去除推荐列表中黑名单用户的回答✨
-9. 去除回答列表中黑名单用户的回答✨
-10. 去除关注顶部的最常访问✨
-11. 去除未读消息的红点✨
-12. 去除知乎指南提示✨
+6. 去除会员页面弹出广告
+7. 付费内容提醒✨
+8. 去除回答列表的会员推荐✨
+9. 去除官方账号的推广消息✨
+10. 去除推荐列表中黑名单用户的回答✨
+11. 去除回答列表中黑名单用户的回答✨
+12. 去除关注顶部的最常访问✨
+13. 去除未读消息的红点✨
+14. 去除知乎指南提示✨
 
 ## 最近更新
 
-1. 去除脚本内置的答主黑名单，现在屏蔽谁完全由你决定。如果出现屏蔽失效，请重新获取黑名单。
-2. 解决关注列表切换为”时间排序“时去广告失效的问题
-3. 解决知乎直播无法访问的问题
-4. 去除回答列表的圆桌
+1. 付费内容文首提醒
+2. 会员页面弹出广告屏蔽
+3. 去除脚本内置的答主黑名单，现在屏蔽谁完全由你决定。如果出现屏蔽失效，请重新获取黑名单。
+4. 解决关注列表切换为”时间排序“时去广告失效的问题
+5. 解决知乎直播无法访问的问题
+6. 去除回答列表的圆桌
 
 ## 去广告
 
@@ -52,6 +56,14 @@
 在知乎 V6.51.1(2518)、Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 中验证通过。
 
 > 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
+
+## 付费内容提醒
+
+遇到需要付费阅读的回答时，会**将付费内容的提醒提到文章顶部**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
+
+效果如下图：
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/04.jpg)
 
 ## 黑名单增强
 
@@ -127,6 +139,7 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/market\/popovers,REJECT-TINYGIF
 
 [URL Rewrite]
 # 知乎直播修正
@@ -216,6 +229,7 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/market\/popovers,REJECT-TINYGIF
 
 [URL Rewrite]
 # 知乎直播修正
@@ -238,7 +252,7 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 对于脚本内置的黑名单，**保持谨慎和克制的原则**，只加入无法通过加入黑名单进行屏蔽的账号。如需要屏蔽更多的账户，可以由使用者手动将其加入黑名单来实现。
 
-推荐列表中脚本内置的黑名单基本上都已去除，只保留”会员推荐“，因为”会员推荐“不是账号，不能通过加入黑名单来屏蔽。并且， 会员推荐的屏蔽功能，只有在你获取过一次黑名单后才会生效。如果你用的是Lite版本，完全不用担心屏蔽问题。
+推荐列表中脚本内置的黑名单基本上都已去除，只保留”会员推荐“等几个，因为这些都不是账号，不能通过加入黑名单来屏蔽。并且， 会员推荐的屏蔽功能，只有在你获取过一次黑名单后才会生效。如果你用的是Lite版本，完全不用担心屏蔽问题。
 
 官方消息中脚本内置的黑名单会比较多，如知乎小伙伴、知乎视频、知乎亲子、知乎团队、知乎好物推荐、知乎盐选会员、知乎礼券、知乎校园等等，因为这些账号都没办法通过加入黑名单来屏蔽。
 
