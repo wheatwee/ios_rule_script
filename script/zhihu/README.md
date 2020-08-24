@@ -2,9 +2,9 @@
 
 ## 介绍
 
-去除知乎广告，提供黑名单增强等功能。
+去除知乎广告，提供付费内容提醒、黑名单增强等优化阅读体验的功能。
 
-分为Plus和Lite两个版本，Lite只提供最纯粹的去广告功能，Plus带有一些增强阅读体验的功能。
+分为Plus和Lite两个版本，Lite只提供最纯粹的去广告功能，Plus带有一些优化阅读体验的功能。
 
 目前已实现(带✨的为Plus版本的功能)：
 
@@ -14,7 +14,7 @@
 4. 去除回答列表的广告
 5. 去除回答列表的圆桌
 6. 去除会员页面弹出广告
-7. 付费内容提醒✨
+7. 付费内容文首提醒✨
 8. 去除回答列表的会员推荐✨
 9. 去除官方账号的推广消息✨
 10. 去除推荐列表中黑名单用户的回答✨
@@ -59,7 +59,7 @@
 
 ## 付费内容提醒
 
-遇到需要付费阅读的回答时，会**将付费内容的提醒提到文章顶部**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
+遇到需要付费阅读的回答时，会**将付费内容的提醒置顶**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
 
 效果如下图：
 
@@ -75,7 +75,7 @@
 
 #### 自定义黑名单
 
-**首次使用时，需要获取一次完整的黑名单**。请从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“知乎黑名单获取结束”，表示黑名单获取完成。此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
+**首次使用时，需要获取一次完整的黑名单**。请从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“获取脚本黑名单结束”，表示黑名单获取完成。此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
 
 黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
 
@@ -111,6 +111,7 @@ RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/s
 知乎_获取黑名单 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/settings\/blocked_users,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/v4\/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_付费内容提醒 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 
 [MITM]
 hostname = www.zhihu.com, api.zhihu.com, link.zhihu.com, 118.89.204.198
@@ -138,8 +139,7 @@ IP-CIDR,118.89.204.198/32,REJECT,no-resolve
 DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/market\/popovers,REJECT-TINYGIF
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/(ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [URL Rewrite]
 # 知乎直播修正
@@ -152,14 +152,14 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/market\/popovers,REJECT-TINYGIF
 ^https?:\/\/api\.zhihu\.com\/me\/guides url reject-dict
 
 [Remote Script]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎_去广告及黑名单增强, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎助手_去广告及黑名单增强, enabled=true
 ```
 
 Loon 2.1.3(193) TF + 可以使用插件Plugin
 
 ```ini
 [Plugin]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin, tag=知乎助手_去广告及体验增强, enabled=true
 ```
 
 #### Quantumult X
@@ -178,7 +178,7 @@ DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
 DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 
 [rewrite_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎助手_去广告及体验增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 ## 配置说明(Lite)
@@ -209,7 +209,7 @@ DOMAIN-SUFFIX,appcloud2.zhihu.com,REJECT
 DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 
 [rewrite_remote]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎_去广告, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎助手_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 ### Loon
@@ -228,22 +228,21 @@ IP-CIDR,118.89.204.198/32,REJECT,no-resolve
 DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com/(ad|fringe|commercial|market/popover|search/(top|preset|tab)|.*featured-comment-ad),REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/market\/popovers,REJECT-TINYGIF
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/(ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [URL Rewrite]
 # 知乎直播修正
 ^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
 
 [Remote Script]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎_去广告, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎助手_去广告, enabled=true
 ```
 
 Loon 2.1.3(193) TF + 可以使用插件Plugin
 
 ```ini
 [Plugin]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
 ```
 
 ## 其他问题
