@@ -8,7 +8,7 @@ const sysmsg_notifications_regex = /^https:\/\/api\.zhihu\.com\/notifications\/v
 const answer_appview_regex = /^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\//;
 const blocked_users_regex = /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/;
 const scriptName = '知乎助手';
-const answer_blocked_users = ['会员推荐'];
+const answer_blocked_users = ['会员推荐','知乎付费咨询'];
 const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
 let magicJS = MagicJS(scriptName, "INFO");
 
