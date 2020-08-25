@@ -271,6 +271,10 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 ^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
 ```
 
+### 想法不存在
+
+拦截知乎APP获取CDN服务器地址，改为由api.zhihu.com获取数据时，点击想法的评论，有较大概率会返回”想法不存在“或”似乎出了点问题“，因为所有的功能都依赖于拦截知乎APP获取CDN服务器地址，暂时无解。
+
 ## 最后
 
 维护不易，如果能帮上你，麻烦给个Star⭐。如果没能帮上你，麻烦[点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)，个人测试覆盖场景有限，你的及时反馈可以让我尽快排查和解决问题。
