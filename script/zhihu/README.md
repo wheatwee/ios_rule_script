@@ -104,8 +104,6 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ```ini
 [Rule]
-# 知乎直播修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎去广告
 DOMAIN,118.89.204.198,REJECT,no-resolve
 DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
@@ -117,14 +115,10 @@ USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [URL Rewrite]
-# 知乎直播修正
-^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
 # 知乎去除最常访问
 ^https?:\/\/api\.zhihu\.com\/moments\/recent url reject-dict
 # 知乎去除未读消息红点
 ^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
-# 知乎指南屏蔽
-^https?:\/\/api\.zhihu\.com\/me\/guides url reject-dict
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎助手_去广告及黑名单增强, enabled=true
@@ -193,8 +187,6 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ```ini
 [Rule]
-# 知乎直播修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎去广告
 DOMAIN,118.89.204.198,REJECT,no-resolve
 DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
@@ -204,10 +196,6 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
-
-[URL Rewrite]
-# 知乎直播修正
-^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
 
 [Remote Script]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎助手_去广告, enabled=true
@@ -234,9 +222,9 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 知乎去广告配置**不会导致知乎直播无法访问**。目前已知部分整合的去广告规则集合，会导致知乎直播无法访问。
 
-我已经在Surge模块、Loon插件和Quantumult X的远程复写规则中对知乎直播无法访问的问题做了修正，但由于优先级的问题，不一定会生效。
-
 如果出现知乎直播无法访问的情况，请开启抓包/调试/记录日志等功能，确认是哪条规则影响知乎直播的正常访问，将其删除或编写修正规则覆盖掉它。
+
+如果没办法修改第三方的规则，提供几个修正方案。
 
 #### Surge/Loon
 

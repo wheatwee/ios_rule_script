@@ -3,8 +3,6 @@
 #!system=ios
 
 [Rule]
-# 知乎直播修正
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎广告拦截
 RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.surge,REJECT
 

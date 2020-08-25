@@ -16,7 +16,5 @@
 ^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
 # 知乎其他广告拦截
 ^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad|\/drama\/living-info) url reject
-# 知乎直播修正
-^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
