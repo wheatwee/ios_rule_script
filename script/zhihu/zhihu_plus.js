@@ -61,7 +61,7 @@ async function main(){
     else if (answer_appview_regex.test(magicJS.request.url)){
       try{
         let html = magicJS.response.body;
-        if (html.indexOf('元/天开通会员') >= 0 && html.indexOf('paid') >= 0){
+        if (html.indexOf('查看完整内容') >= 0 && html.indexOf('paid') >= 0){
           let richText = html.match(/(richText[^<]*>)(.)/);
           let matchStr = richText[1];
           let start = html.lastIndexOf(matchStr) + matchStr.length;
