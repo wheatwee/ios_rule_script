@@ -27,6 +27,7 @@ async function main(){
     else if (topstory_recommend_regex.test(magicJS.request.url)){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
       custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
+      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
       body = JSON.parse(magicJS.response.body);
       let data = body['data'].filter((element) =>{
         return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
@@ -110,7 +111,7 @@ async function main(){
       let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
       custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
       answer_blocked_users.forEach(element => {
-        custom_blocked_users[element] = '';
+        custom_blocked_users[element] = '00000000000000000000000000000000';
       });
       // 获取黑名单
       if (magicJS.request.method == 'GET'){
