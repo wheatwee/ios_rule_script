@@ -1,5 +1,3 @@
-# 知乎直播修正
-^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
 # 知乎去除MCN信息
 ^https?:\/\/api\.zhihu\.com\/people\/ url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 # 知乎信息流去广告
@@ -8,5 +6,7 @@
 ^https?:\/\/api\.zhihu\.com\/v4\/questions url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 # 知乎其他广告拦截
 ^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad) url reject
+# 知乎直播修正
+^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
