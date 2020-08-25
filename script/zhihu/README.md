@@ -14,14 +14,15 @@
 4. 去除回答列表的广告
 5. 去除回答列表的圆桌
 6. 去除会员页面弹出广告
-7. 付费内容文首提醒✨
-8. 去除回答列表的会员推荐✨
-9. 去除官方账号的推广消息✨
-10. 去除推荐列表中黑名单用户的回答✨
-11. 去除回答列表中黑名单用户的回答✨
-12. 去除关注顶部的最常访问✨
-13. 去除未读消息的红点✨
-14. 去除知乎指南提示✨
+7. 去除知乎直播红点
+8. 去除知乎指南提示
+9. 付费内容文首提醒✨
+10. 去除推荐列表的付费推荐内容✨
+11. 去除官方账号的推广消息✨
+12. 去除推荐列表中黑名单用户的回答✨
+13. 去除回答列表中黑名单用户的回答✨
+14. 去除关注顶部的最常访问✨
+15. 去除未读消息的红点✨
 
 ## 最近更新
 
@@ -91,33 +92,7 @@
 
 #### Surge
 
-配置文件
-
-```ini
-[Rule]
-RULE-SET,https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_remove_ads.surge,REJECT
-
-[Map Local]
-# 知乎去除最常访问
-^https?:\/\/api\.zhihu\.com\/moments\/recent data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
-# 知乎去除未读消息红点
-^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
-# 知乎指南屏蔽
-^https?:\/\/api\.zhihu\.com\/me\/guides data="https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/blank.json"
-
-[Script]
-知乎_去除MCN信息 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/people\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_获取黑名单 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/settings\/blocked_users,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_回答黑名单增强 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/v4\/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_官方消息去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/notifications\/v3\/(message\?|timeline\/entry\/system_message),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-知乎_付费内容提醒 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
-
-[MITM]
-hostname = www.zhihu.com, api.zhihu.com, link.zhihu.com, 118.89.204.198
-```
-
-或者使用模块
+使用模块
 
 ```ini
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.sgmodule
@@ -139,7 +114,7 @@ IP-CIDR,118.89.204.198/32,REJECT,no-resolve
 DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/(ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [URL Rewrite]
 # 知乎直播修正
@@ -228,7 +203,7 @@ IP-CIDR,118.89.204.198/32,REJECT,no-resolve
 DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/(ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
 
 [URL Rewrite]
 # 知乎直播修正
