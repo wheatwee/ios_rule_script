@@ -4,8 +4,6 @@ DOMAIN-SUFFIX,fus.cdn.krcom.cn
 DOMAIN-KEYWORD,wb_ad
 # 联通手机营业厅签到
 DOMAIN,ad.10010.com
-# 知乎直播
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/
 # 嘀嗒出行购买优惠券
 URL-REGEX,^https?:\/\/www\.didapinche\.com\/app\/adstat
 # Bilibili启动开屏画面选择

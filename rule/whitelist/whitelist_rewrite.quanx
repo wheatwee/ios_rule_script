@@ -3,5 +3,3 @@
 ^https?:\/\/app\.bilibili\.com\/x\/v2\/splash\/brand\/set url 307 https://app.bilibili.com/x/v2/splash/brand/set
 # 滴答出行无法购买优惠券
 ^https?:\/\/www\.didapinche\.com\/app\/adstat url 307 https://www.didapinche.com/app/adstat
-# 知乎直播无法点击
-^https?:\/\/api\.zhihu\.com\/drama url 307 https://api.zhihu.com/drama
