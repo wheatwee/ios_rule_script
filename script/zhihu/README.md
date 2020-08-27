@@ -62,22 +62,9 @@
 
 遇到需要付费阅读的回答时，会**将付费内容的提醒置顶**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
 
-效果如下图：
+浅色/深色效果如下图：
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/04.jpg)
-
-### Loon
-
-因为知乎回答存在预加载机制，每次滑动关注或推荐列表，会预加载大量的回答。每预加载一个回答，就会触发一次脚本执行，以判断是否为付费内容。快速滑动时，会在短事件内触发数次脚本执行。Loon在这种情况下可能会出现VPN重启、预加载内容错误的情况。所以暂时不会在Loon的插件和远程脚本中加入付费内容提醒的功能。
-
-如果实在有需要，并且不介意出现上述问题，可以自行在配置文件中加入如下内容：
-
-```ini
-[Script]
-http-response ^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\/[0-9]* requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_付费内容提醒
-```
-
-Surge和Quantumult X，目前我在iPhone X和iPhone 11 Pro Max中没有出现这样的情况。如其他机型出现VPN重启的情况，请在Issues中反馈给我，出现频繁的话，我会将此条脚本从默认的模块和复写规则中移除。
 
 ## 黑名单增强
 
@@ -278,7 +265,7 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 ## 最后
 
-维护不易，如果能帮上你，麻烦给个Star⭐。如果没能帮上你，麻烦[点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)，个人测试覆盖场景有限，你的及时反馈可以让我尽快排查和解决问题。
+如果能帮上你，麻烦给个Star⭐。如果没能帮上你，麻烦[点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)，个人测试覆盖场景有限，你的及时反馈可以让我尽快排查和解决问题。
 
 特别感谢：
 
