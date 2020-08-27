@@ -16,7 +16,7 @@
 6. 去除会员页面弹出广告
 7. 去除知乎直播红点
 8. 去除知乎指南提示
-9. 付费内容文首提醒✨
+9. 付费内容文首提醒(beta)✨
 10. 去除推荐列表的付费推荐内容✨
 11. 去除官方账号的推广消息✨
 12. 去除推荐列表中黑名单用户的回答✨
@@ -65,6 +65,19 @@
 效果如下图：
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/04.jpg)
+
+### Loon暂不建议使用此功能
+
+因为知乎回答存在预加载机制，每次滑动关注或推荐列表，会预加载大量的回答。每预加载一次回答，就会触发一次脚本执行，以判断是否为付费内容。快速滑动时，会在短事件内触发数次脚本执行。Loon在这种情况下可能会出现VPN重启、预加载内容错误的情况。所以暂时不会在Loon的插件和远程脚本中加入付费内容提醒的功能。
+
+如果实在有需要，并且不介意出现上述问题，可以自行在配置文件重加入如下内容脚本：
+
+```ini
+[Script]
+http-response ^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\/[0-9]* requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js,tag=知乎_付费内容提醒
+```
+
+Surge和Quantumult X，目前我在iPhone X和iPhone 11 Pro Max中没有出现这样的情况。如其他机型出现VPN重启的情况，请在Issues中反馈给我，出现频繁的话，我会将此条脚本从默认的模块和复写规则中移除。
 
 ## 黑名单增强
 
