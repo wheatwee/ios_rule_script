@@ -18,45 +18,69 @@ async function main(){
   if (magicJS.isResponse){
     // 去除MCN信息
     if (mcn_userinfo.test(magicJS.request.url)){
-      body = JSON.parse(magicJS.response.body);
-      delete body['mcn_user_info']
-      body=JSON.stringify(body);
-      magicJS.done({body});
+      try{
+        body = JSON.parse(magicJS.response.body);
+        delete body['mcn_user_info']
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch(err){
+        magicJS.logError(`知乎去除MCN信息出现异常：${err}`);
+        magicJS.done();
+      }
     }
     // 知乎推荐去广告与黑名单增强
     else if (topstory_recommend_regex.test(magicJS.request.url)){
-      let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
-      custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
-      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
-      body = JSON.parse(magicJS.response.body);
-      let data = body['data'].filter((element) =>{
-        return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
-        !custom_blocked_users[element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']]
-      });
-      body['data'] = data;
-      body=JSON.stringify(body);
-      magicJS.done({body});
+      try{
+        let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+        custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
+        magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
+        body = JSON.parse(magicJS.response.body);
+        let data = body['data'].filter((element) =>{
+          return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
+          !custom_blocked_users[element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']]
+        });
+        body['data'] = data;
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch(err){
+        magicJS.logError(`知乎推荐列表去广告出现异常：${err}`);
+        magicJS.done();
+      }
     }
     // 知乎关注去广告
     else if (moments_recommend_regex.test(magicJS.request.url)){
-      body = JSON.parse(magicJS.response.body);
-      let data = body['data'].filter((element) =>{return !element['ad']});
-      body['data'] = data;
-      body=JSON.stringify(body);
-      magicJS.done({body});
+      try{
+        body = JSON.parse(magicJS.response.body);
+        let data = body['data'].filter((element) =>{return !element['ad']});
+        body['data'] = data;
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch(err){
+        magicJS.logError(`知乎关注列表去广告出现异常：${err}`);
+        magicJS.done();
+      }
     }
     // 知乎回答列表去广告及黑名单增强，在回答列表里不会出现黑名单的答主
     else if (question_regex.test(magicJS.request.url)){
-      let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
-      custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
-      body = JSON.parse(magicJS.response.body);
-      magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
-      delete body['ad_info'];
-      delete body['roundtable_info'];
-      let data = body['data'].filter((element) =>{ return !custom_blocked_users[element['author']['name']]})
-      body['data'] = data;
-      body=JSON.stringify(body);
-      magicJS.done({body});
+      try{
+        let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+        custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
+        body = JSON.parse(magicJS.response.body);
+        magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
+        delete body['ad_info'];
+        delete body['roundtable_info'];
+        let data = body['data'].filter((element) =>{ return !custom_blocked_users[element['author']['name']]})
+        body['data'] = data;
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch(err){
+        magicJS.logError(`知乎回答列表去广告出现异常：${err}`);
+        magicJS.done();
+      }
     }
     // 付费内容提醒
     else if (answer_appview_regex.test(magicJS.request.url)){
@@ -75,36 +99,48 @@ async function main(){
         }
       }
       catch(err){
-        magicJS.logError(err);
+        magicJS.logError(`知乎付费内容提醒出现异常：${err}`);
         magicJS.done();
       }
     }
     // 拦截官方账号推广消息
     else if (sysmsg_timeline_regex.test(magicJS.request.url)){
-      body = JSON.parse(magicJS.response.body);
-      let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
-      body['data'] = data;
-      body=JSON.stringify(body);
-      magicJS.done({body});
+      try{
+        body = JSON.parse(magicJS.response.body);
+        let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
+        body['data'] = data;
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch (err){
+        magicJS.logError(`知乎拦截官方账号推广消息出现异常：${err}`);
+        magicJS.done();
+      }
     } 
     // 屏蔽一些官方的营销消息
     else if (sysmsg_notifications_regex.test(magicJS.request.url)){
-      body = JSON.parse(magicJS.response.body);
-      body['data'].forEach((element, index)=> {
-        if(element['detail_title'] === '官方帐号消息'){
-          let unread_count = body['data'][index]['unread_count'];
-          if (unread_count > 0){
-            body['data'][index]['content']['text'] = '未读消息' + unread_count + '条';
+      try{
+        body = JSON.parse(magicJS.response.body);
+        body['data'].forEach((element, index)=> {
+          if(element['detail_title'] === '官方帐号消息'){
+            let unread_count = body['data'][index]['unread_count'];
+            if (unread_count > 0){
+              body['data'][index]['content']['text'] = '未读消息' + unread_count + '条';
+            }
+            else{
+              body['data'][index]['content']['text'] = '全部消息已读';
+            }
+            body['data'][index]['is_read'] = true;
+            body['data'][index]['unread_count'] = 0;
           }
-          else{
-            body['data'][index]['content']['text'] = '全部消息已读';
-          }
-          body['data'][index]['is_read'] = true;
-          body['data'][index]['unread_count'] = 0;
-        }
-      })
-      body=JSON.stringify(body);
-      magicJS.done({body});
+        })
+        body=JSON.stringify(body);
+        magicJS.done({body});
+      }
+      catch(err){
+        magicJS.logError(`知乎屏蔽官方营销消息出现异常：${err}`);
+        magicJS.done();
+      }
     }
     // 黑名单管理
     else if (blocked_users_regex.test(magicJS.request.url)){
