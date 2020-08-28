@@ -265,7 +265,7 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 ## 最后
 
-**低调使用，勿宣扬**，不要再任何公共群组内宣传此脚本，十分感谢。
+**低调使用，勿宣扬**，不要在任何公共群组内宣传此脚本，十分感谢。
 
 如果能帮上你，麻烦给个Star⭐。如果没能帮上你，麻烦[点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)，个人测试覆盖场景有限，你的及时反馈可以让我尽快排查和解决问题。
 
