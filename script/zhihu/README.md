@@ -1,5 +1,7 @@
 # 知乎助手
 
+**低调使用，勿宣扬**，请不要在任何公共场合/群组内宣传此脚本，十分感谢。
+
 ## 介绍
 
 去除知乎广告，提供付费内容提醒、黑名单增强等优化阅读体验的功能。
@@ -17,21 +19,19 @@
 7. 去除知乎直播红点
 8. 去除知乎指南提示
 9. 付费内容文首提醒(beta)✨
-10. 去除推荐列表的付费推荐内容✨
-11. 去除官方账号的推广消息✨
-12. 去除推荐列表中黑名单用户的回答✨
-13. 去除回答列表中黑名单用户的回答✨
-14. 去除关注顶部的最常访问✨
-15. 去除未读消息的红点✨
+10. 拦截部分回答预加载以节约流量✨
+11. 去除推荐列表的付费推荐内容✨
+12. 去除官方账号的推广消息✨
+13. 去除推荐列表中黑名单用户的回答✨
+14. 去除回答列表中黑名单用户的回答✨
+15. 去除关注顶部的最常访问✨
+16. 去除未读消息的红点✨
 
 ## 最近更新
 
-1. 付费内容文首提醒
-2. 会员页面弹出广告屏蔽
-3. 去除脚本内置的答主黑名单，现在屏蔽谁完全由你决定。如果出现屏蔽失效，请重新获取黑名单。
-4. 解决关注列表切换为”时间排序“时去广告失效的问题
-5. 解决知乎直播无法访问的问题
-6. 去除回答列表的圆桌
+1. 拦截部分回答预加载以节约流量
+2. 屏蔽推荐列表中的直播
+3. 付费内容文首提醒
 
 ## 去广告
 
@@ -58,7 +58,9 @@
 
 > 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
 
-## 付费内容提醒
+## 付费内容提醒(beta)
+
+<u>此功能为测试功能，如引起异常，请使用Lite版本。</u>
 
 遇到需要付费阅读的回答时，会**将付费内容的提醒置顶**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
 
@@ -100,36 +102,14 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 #### Loon
 
-配置文件
-
-```ini
-[Rule]
-# 知乎去广告
-DOMAIN,118.89.204.198,REJECT,no-resolve
-DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
-DOMAIN-KEYWORD,118.89.204.198,REJECT,no-resolve
-IP-CIDR,118.89.204.198/32,REJECT,no-resolve
-DOMAIN,appcloud2.zhihu.com,REJECT
-DOMAIN,appcloud2.in.zhihu.com,REJECT
-USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
-
-[URL Rewrite]
-# 知乎去除最常访问
-^https?:\/\/api\.zhihu\.com\/moments\/recent url reject-dict
-# 知乎去除未读消息红点
-^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
-
-[Remote Script]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loon, tag=知乎助手_去广告及黑名单增强, enabled=true
-```
-
 Loon 2.1.3(193) TF + 可以使用插件Plugin
 
 ```ini
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin, tag=知乎助手_去广告及体验增强, enabled=true
 ```
+
+Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
 
 #### Quantumult X
 
@@ -183,30 +163,14 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 
 ### Loon
 
-配置文件
-
-```ini
-[Rule]
-# 知乎去广告
-DOMAIN,118.89.204.198,REJECT,no-resolve
-DOMAIN-SUFFIX,118.89.204.198,REJECT,no-resolve
-DOMAIN-KEYWORD,118.89.204.198,REJECT,no-resolve
-IP-CIDR,118.89.204.198/32,REJECT,no-resolve
-DOMAIN,appcloud2.zhihu.com,REJECT
-DOMAIN,appcloud2.in.zhihu.com,REJECT
-USER-AGENT,AVOS*,REJECT
-URL-REGEX,^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad),REJECT
-
-[Remote Script]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loon, tag=知乎助手_去广告, enabled=true
-```
-
 Loon 2.1.3(193) TF + 可以使用插件Plugin
 
 ```ini
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
 ```
+
+Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
 
 ## 其他问题
 
@@ -264,8 +228,6 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 拦截知乎APP获取CDN服务器地址，改为由api.zhihu.com获取数据时，点击想法的评论，有较大概率会返回”想法不存在“或”似乎出了点问题“，因为所有的功能都依赖于拦截知乎APP获取CDN服务器地址，暂时无解。
 
 ## 最后
-
-**低调使用，勿宣扬**，不要在任何公共群组内宣传此脚本，十分感谢。
 
 如果能帮上你，麻烦给个Star⭐。如果没能帮上你，麻烦[点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)，个人测试覆盖场景有限，你的及时反馈可以让我尽快排查和解决问题。
 
