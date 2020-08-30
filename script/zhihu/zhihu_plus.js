@@ -54,8 +54,9 @@ async function main(){
           magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
           body = JSON.parse(magicJS.response.body);
           let data = body['data'].filter((element) =>{
-            return element['card_type'] != 'slot_event_card' && !element['ad'] && element['common_card'] && 
-            !custom_blocked_users[element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']]
+            // 增加此条件，屏蔽推荐内视频 && element['extra']['type'] !== 'zvideo'
+            return element['card_type'] != 'slot_event_card' && !element['ad'] && (!element.hasOwnProperty('extra') || element['extra']['type'] !== 'drama') && 
+            (!element['common_card'] || !custom_blocked_users[element['common_card']['feed_content']['source_line']['elements'][1]['text']['panel_text']])
           });
           body['data'] = data;
           body=JSON.stringify(body);
