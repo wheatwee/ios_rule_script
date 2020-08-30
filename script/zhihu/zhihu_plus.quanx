@@ -16,5 +16,7 @@
 ^https?:\/\/api\.zhihu\.com\/notifications\/v3\/count url reject-dict
 # 知乎其他广告拦截
 ^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad) url reject
+# 知乎拦截部分预加载
+^https?:\/\/www\.zhihu\.com\/appview\/(p|v2\/answer|zvideo)\/.*entry=(preload-topstory|preload-search|preload-subscription) url reject
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
