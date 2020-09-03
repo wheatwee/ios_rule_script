@@ -1,5 +1,6 @@
 #!name=BiliBili
-#!desc=BiliBili漫画签到
+#!desc=BiliBili漫画每日自动签到
+#!system=ios
 
 [Script]
 BiliBili漫画_每日签到 = script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Bilibili-DailyBonus/Manga.js,type=cron,cronexp=05 00 * * *

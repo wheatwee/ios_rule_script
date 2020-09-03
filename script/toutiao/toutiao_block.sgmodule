@@ -1,5 +1,6 @@
 #!name=今日头条
 #!desc=今日头条内容过滤
+#!system=ios
 
 [MITM]
 hostname = %APPEND% *.snssdk.com
