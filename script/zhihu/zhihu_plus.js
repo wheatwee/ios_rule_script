@@ -1,7 +1,9 @@
+const scriptName = '知乎助手';
+const blocked_users_key = 'zhihu_blocked_users';
+const current_userinfo_key = 'zhihu_current_userinfo';
+let magicJS = MagicJS(scriptName, "INFO");
+
 async function main(){
-  const scriptName = '知乎助手';
-  let magicJS = MagicJS(scriptName, "INFO");
-  const blocked_users_key = 'zhihu_blocked_users';
   if (magicJS.isResponse){
     switch (true){
       // 付费内容提醒
@@ -33,8 +35,26 @@ async function main(){
           magicJS.done();
         }
         break;
+      // 获取当前用户信息
+      case /^https:\/\/api\.zhihu\.com\/people\/self/.test(magicJS.request.url):
+        try{
+          let obj = JSON.parse(magicJS.response.body);
+          let user_info = {
+            id: obj['id'],
+            is_vip: obj['vip_info']['is_vip']
+          }
+          magicJS.logDebug(`当前用户id：${obj['id']}，是否为VIP：${obj['vip_info']['is_vip']}`);
+          magicJS.write(current_userinfo_key, user_info);
+          let body=JSON.stringify(obj);
+          magicJS.done({body});
+        }
+        catch(err){
+          magicJS.logError(`知乎获取当前用户信息出现异常：${err}`);
+          magicJS.done();
+        }
+        break;
       // 去除MCN信息
-      case /^https:\/\/api\.zhihu\.com\/people\//.test(magicJS.request.url):
+      case /^https:\/\/api\.zhihu\.com\/people\/((?!self).)*$/.test(magicJS.request.url):
         try{
           body = JSON.parse(magicJS.response.body);
           delete body['mcn_user_info']
@@ -49,7 +69,8 @@ async function main(){
       // 推荐去广告与黑名单增强
       case /^https:\/\/api\.zhihu\.com\/topstory\/recommend\?/.test(magicJS.request.url):
         try{
-          let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+          let user_info = GetUserInfo();
+          let custom_blocked_users = magicJS.read(blocked_users_key, user_info.id);
           custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
           magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
           body = JSON.parse(magicJS.response.body);
@@ -70,7 +91,7 @@ async function main(){
       // 关注列表去广告
       case /^https:\/\/api\.zhihu\.com\/moments(\/|\?)?(recommend|action=|feed_type=)/.test(magicJS.request.url):
         try{
-          body = JSON.parse(magicJS.response.body);
+          let body = JSON.parse(magicJS.response.body);
           let data = body['data'].filter((element) =>{return !element['ad']});
           body['data'] = data;
           body=JSON.stringify(body);
@@ -84,7 +105,8 @@ async function main(){
       // 回答列表去广告及黑名单增强
       case /^https:\/\/api\.zhihu\.com\/v4\/questions/.test(magicJS.request.url):
         try{
-          let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+          let user_info = GetUserInfo();
+          let custom_blocked_users = magicJS.read(blocked_users_key, user_info.id);
           custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
           body = JSON.parse(magicJS.response.body);
           magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
@@ -104,7 +126,7 @@ async function main(){
       case /^https:\/\/api\.zhihu\.com\/notifications\/v3\/timeline\/entry\/system_message/.test(magicJS.request.url):
         try{
           const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎亲子', '知乎团队', '知乎好物推荐', '知乎盐选会员', '知乎礼券', '知乎校园'];
-          body = JSON.parse(magicJS.response.body);
+          let body = JSON.parse(magicJS.response.body);
           let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
           body['data'] = data;
           body=JSON.stringify(body);
@@ -118,7 +140,7 @@ async function main(){
       // 屏蔽官方营销消息
       case /^https:\/\/api\.zhihu\.com\/notifications\/v3\/message\?/.test(magicJS.request.url):
         try{
-          body = JSON.parse(magicJS.response.body);
+          let body = JSON.parse(magicJS.response.body);
           body['data'].forEach((element, index)=> {
             if(element['detail_title'] === '官方帐号消息'){
               let unread_count = body['data'][index]['unread_count'];
@@ -142,12 +164,14 @@ async function main(){
         break;
       // 黑名单管理
       case /^https:\/\/api\.zhihu\.com\/settings\/blocked_users/.test(magicJS.request.url):
+        let userInfo = GetUserInfo();
         const answer_blocked_users = ['会员推荐','知乎付费咨询'];
-        let custom_blocked_users = magicJS.read(blocked_users_key, 'default');
+        let custom_blocked_users = magicJS.read(blocked_users_key, userInfo.id);
         custom_blocked_users = typeof custom_blocked_users === 'object' && !!custom_blocked_users ? custom_blocked_users : {};
         answer_blocked_users.forEach(element => {
           custom_blocked_users[element] = '00000000000000000000000000000000';
         });
+        magicJS.logInfo(`当前用户id：${userInfo.id}，脚本黑名单：${JSON.stringify(custom_blocked_users)}`);
         // 获取黑名单
         if (magicJS.request.method == 'GET'){
           try{
@@ -158,10 +182,10 @@ async function main(){
                   custom_blocked_users[element['name']] = element['id'];
                 }
               });
-              magicJS.write(blocked_users_key, custom_blocked_users, 'default');
+              magicJS.write(blocked_users_key, custom_blocked_users, userInfo.id);
               if (obj['paging']['is_end'] == true){
                 magicJS.notify(`获取脚本黑名单结束，当前黑名单共${Object.keys(custom_blocked_users).length}人！`);
-                magicJS.logDebug(`脚本黑名单内容：${JSON.stringify(custom_blocked_users)}。`);
+                magicJS.logInfo(`脚本黑名单内容：${JSON.stringify(custom_blocked_users)}。`);
               }
             }
             else{
@@ -180,7 +204,7 @@ async function main(){
             let obj = JSON.parse(magicJS.response.body);
             if (obj.hasOwnProperty('name') && obj.hasOwnProperty('id')){
               custom_blocked_users[obj['name']] = obj['id'];
-              magicJS.write(blocked_users_key, custom_blocked_users, 'default');
+              magicJS.write(blocked_users_key, custom_blocked_users, userInfo.id);
               magicJS.logInfo(`${obj['name']}写入脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
               magicJS.notify(`已将用户 ${obj['name']} 写入脚本黑名单。`);
             }
@@ -203,8 +227,8 @@ async function main(){
               for (let username in custom_blocked_users){
                 if (custom_blocked_users[username] == user_id){
                   delete custom_blocked_users[username];
-                  magicJS.write(blocked_users_key, custom_blocked_users, 'default')
-                  magicJS.logInfo(`${obj['name']}移出脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
+                  magicJS.write(blocked_users_key, custom_blocked_users, userInfo.id)
+                  magicJS.logInfo(`${username}移出脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
                   magicJS.notify(`已将用户 ${username} 移出脚本黑名单！`);
                   break;
                 }
@@ -232,6 +256,18 @@ async function main(){
 } 
 
 main();
+
+function GetUserInfo(){
+  try{
+    let user_info = magicJS.read(current_userinfo_key);
+    if (typeof user_info === 'string') user_info = JSON.parse(user_info);
+    return user_info;
+  }
+  catch(err){
+    magicJS.logError(`获取用户信息出现异常：${err}`);
+    return {id: 'default', is_vip: false};
+  }
+}
 
 function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 

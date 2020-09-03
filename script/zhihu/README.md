@@ -18,7 +18,7 @@
 6. 去除会员页面弹出广告
 7. 去除知乎直播红点
 8. 去除知乎指南提示
-9. 付费内容文首提醒(beta)✨
+9. 付费内容文首提醒✨
 10. 拦截部分回答预加载以节约流量✨
 11. 去除推荐列表的付费推荐内容✨
 12. 去除官方账号的推广消息✨
@@ -29,9 +29,10 @@
 
 ## 最近更新
 
-1. 拦截部分回答预加载以节约流量
-2. 屏蔽推荐列表中的直播
-3. 付费内容文首提醒
+1. 脚本黑名单跟随登录用户切换，需要重新获取黑名单。
+2. 拦截部分回答预加载以节约流量
+3. 屏蔽推荐列表中的直播
+4. 付费内容文首提醒
 
 ## 去广告
 
@@ -58,9 +59,7 @@
 
 > 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
 
-## 付费内容提醒(beta)
-
-<u>此功能为测试功能，如引起异常，请使用Lite版本。</u>
+## 付费内容提醒
 
 遇到需要付费阅读的回答时，会**将付费内容的提醒置顶**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
 
@@ -75,6 +74,8 @@
 黑名单增强就是对黑名单用户的回答进行屏蔽，让他的回答从推荐列表和回答列表中消失。
 
 如果需要定向查看某个黑名单的用户，请搜索他的名称，然后点进去看他的回答。
+
+现在黑名单可以跟随登录用户切换。
 
 #### 自定义黑名单
 
@@ -142,6 +143,17 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.sgmodule
 ```
 
+### Loon
+
+Loon 2.1.3(193) TF + 可以使用插件Plugin
+
+```ini
+[Plugin]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
+```
+
+Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
+
 #### Quantumult X
 
 配置文件
@@ -160,17 +172,6 @@ DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎助手_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
-
-### Loon
-
-Loon 2.1.3(193) TF + 可以使用插件Plugin
-
-```ini
-[Plugin]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
-```
-
-Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
 
 ## 其他问题
 
