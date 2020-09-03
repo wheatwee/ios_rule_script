@@ -31,13 +31,15 @@ iOS平台的去广告规则和一些自动化脚本。
 | 脚本                                                         | 介绍                                                         |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | [知乎](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/zhihu) | 去广告、付费内容置顶提醒、黑名单增强                         |
-| [什么值得买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/smzdm) | Web端和App端签到、自动完成去购买任务、去广告                 |
+| [什么值得买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/smzdm) | Web端和App端签到、自动完成任务、去广告                       |
 | [百度贴吧](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/tieba) | 带重试功能的贴吧签到，提高签到成功率                         |
-| [联通手机营业厅](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/10010) | 每日签到、必领美团外卖30-3优惠券、4次抽奖、话费流量语音情况推送 |
-| [嘀嗒出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didachuxing) | 每日签到                                                     |
+| [联通手机营业厅](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/10010) | 每日自动签到、必领美团外卖30-3优惠券、4次抽奖、话费流量语音情况推送 |
 | [联享家](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/lxj) | 去广告、拦截检测更新                                         |
-| [家长帮](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/jiazhangbang) | 每日签到                                                     |
-| [慢慢买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/manmanbuy) | 每日签到                                                     |
+| [嘀嗒出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didachuxing) | 每日自动签到                                                 |
+| [家长帮](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/jiazhangbang) | 每日自动签到                                                 |
+| [慢慢买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/manmanbuy) | 每日自动签到                                                 |
+| [小米有品](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/youpin) | 每日自动签到                                                 |
+| [叮咚买菜](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/dingdong) | 每日自动签到                                                 |
 
 ## 其他说明
 
