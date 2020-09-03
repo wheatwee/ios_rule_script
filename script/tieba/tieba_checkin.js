@@ -82,18 +82,24 @@ function TiebaCheckIn(cookie, tbs, tieba){
           try{
             let obj = JSON.parse(data);
             if (obj.data.errmsg === 'success' && obj.data.errno === 0 && obj.data.uinfo.is_sign_in === 1){
-              resolve(`[${kw}] 签到成功 排名 ${obj.data.uinfo.user_sign_rank} 积分 ${obj.data.uinfo.cont_sign_num}`)
+              let msg = `[${kw}] 签到成功 排名 ${obj.data.uinfo.user_sign_rank} 积分 ${obj.data.uinfo.cont_sign_num}`;
+              magicJS.logInfo(msg);
+              resolve(msg);
+            }
+            else if (obj.no === 2150040){
+              magicJS.logDebug(`[${kw}] need vcode，接口响应：${data}`)
+              reject(`[${kw}] 签到失败，need vcode`);
             }
             else if (obj.no === 1011){
-              magicJS.logWarning(`[${kw}] 未加入此吧或等级不够，接口响应：${data}`);
+              magicJS.logDebug(`[${kw}] 未加入此吧或等级不够，接口响应：${data}`);
               reject(`[${kw}] 未加入此吧或等级不够`);
             }
             else if (obj.no === 1102){
-              magicJS.logWarning(`[${kw}] 签到过快，接口响应：${data}`);
+              magicJS.logDebug(`[${kw}] 签到过快，接口响应：${data}`);
               reject(`[${kw}] 签到过快`);
             }
             else if (obj.no === 1101){
-              magicJS.logWarning(`[${kw}] 重复签到，接口响应：${data}`);
+              magicJS.logDebug(`[${kw}] 重复签到，接口响应：${data}`);
               resolve(`[${kw}] 重复签到`);
             }
             else{

@@ -50,7 +50,7 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/tie
 
 ## 签到
 
-虽然带有重试机制，提高签到成功率，但是依旧不建议在凌晨的签到高峰期进行签到。
+带有重试机制，解决need vcode失败问题，凌晨高峰期签到也可以保证成功率。
 
 全部签到成功时：
 
