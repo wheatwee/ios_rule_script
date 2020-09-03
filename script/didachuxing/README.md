@@ -2,6 +2,10 @@
 
 嘀嗒出行自动签到和自动拾取贝壳脚本。每日0点10分执行脚本，自动进行当日签到，并显示签到获取的贝壳数量。同时拾取所有贝壳广场中的所有贝壳。
 
+2020.09.03:
+
+贝壳已自动拾取，去除通过脚本拾取贝壳的内容。
+
 2020.08.07：
 
 目前贝壳似乎是自动拾取的，不需要再通过脚本定时获取，所以每天都会提示“没有发现待拾取的贝壳”，目前不影响使用，暂时不做调整，观察一段时间再说。
@@ -10,21 +14,27 @@
 
 ### Surge
 
-**安装模块**
+使用模块
 
-Surge推荐使用模块进行部署，模块地址：https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.sgmodule
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.sgmodule
 
-**配置文件**
+### Loon
 
-如果不方便使用模块，则根据如下内容修改配置文件
+使用远程脚本
 
 ```ini
-[Script]
-嘀嗒出行_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,type=cron,cronexp=10 0 * * *
-嘀嗒出行_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js,type=http-request,pattern=^https?:\/\/www\.didapinche\.com\/hapis\/.*\/getBeikeAccount\?userCid=.*
+[Remote Script]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.lnrewrite, tag=嘀嗒出行_每日签到, enabled=true
+```
 
-[MITM]
-hostname = www.didapinche.com
+### Quantumult X
+
+```ini
+[rewrite_remote]
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.qxrewrite, tag=嘀嗒出行_获取cookie, enabled=true
+
+[task_local]
+10 0 * * * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.js, tag=嘀嗒出行_每日签到, enabled=true
 ```
 
 ## 使用说明
