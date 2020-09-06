@@ -9,4 +9,4 @@
 # 知乎其他广告拦截
 ^https?:\/\/api\.zhihu\.com\/(v3\/package|me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|tab)|.*featured-comment-ad) url reject
 
-hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
+hostname = www.zhihu.com,api.zhihu.com
