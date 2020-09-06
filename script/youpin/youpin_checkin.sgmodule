@@ -3,7 +3,7 @@
 #!system=ios
 
 [Script]
-小米有品_每日签到 = type=cron,cronexp=25 0 * * *,timeout=10,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/youpin/youpin_checkin.js
+小米有品_每日签到 = type=cron,cronexp=25 0 * * *,timeout=30,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/youpin/youpin_checkin.js
 小米有品_获取cookie = type=http-request,pattern=^https?:\/\/m\.xiaomiyoupin\.com\/mtop\/coupon\/redpacket\/get_user_balance,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/youpin/youpin_checkin.js
 
 [MITM] 

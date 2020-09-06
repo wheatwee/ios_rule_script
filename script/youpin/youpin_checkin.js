@@ -41,6 +41,9 @@ function CheckIn(cookie){
             magicJS.logInfo(`签到成功，获得红包${obj.data.amount}，优惠券${obj.data.couponInfo.couponDesc.nameDesc}!`)
             resolve(['🎉签到成功', obj.data.amount, obj.data.couponInfo.couponDesc.nameDesc]);
           }
+          else if (obj.code === 401){
+            resolve(['❌签到失败，Cookie已过期', null, null]);
+          }
           else{
             magicJS.logError(`签到失败，响应异常：${data}`);
             reject('❌签到失败，响应异常，请查阅日志！');
