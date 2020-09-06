@@ -4,7 +4,9 @@
 ^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=) url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 # 知乎回答列表去广告
 ^https?:\/\/api\.zhihu\.com\/v4\/questions url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+# 知乎预置关键词去广告
+^https?:\/\/api\.zhihu\.com\/search\/preset_words\? url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
 # 知乎其他广告拦截
-^https?:\/\/api\.zhihu\.com\/(me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|preset|tab)|.*featured-comment-ad) url reject
+^https?:\/\/api\.zhihu\.com\/(v3\/package|me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|tab)|.*featured-comment-ad) url reject
 
 hostname = www.zhihu.com,api.zhihu.com,link.zhihu.com,118.89.204.198
