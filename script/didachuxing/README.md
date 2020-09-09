@@ -24,7 +24,7 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/did
 
 ```ini
 [Remote Script]
-https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.lnrewrite, tag=嘀嗒出行_每日签到, enabled=true
+https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didachuxing/didachuxing_plus.lnscript, tag=嘀嗒出行_每日签到, enabled=true
 ```
 
 ### Quantumult X
