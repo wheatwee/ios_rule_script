@@ -112,7 +112,7 @@ async function main(){
           magicJS.logDebug(`当前黑名单列表: ${JSON.stringify(custom_blocked_users)}`);
           delete body['ad_info'];
           delete body['roundtable_info'];
-          let data = body['data'].filter((element) =>{ return !custom_blocked_users[element['author']['name']]})
+          let data = body['data'].filter((element) =>{return !custom_blocked_users[element['author']['name']]})
           body['data'] = data;
           body=JSON.stringify(body);
           magicJS.done({body});
@@ -127,7 +127,7 @@ async function main(){
         try{
           const sysmsg_blacklist = ['知乎小伙伴', '知乎视频', '知乎团队', '知乎礼券', '知乎读书会团队'];
           let body = JSON.parse(magicJS.response.body);
-          let data = body['data'].filter((element) =>{ return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
+          let data = body['data'].filter((element) =>{return sysmsg_blacklist.indexOf(element['content']['title']) < 0})
           body['data'] = data;
           body=JSON.stringify(body);
           magicJS.done({body});
