@@ -1,0 +1,10 @@
+#!name=滴滴出行
+#!desc=滴滴出行每日自动签到
+#!system=ios
+
+[Script]
+滴滴出行_每日签到 = type=cron,cronexp=05 0 * * *,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didichuxing/didi_checkin.js
+滴滴出行_获取cookie = type=http-request,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didichuxing/didi_checkin.js,pattern=^https?:\/\/api\.didialift\.com\/beatles\/userapi\/user\/user\/getuserinfo?.*city_id=(\d+).*token=([^&]*)
+
+[MITM]
+hostname = %APPEND% api.didialift.com
