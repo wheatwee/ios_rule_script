@@ -10,7 +10,7 @@ async function main(){
       case /^https?:\/\/www\.zhihu\.com\/appview\/v2\/answer\/[0-9]*/.test(magicJS.request.url):
         try{
           let html = magicJS.response.body;
-          if (html.indexOf('查看完整内容') >= 0 && html.indexOf('paid') >= 0){
+          if ((html.indexOf('查看完整内容') >= 0 || html.indexOf('查看全部章节') >= 0) && html.indexOf('paid') >= 0){
             let matchStr = html.match(/(richText[^<]*>)(.)/)[1];
             let start = html.lastIndexOf(matchStr) + matchStr.length;
             let insertText = '<a style="height: 42px;padding: 0 12px;border-radius: 6px;background-color: rgb(247 104 104 / 8%);display: block;text-decoration: none;" href="https://github.com/blackmatrix7/ios_rule_script/blob/master/script/zhihu/README.md#知乎助手"><div style="color: #f36;display: flex;-webkit-box-align: center;align-items: center;height: 100%;"><svg style="width: 1.2em; height: 1em;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1957"><path d="M821.333333 138.666667c64.8 0 117.333333 52.533333 117.333334 117.333333v149.333333a32 32 0 0 1-32 32 74.666667 74.666667 0 0 0 0 149.333334 32 32 0 0 1 32 32v149.333333c0 64.8-52.533333 117.333333-117.333334 117.333333H202.666667c-64.8 0-117.333333-52.533333-117.333334-117.333333V618.666667a32 32 0 0 1 32-32 74.666667 74.666667 0 0 0 0-149.333334 32 32 0 0 1-32-32V256c0-64.8 52.533333-117.333333 117.333334-117.333333h618.666666zM428.576 329.994667a32 32 0 0 0-43.733333-2.581334l-1.514667 1.344a32 32 0 0 0-2.581333 43.733334L452.565333 458.666667H405.333333l-1.877333 0.053333A32 32 0 0 0 373.333333 490.666667l0.053334 1.877333A32 32 0 0 0 405.333333 522.666667h80v42.666666H405.333333l-1.877333 0.053334A32 32 0 0 0 373.333333 597.333333l0.053334 1.877334A32 32 0 0 0 405.333333 629.333333h80v42.666667l0.053334 1.877333A32 32 0 0 0 517.333333 704l1.877334-0.053333A32 32 0 0 0 549.333333 672v-42.666667H618.666667l1.877333-0.053333A32 32 0 0 0 650.666667 597.333333l-0.053334-1.877333A32 32 0 0 0 618.666667 565.333333h-69.333334v-42.666666H618.666667l1.877333-0.053334A32 32 0 0 0 650.666667 490.666667l-0.053334-1.877334A32 32 0 0 0 618.666667 458.666667h-47.253334l71.84-86.186667 1.248-1.589333a32 32 0 0 0-50.421333-39.381334L512 430.016l-82.08-98.506667z" p-id="1958"></path></svg><div style="flex: 1 1;white-space: nowrap;text-overflow: ellipsis;padding-left:4px"><span style="font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif;-webkit-tap-highlight-color: rgba(26,26,26,0);font-size: 14px;line-height: 20px;color: #f36;white-space: nowrap;font-weight: 600;">知乎助手 · 本文为付费内容</span></div><div><span style="font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif;-webkit-tap-highlight-color: rgba(26,26,26,0);font-size: 14px;color: #f36;line-height: normal;display: flex;-webkit-box-align: center;align-items: center;"><svg style="font-family: -apple-system,BlinkMacSystemFont,Helvetica Neue,PingFang SC,Microsoft YaHei,Source Han Sans SC,Noto Sans CJK SC,WenQuanYi Micro Hei,sans-serif;-webkit-tap-highlight-color: rgba(26,26,26,0);font-size: 14px;color: #f36;line-height: normal;fill: currentcolor;width: 24px;height: 24px;margin: -2px;" fill="currentColor" viewBox="0 0 24 24" width="24" height="24"><path d="M9.218 16.78a.737.737 0 0 0 1.052 0l4.512-4.249a.758.758 0 0 0 0-1.063L10.27 7.22a.737.737 0 0 0-1.052 0 .759.759 0 0 0-.001 1.063L13 12l-3.782 3.716a.758.758 0 0 0 0 1.063z" fill-rule="evenodd"></path></svg></span></div></div></a>'
@@ -177,6 +177,7 @@ async function main(){
           try{
             let obj = JSON.parse(magicJS.response.body);
             if (!!obj['data']){
+              magicJS.logDebug(`本次滑动获取的黑名单信息：${JSON.stringify(obj['data'])}`);
               obj['data'].forEach(element => {
                 if (element['name'] != '[已重置]'){
                   custom_blocked_users[element['name']] = element['id'];
@@ -203,6 +204,7 @@ async function main(){
           try{
             let obj = JSON.parse(magicJS.response.body);
             if (obj.hasOwnProperty('name') && obj.hasOwnProperty('id')){
+              magicJS.logDebug(`当前需要加入黑名单的用户Id：${obj['id']}，用户名：${obj['name']}`);
               custom_blocked_users[obj['name']] = obj['id'];
               magicJS.write(blocked_users_key, custom_blocked_users, userInfo.id);
               magicJS.logInfo(`${obj['name']}写入脚本黑名单成功，当前脚本黑名单数据：${JSON.stringify(custom_blocked_users)}`);
@@ -224,6 +226,7 @@ async function main(){
             let obj = JSON.parse(magicJS.response.body);
             if (obj.success){
               let user_id = magicJS.request.url.match(/https?:\/\/api\.zhihu\.com\/settings\/blocked_users\/([0-9a-zA-Z]*)/)[1];
+              magicJS.logDebug(`当前需要移出黑名单的用户Id：${user_id}`);
               for (let username in custom_blocked_users){
                 if (custom_blocked_users[username] == user_id){
                   delete custom_blocked_users[username];
