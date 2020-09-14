@@ -1,14 +1,3 @@
-/*
-Surge Config
-
-[Script]
-什么值得买_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=cron,cronexp=10 0 * * *
-什么值得买_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=http-request,requires-body=true,pattern=^https?:\/\/zhiyou\.smzdm\.com\/user$
-什么值得买_获取账号密码 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=http-request,requires-body=true,pattern=^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$
-
-[MITM]
-hostname = zhiyou.smzdm.com, user-api.smzdm.com
-*/
 const zhiyouRegex = /^https?:\/\/zhiyou\.smzdm\.com\/user$/;
 const appLoginRegex = /^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$/;
 const smzdmCookieKey = 'smzdm_cookie';
@@ -19,30 +8,17 @@ const smzdmPasswordKey = 'smzdm_password';
 const scriptName = '什么值得买';
 const smzdmAccount = '' // 什么值得买账号
 const smzdmPassword = '' // 什么值得买密码
+let clickGoBuyMaxTimes = 12; // 好价点击去购买的次数
+let clickLikeProductMaxTimes = 7; // 好价点值次数
+let clickLikeArticleMaxTimes = 7; // 好文点赞次数
+let clickFavArticleMaxTimes = 7; // 好文收藏次数
 
-let magicJS = MagicJS(scriptName);
-let appToken = null;
-
-let webGetCurrentInfo = {
-    url : 'https://zhiyou.smzdm.com/user/info/jsonp_get_current?callback=jQuery112407333236740601499_1595084820484&_=1595084820484',
-    headers : {
-      'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Accept-Language': 'zh-CN,zh;q=0.9',
-      'Connection': 'keep-alive',
-      'DNT': '1',
-      'Host': 'zhiyou.smzdm.com',
-      'Referer': 'https://zhiyou.smzdm.com/user/',
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
-      'Cookie': null
-    }
-};
+let magicJS = MagicJS(scriptName, "INFO");
 
 let webCheckinOptions = {
-    url : 'https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery112404020093264993104_',
+    url : 'https://zhiyou.smzdm.com/user/checkin/jsonp_checkin?callback=jQuery112404020093264993104_1597893638970&_=1597893638973',
     headers : {
       'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate, br',
       'Accept-Language': 'zh-cn',
       'Connection': 'keep-alive',
       'Host': 'zhiyou.smzdm.com',
@@ -56,7 +32,6 @@ let getAppTokenOptions ={
   url : 'https://api.smzdm.com/v1/user/login',
   headers : {
     'Accept': '*/*',
-    'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-cn',
     'Connection': 'keep-alive',
     'Host': 'api.smzdm.com',
@@ -69,7 +44,6 @@ let appCheckinOptions ={
   url : 'https://api.smzdm.com/v1/user/checkin',
   headers : {
     'Accept': '*/*',
-    'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'zh-cn',
     'Connection': 'keep-alive',
     'Host': 'api.smzdm.com',
@@ -78,42 +52,96 @@ let appCheckinOptions ={
   body: ''
 };
 
-// 检查cookie完整性
-function WebCheckCookie(){
-  let smzdmCookie = magicJS.read(smzdmCookieKey, 'default');
-  if (!!smzdmCookie){
-    return true;
-  }
-  else{
-      return false;
-  }
+// 获取用户信息，新版
+function WebGetCurrentInfoNewVersion(smzdmCookie){
+  return new Promise(resolve =>{
+    let getUserPointOptions ={
+      url : 'https://zhiyou.smzdm.com/user/point/',
+      headers : {
+        'Cookie': ''
+      },
+      body: ''
+    };
+    getUserPointOptions.headers.Cookie = smzdmCookie;
+    magicJS.get(getUserPointOptions, (err, resp, data)=>{
+      if (err){
+        magicJS.logError(`获取用户信息失败，异常信息：${err}`);
+        resolve([null,null,null,null,null,null,null]);
+      }
+      else{
+        try{
+          // 获取用户名
+          let userName =data.match(/<a.*zhiyou\.smzdm\.com\/user[^<]*>([^<]*)</)[1].trim();
+          // 获取近期经验值变动情况
+          let pointTimeList = data.match(/\<div class=['"]scoreLeft['"]\>(.*)\<\/div\>/ig);
+          let pointDetailList = data.match(/\<div class=['"]scoreRight ellipsis['"]\>(.*)\<\/div\>/ig);
+          let minLength = pointTimeList.length > pointDetailList.length ? pointDetailList.length : pointTimeList.length;
+          let userPointList = [];
+          for (let i=0;i<minLength;i++){
+            userPointList.push({
+              'time': pointTimeList[i].match(/\<div class=['"]scoreLeft['"]\>(.*)\<\/div\>/)[1], 
+              'detail': pointDetailList[i].match(/\<div class=['"]scoreRight ellipsis['"]\>(.*)\<\/div\>/)[1]
+            });
+          }
+          // 获取用户资源
+          let assetsNumList = data.match(/assets-num[^<]*>(.*)</ig);
+          let points = assetsNumList[0].match(/assets-num[^<]*>(.*)</)[1]; // 积分
+          let experience = assetsNumList[1].match(/assets-num[^<]*>(.*)</)[1]; // 经验
+          let gold = assetsNumList[2].match(/assets-num[^<]*>(.*)</)[1]; // 金币
+          let prestige = assetsNumList[3].match(/assets-num[^<]*>(.*)</)[1]; // 威望
+          let silver = assetsNumList[4].match(/assets-num[^<]*>(.*)</)[1]; // 碎银子
+          resolve([userName, userPointList, Number(points), Number(experience), Number(gold), Number(prestige), Number(silver)]);
+        }
+        catch(err){
+          magicJS.logError(`获取用户信息失败，异常信息：${err}`);
+          resolve([null,null,null,null,null,null,null]);
+        }
+      }
+    })
+  })
 }
 
 // 获取用户信息
-function WebGetCurrentInfo(){
+function WebGetCurrentInfo(smzdmCookie){
   return new Promise((resolve) => {
-    webGetCurrentInfo.url = webGetCurrentInfo.url.replace(/_[0-9]*&_=[0-9]*/, `_${new Date().getTime()}&_=${new Date().getTime()}`);
-    let smzdmCookie = magicJS.read(smzdmCookieKey, 'default');
-    webGetCurrentInfo.headers.Cookie = smzdmCookie;
+    let webGetCurrentInfo = {
+      url : `https://zhiyou.smzdm.com/user/info/jsonp_get_current?with_avatar_ornament=1&callback=jQuery112403507528653716241_${new Date().getTime()}&_=${new Date().getTime()}`,
+      headers : {
+        'Accept': 'text/javascript, application/javascript, application/ecmascript, application/x-ecmascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9',
+        'Connection': 'keep-alive',
+        'DNT': '1',
+        'Host': 'zhiyou.smzdm.com',
+        'Referer': 'https://zhiyou.smzdm.com/user/',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36',
+        'Cookie': smzdmCookie
+      }
+    };
     magicJS.get(webGetCurrentInfo, (err, resp, data)=>{
       try{
-        let obj = JSON.parse(/jQuery.*\((.*)\)/.exec(data)[1]);
-        if ('smzdm_id' in obj && !!obj['smzdm_id']){
-          let level = Number(obj['level']);
-          let point = Number(obj['point']);
-          let exp = Number(obj['exp']);
-          let gold = Number(obj['gold']);
-          let silver = Number(obj['silver']);
-          let haveCheckin = obj['checkin']['has_checkin'];
-          resolve([level, point, exp, gold, silver, haveCheckin, obj['checkin']['daily_checkin_num'], obj['unread']['notice']['num']]);
+        let obj = JSON.parse(/\((.*)\)/.exec(data)[1]);
+        if (obj['smzdm_id'] !== 0){
+          resolve([
+            obj['nickname'],  // 昵称
+            `https:${obj['avatar']}`,  // 头像
+            obj['vip_level'], // 新版VIP等级
+            obj['checkin']['has_checkin'], //是否签到
+            Number(obj['checkin']['daily_checkin_num']), //连续签到天数
+            Number(obj['unread']['notice']['num']), // 未读消息
+            Number(obj['level']),  // 旧版等级
+            Number(obj['exp']),  // 旧版经验
+            Number(obj['point']), // 积分
+            Number(obj['gold']), // 金币
+            Number(obj['silver']) // 碎银子
+          ]);
         }
         else {
-          magicJS.log(`获取用户信息异常，接口返回数据不合法：${data}`);
+          magicJS.logWarning(`获取用户信息异常，接口返回数据不合法：${data}`);
           resolve([null, null, null, null, null, false, null, null]);
         }
       }
       catch (err){
-        magicJS.log(`获取用户信息异常，代码指向异常：${err}，接口返回数据：${data}`);
+        magicJS.logError(`获取用户信息异常，代码执行异常：${err}，接口返回数据：${data}`);
         resolve([null, null, null, null, null, false, null, null]);
       }
     })
@@ -121,47 +149,46 @@ function WebGetCurrentInfo(){
 }
 
 // 每日签到
-function WebCheckin() {
+function WebCheckin(smzdmCookie) {
   return new Promise((resolve, reject) => {
-    let smzdmCookie = magicJS.read(smzdmCookieKey, 'default');
     webCheckinOptions.url = webCheckinOptions.url.replace(/_[0-9]*&_=[0-9]*/, `_${new Date().getTime()}&_=${new Date().getTime()}`);
     webCheckinOptions.headers.Cookie = smzdmCookie;
     magicJS.get(webCheckinOptions, (err, resp, data)=>{
       if (err) {
-        magicJS.log('Web端签到出现异常:' + err);
+        magicJS.logWarning('Web端签到出现异常:' + err);
         reject('Web端签到异常');
       }
       else{
         try {
-          let checkin_data = /(callback\()(.*)(\))/.exec(data);
+          let checkin_data = /\((.*)\)/.exec(data);
           if (checkin_data){
-            let checkin_obj = JSON.parse(checkin_data[2]);
+            let checkin_obj = JSON.parse(checkin_data[1]);
             if (!!checkin_obj && checkin_obj.hasOwnProperty('error_code')){
               if (checkin_obj.error_code == -1){
-                magicJS.log(`Web端签到出现异常，网络繁忙，接口返回：${data}`);
+                magicJS.logWarning(`Web端签到出现异常，网络繁忙，接口返回：${data}`);
                 reject( 'Web端网络繁忙');
               }
               else if (checkin_obj['error_code'] == 0){
-                magicJS.log('Web端本日签到成功');
+                magicJS.logInfo('Web端签到成功');
                 resolve([true, 'Web端签到成功']);
               }
               else{
-                magicJS.log(`Web端签到出现异常，接口返回数据不合法：${data}`);
+                magicJS.logWarning(`Web端签到出现异常，接口返回数据不合法：${data}`);
                 reject('Web端返回错误');
               }
             }
             else{
-              magicJS.log(`Web端签到出现异常，接口返回数据：${data}`);
+              magicJS.logWarning(`Web端签到出现异常，接口返回数据：${data}`);
               reject('Web端签到异常');
             }
           }
           else{
-            magicJS.log(`Web端签到出现异常，接口返回数据不合法：${data}`);
+            magicJS.logWarning(`Web端签到出现异常，接口返回数据不合法：${data}`);
             reject('Web端签到异常');
           }
         }
         catch (err){
-          magicJS.log(`Web端签到出现异常，代码执行异常：${err}，接口返回：${data}`);
+          magicJS.logWarning(`Web端签到出现异常，代码执行异常：${err}，接口返回：${data}`);
           reject('Web端执行异常');
         }
       }
@@ -169,15 +196,14 @@ function WebCheckin() {
   });
 }
 
-function AppGetToken(){
+// 获取App端签到Token
+function AppGetToken(account, password){
   return new Promise((resolve) => {
-    let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey, 'default');
-    let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey, 'default');
     if (magicJS.isJSBox){
       getAppTokenOptions.body = {user_login: account, user_pass: password, f:'win'};
     }
     else if (magicJS.isNode){
-      getAppTokenOptions.form = {token: token, f:'win'};
+      getAppTokenOptions.form = {user_login: account, user_pass: password, f:'win'};
     }
     else{
       getAppTokenOptions.body = `user_login=${account}&user_pass=${password}&f=win`;
@@ -187,33 +213,37 @@ function AppGetToken(){
     }
     magicJS.post(getAppTokenOptions, (err, resp, data) => {
       if (err){
-        magicJS.log(`什么值得买App登录失败，http请求异常。异常内容：${err}`);
+        magicJS.logWarning(`App端登录失败，http请求异常。异常内容：${err}`);
         resolve([false,'App端登录异常',null]);
       }
       else{
         try{
           let obj = JSON.parse(data);
-          magicJS.log(`什么值得买App登录，接口响应内容：${data}`);
+          magicJS.logDebug(`App端登录，接口响应内容：${data}`);
+          if (obj.error_code == '111101'){
+            magicJS.logWarning(`App端登录失败，邮箱不能为空`);
+            resolve([false,'App端邮箱不能为空',null]);
+          }
           if (obj.error_code == '111104'){
-            magicJS.log(`什么值得买App登录失败，账号密码错误`);
+            magicJS.logWarning(`App端登录失败，账号密码错误`);
             resolve([false,'App端账号密码错误',null]);
           }
           if (obj.error_code == '110202'){
-            magicJS.log(`什么值得买App登录失败，验证码错误`);
+            magicJS.logWarning(`App端登录失败，验证码错误`);
             resolve([false,'App端验证码错误',null]);
           }
           else if (obj.error_code != '0'){
-            magicJS.log(`什么值得买App登录失败，接口响应格式不合法`);
+            magicJS.logWarning(`App端登录失败，接口响应格式不合法`);
             resolve([false,'App端响应异常',null]);
           }
           else{
-            magicJS.log(`什么值得买App登录成功`);
-            magicJS.write(smzdmTokenKey, obj['data']['token'], 'default');
+            magicJS.logInfo(`App端登录成功`);
+            magicJS.write(smzdmTokenKey, obj['data']['token']);
             resolve([true,'App端登录成功',obj['data']['token']]);
           }
         }
         catch (ex){
-          magicJS.log(`什么值得买App登录失败，代码执行异常。异常内容：${ex}`);
+          magicJS.logWarning(`App端登录失败，代码执行异常。异常内容：${ex}`);
           resolve([false,'App端执行异常',null]);
         }
       }
@@ -222,11 +252,12 @@ function AppGetToken(){
 }
 
 /*
-什么值得买App端签到，感谢苍井灰灰提供接口
+App端签到，感谢苍井灰灰提供接口
 返回值 0 失败 1 成功 2 网络繁忙 3 token失效 4 重复签到
 */
 function AppCheckin(){
   return new Promise((resolve, reject) => {
+    let appToken = magicJS.read(smzdmTokenKey);
     if (magicJS.isJSBox){
       appCheckinOptions.body = {token: appToken, f:'win'};
     }
@@ -241,35 +272,35 @@ function AppCheckin(){
     }
     magicJS.post(appCheckinOptions, (err, resp, data) => {
       if (err){
-        magicJS.log(`App端签到失败，http请求异常。异常内容：${err}`);
+        magicJS.logWarning(`App端签到失败，http请求异常。异常内容：${err}`);
         reject('App端请求异常');
       }
       else{
         try{
           let obj = JSON.parse(data);
           if (obj.error_code == '-1' && obj.error_msg.indexOf('主页君较忙') >= 0){
-            magicJS.log(`App签到失败，网络繁忙。接口返回：${data}`);
+            magicJS.logError(`App端签到失败，网络繁忙。接口返回：${data}`);
             reject('App端网络繁忙');
           }
           else if (obj.error_code == '11111'){
-            magicJS.log(`App签到失败，Token已过期。接口返回：${data}`);
+            magicJS.logWarning(`App端签到失败，Token已过期。接口返回：${data}`);
             resolve([3, 'App端Token过期']);
           }
           else if (obj.error_code != '0'){
-            magicJS.log(`App签到失败，接口响应格式不合法：${data}`);
+            magicJS.logWarning(`App端签到失败，接口响应格式不合法：${data}`);
             resolve([3, 'App端返回异常']);
           }
           else if(obj.error_msg == '已签到'){
-            magicJS.log('App端重复签到');
+            magicJS.logWarning('App端重复签到');
             resolve([4, 'App端重复签到']);
           }
           else{
-            magicJS.log('App签到成功！！');
+            magicJS.logInfo('App端签到成功');
             resolve([1, 'App端签到成功']);
           }
         }
         catch (ex){
-          magicJS.log(`App签到失败，代码执行异常。异常内容：${ex}，接口返回：${data}`);
+          magicJS.logError(`App端签到失败，代码执行异常。异常内容：${ex}，接口返回：${data}`);
           reject('App端执行异常');
         }
       }
@@ -277,7 +308,250 @@ function AppCheckin(){
   })
 }
 
+// 获取点击去购买和点值的链接
+function GetProductList(){
+  return new Promise((resolve, reject) =>{
+    let getGoBuyOptions ={
+      url : 'https://faxian.smzdm.com/',
+      headers : {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'Host': 'www.smzdm.com',
+        'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52'
+      },
+      body: ''
+    };
+    magicJS.get(getGoBuyOptions, (err, resp, data)=>{
+      if (err){
+        reject(err);
+      }
+      else{
+        // 获取每日去购买的链接
+        let goBuyList = data.match(/https?:\/\/go\.smzdm\.com\/[0-9a-zA-Z]*\/[^"']*_0/ig);
+        if (!!goBuyList){
+          // 去除重复的商品链接
+          let goBuyDict = {};
+          goBuyList.forEach(element => {
+            let productCode = element.match(/https?:\/\/go\.smzdm\.com\/[0-9a-zA-Z]*\/([^"']*_0)/)[1]
+            goBuyDict[productCode] = element;
+          });
+          goBuyList = Object.values(goBuyDict);
+          magicJS.logDebug(`当前获取的每日去购买链接: ${JSON.stringify(goBuyList)}`);
+        }
+        else{
+          goBuyList = []
+        }
+
+        // 获取每日点值的链接
+        let productUrlList = data.match(/https?:\/\/www\.smzdm\.com\/p\/[0-9]*/ig);
+        let likeProductList = []
+        if (!!productUrlList){
+          productUrlList.forEach(element => {
+            likeProductList.push(element.match(/https?:\/\/www\.smzdm\.com\/p\/([0-9]*)/)[1]);
+          });
+        }
+        resolve([goBuyList, likeProductList]);
+      }
+    });
+  })
+}
+
+// 获取点赞和收藏的好文Id
+function GetDataArticleIdList(){
+  return new Promise((resolve) =>{
+    let getArticleOptions = {
+      url: 'https://post.smzdm.com/',
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Host': 'post.smzdm.com',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41'
+      },
+      body:''
+    }
+    magicJS.get(getArticleOptions, (err, resp, data) =>{
+      if (err){
+        magicJS.logWarning(`获取好文列表失败，请求异常：${err}`);
+        resolve([]);
+      }
+      else{
+        try{
+          let articleList = data.match(/data-article=".*" data-type="zan"/ig);
+          let result = []
+          articleList.forEach(element => {
+            result.push(element.match(/data-article="(.*)" data-type="zan"/)[1]);
+          });
+          resolve(result);
+        }
+        catch(err){
+          magicJS.logWarning(`获取好文列表失败，执行异常：${err}`);
+          resolve([]);
+        }
+      }
+    })
+  })
+}
+
+// 点击去购买
+function ClickGoBuyButton(cookie, url){
+  return new Promise((resolve) =>{
+    let clickGoBuyOptions = {
+      url: url,
+      headers: {
+        'Cookie': cookie
+      }
+    }
+    magicJS.get(clickGoBuyOptions, (err, resp, data)=>{
+      resolve();
+    });
+  })
+}
+
+// 好价点值
+function ClickLikeProduct(cookie, articleId){
+  return new Promise((resolve) =>{
+    let ClickLikeProductOptions = {
+      url: 'https://zhiyou.smzdm.com/user/rating/ajax_add',
+      headers: {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Host': 'zhiyou.smzdm.com',
+        'Origin': 'https://faxian.smzdm.com',
+        'Referer': 'https://faxian.smzdm.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41',
+        'Cookie': cookie
+      },
+      body: `article_id=${articleId}&channel_id=3&rating=1&client_type=PC&event_key=%E7%82%B9%E5%80%BC&otype=%E5%80%BC&aid=${articleId}&p=16&cid=2&source=%E6%97%A0&atp=3&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Ffaxian.smzdm.com%2F&sourceMode=%E6%97%A0`
+    }
+    magicJS.post(ClickLikeProductOptions, (err, resp, data)=>{
+      if (err){
+        magicJS.logWarning(`好价${articleId}点值失败，请求异常：${articleId}`);
+        resolve(false);
+      }
+      else{
+        try{
+          let obj = JSON.parse(data);
+          if (obj.error_code == 0){
+            magicJS.logDebug(`好价${articleId}点值成功`);
+            resolve(true);
+          }
+          else if (obj.error_code == 1){
+            magicJS.logDebug(`好价${articleId}点值重复点值`);
+            resolve(true);
+          }
+          else{
+            magicJS.logWarning(`好价${articleId}点值失败，接口响应异常：${data}`);
+            resolve(false);
+          }
+        }
+        catch(err){
+          magicJS.logWarning(`好价${articleId}点值失败，执行异常：${articleId}`);
+          resolve(false);
+        }
+      }
+    });
+  })
+}
+
+// 好文点赞
+function ClickLikeArticle(cookie, articleId){
+  return new Promise((resolve) =>{
+    let ClickLikeProductOptions = {
+      url: 'https://zhiyou.smzdm.com/user/rating/ajax_add',
+      headers: {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Host': 'zhiyou.smzdm.com',
+        'Origin': 'https://post.smzdm.com',
+        'Referer': 'https://post.smzdm.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41',
+        'Cookie': cookie
+      },
+      body: `article_id=${articleId}&channel_id=11&rating=1&client_type=PC&event_key=%E7%82%B9%E5%80%BC&otype=%E7%82%B9%E8%B5%9E&aid=${articleId}&p=2&cid=11&source=%E6%97%A0&atp=76&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Fpost.smzdm.com%2F&sourceMode=%E6%97%A0`
+    }
+    magicJS.post(ClickLikeProductOptions, (err, resp, data)=>{
+      if (err){
+        magicJS.logWarning(`好文${articleId}点赞失败，请求异常：${articleId}`);
+        resolve(false);
+      }
+      else{
+        try{
+          let obj = JSON.parse(data);
+          if (obj.error_code == 0){
+            magicJS.logDebug(`好文${articleId}点赞成功`);
+            resolve(true);
+          }
+          else if(obj.error_code == 1 && obj.error_msg == '已喜欢'){
+            magicJS.logDebug(`好文${articleId}点赞失败，重复点值。`);
+            resolve(false);
+          }
+          else{
+            magicJS.logWarning(`好文${articleId}点赞失败，接口响应异常：${data}`);
+            resolve(false);
+          }
+        }
+        catch(err){
+          magicJS.logWarning(`好文${articleId}点赞失败，请求异常：${err}`);
+          resolve(false);
+        }
+      }
+    });
+  })
+}
+
+// 好文收藏/取消收藏
+function ClickFavArticle(cookie, articleId){
+  return new Promise((resolve) =>{
+    let options = {
+      url: 'https://zhiyou.smzdm.com/user/favorites/ajax_favorite',
+      headers: {
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Host': 'zhiyou.smzdm.com',
+        'Origin': 'https://post.smzdm.com',
+        'Referer': 'https://post.smzdm.com/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.41',
+        'Cookie': cookie
+      },
+      body: `article_id=${articleId}&channel_id=11&client_type=PC&event_key=%E6%94%B6%E8%97%8F&otype=%E6%94%B6%E8%97%8F&aid=${articleId}&cid=11&p=2&source=%E6%97%A0&atp=76&tagID=%E6%97%A0&sourcePage=https%3A%2F%2Fpost.smzdm.com%2F&sourceMode=%E6%97%A0`
+    }
+    magicJS.post(options, (err, resp, data)=>{
+      if (err){
+        magicJS.logWarning(`好文${articleId}收藏失败，请求异常：${articleId}`);
+        resolve(false);
+      }
+      else{
+        try{
+          let obj = JSON.parse(data);
+          if (obj.error_code == 0){
+            magicJS.logDebug(`好文${articleId}收藏成功`);
+            resolve(true);
+          }
+          else if(obj.error_code == 2){
+            magicJS.logDebug(`好文${articleId}取消收藏成功`);
+            resolve(true);
+          }
+          else{
+            magicJS.logWarning(`好文${articleId}收藏失败，接口响应异常：${data}`);
+            resolve(false);
+          }
+        }
+        catch(err){
+          magicJS.logWarning(`好文${articleId}收藏失败，请求异常：${err}`);
+          resolve(false);
+        }
+      }
+    });
+  })
+}
+
 async function Main(){
+  // 获取Cookie与账号密码
   if (magicJS.isRequest){
     if(zhiyouRegex.test(magicJS.request.url) && magicJS.request.method == 'GET'){
       let match_str = magicJS.request.headers.Cookie.match(/sess=[^\s]*;/);
@@ -285,91 +559,109 @@ async function Main(){
       // 获取新的session_id
       if (session_id){
         // 获取持久化的session_id
-        old_session_id = magicJS.read(smzdmSessionKey, 'default') != null ? magicJS.read(smzdmSessionKey, 'default') : '';
+        old_session_id = magicJS.read(smzdmSessionKey) != null ? magicJS.read(smzdmSessionKey) : '';
         // 获取新的session_id
         console.log({'old_session_id': old_session_id, 'new_session_id': session_id});    
         // 比较差异
         if (old_session_id == session_id){
-          magicJS.log('网页版cookie没有变化，无需更新。');
+          magicJS.logInfo('网页版cookie没有变化，无需更新。');
         }
         else{
           // 持久化cookie
-          magicJS.write(smzdmSessionKey, session_id, 'default');
-          magicJS.write(smzdmCookieKey, magicJS.request.headers.Cookie, 'default');
-          magicJS.log('写入cookie ' + magicJS.request.headers.Cookie);
+          magicJS.write(smzdmSessionKey, session_id);
+          magicJS.write(smzdmCookieKey, magicJS.request.headers.Cookie);
+          magicJS.logInfo('写入cookie ' + magicJS.request.headers.Cookie);
           magicJS.notify(scriptName, '', '🎈获取cookie成功！！');
         }
       }
       else{
-        magicJS.log('没有读取到有效的Cookie信息。');
+        magicJS.logError('没有读取到有效的Cookie信息。');
       }
     }
     else if(appLoginRegex.test(magicJS.request.url) && magicJS.request.method == 'POST'){
       if (magicJS.request.body){
         try{
-          // TODO 密码含有&的可能会有问题，待验证
           let matchArray = magicJS.request.body.match(/(user_login=)([^&]*)(&user_pass=)([^&]*)(&v=)/);
           let account = decodeURIComponent(matchArray[2]);
           let password = matchArray[4];
-          let hisAccount = magicJS.read(smzdmAccountKey, 'default');
-          let hisPassword = magicJS.read(smzdmPasswordKey, 'default');
+          let hisAccount = magicJS.read(smzdmAccountKey);
+          let hisPassword = magicJS.read(smzdmPasswordKey);
           if (account != hisAccount || password != hisPassword){
-            magicJS.write(smzdmAccountKey, account, 'default');
-            magicJS.write(smzdmPasswordKey, password, 'default');
+            magicJS.write(smzdmAccountKey, account);
+            magicJS.write(smzdmPasswordKey, password);
             magicJS.notify(scriptName, '', '🎈获取账号密码成功！！');
-            magicJS.log(`获取账号密码成功，登录账号：${account}`);
+            magicJS.logInfo(`获取账号密码成功，登录账号：${account}`);
           }
           else{
-            magicJS.log(`账号密码没有变化，无需更新。登录账号：${account}`);
+            magicJS.logInfo(`账号密码没有变化，无需更新。登录账号：${account}`);
           }
         }
         catch (ex){
           magicJS.notify(scriptName, '', '❌获取账号密码出现异常,请查阅日志！！');
-          magicJS.log(`获取账号密码出现异常。\n请求数据：${magicJS.request.body}\n异常信息：${ex}`);
+          magicJS.logError(`获取账号密码出现异常。\n请求数据：${magicJS.request.body}\n异常信息：${ex}`);
         }        
       }
       else{
-        magicJS.log(`获取账号密码时请求数据不合法 。\n请求数据：${magicJS.request.body}`);
+        magicJS.logWarning(`获取账号密码时请求数据不合法 。\n请求数据：${magicJS.request.body}`);
       }
     }
   }
+  // 每日签到与完成任务
   else{
-    let subTitle = '';
-    let content = '';
-    let webCheckinErr = null;
-    let webCheckinResult = '';
-    let webCheckinStr = '';
-    let getTokenStr = '';
-    let appCheckinErr = null;
-    let appCheckinStr = '';
-    let beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin, checkinNum;
-    let afterLevel, afterPoint, afterExp, afterGold, afterSilver, afterHaveCheckin, unread;
+    // 获取Cookie
+    let smzdmCookie = magicJS.read(smzdmCookieKey);
 
-    if (!WebCheckCookie()){
-      magicJS.log('没有读取到什么值得买有效cookie，请访问zhiyou.smzdm.com进行登录');
+    if (!!smzdmCookie === false){
+      magicJS.logWarning('没有读取到什么值得买有效cookie，请访问zhiyou.smzdm.com进行登录');
       magicJS.notify(scriptName, '', '❓没有获取到Web端Cookie，请先进行登录。');
     }
     else{
-      // 查询签到前用户数据
-      [beforeLevel, beforePoint, beforeExp, beforeGold, beforeSilver, haveCheckin,] = await WebGetCurrentInfo();
-      magicJS.log(`签到前等级${beforeLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}`);
+
+      // 通知信息
+      let title = '';
+      let subTitle = '';
+      let content = '';
+
+      // Web端签到信息
+      let webCheckinErr = null;
+      let webCheckinResult = '';
+      let webCheckinStr = '';
+
+      // App端签到信息
+      let getTokenStr = '';
+      let appCheckinErr = null;
+      let appCheckinStr = '';
+
+      // 任务完成情况
+      let clickGoBuyTimes = 0;
+      let clickLikePrductTimes = 0;
+      let clickLikeArticleTimes = 0;
+      let clickFavArticleTimes = 0;
+      
+      // ---------------------- 查询签到前用户数据 ---------------------- 
+      let [, , , beforeExp, , beforePrestige, ] = await WebGetCurrentInfoNewVersion(smzdmCookie);
+      let [nickName, avatar, beforeVIPLevel, beforeHasCheckin, , beforeNotice, , ,beforePoint, beforeGold, beforeSilver] = await WebGetCurrentInfo(smzdmCookie);
+
+      magicJS.logInfo(`昵称：${nickName}\nWeb端签到状态：${beforeHasCheckin}\n签到前等级${beforeVIPLevel}，积分${beforePoint}，经验${beforeExp}，金币${beforeGold}，碎银子${beforeSilver}，威望${beforePrestige}, 未读消息${beforeNotice}`);
+
+      // ---------------------- 开始签到 ---------------------- 
 
       // App端签到
-      let account = smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey, 'default');
-      let password = smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey, 'default');
+      let account = !!smzdmAccount? smzdmAccount : magicJS.read(smzdmAccountKey);
+      let password = !!smzdmPassword? smzdmPassword : magicJS.read(smzdmPasswordKey);
       if (!!account && !!password){
-        appToken = magicJS.read(smzdmTokenKey, 'default');
+        let appToken = magicJS.read(smzdmTokenKey);
         if (!appToken){
-          [,getTokenStr,appToken] = await AppGetToken();
+          [,getTokenStr,appToken] = await AppGetToken(account, password);
         }
         if (!!appToken){
-          let AppCheckinRetry = magicJS.retry(AppCheckin, 5, 2000, async (result)=>{
-            if (result == 3){
-              appToken = await AppGetToken();
-              if (appToken) throw result;
+          let AppCheckinRetry = magicJS.retry(AppCheckin, 3, 3000, async (result)=>{
+            if (result[0] == 3){
+              [, ,appToken] = await AppGetToken(account, password);
+              if (appToken) throw 'AppToken已失效，触发重试！';
             }
           });
-          // 重试5次App签到，每次间隔2000毫秒
+          // 重试
           [appCheckinErr,[,appCheckinStr]] = await magicJS.attempt(AppCheckinRetry(), [false, 'App端签到异常']);
           if (appCheckinErr){
             appCheckinStr = appCheckinErr;
@@ -383,57 +675,147 @@ async function Main(){
         magicJS.notify(scriptName, '', '❓没有获取到App端账号密码，请先进行登录。');
       }
 
-      await magicJS.sleep(5000);
+      // 必须间隔3秒才能确保签到成功
+      await magicJS.sleep(3000);
       
       // Web端签到
-      if (!haveCheckin){
-        let webCheckinRetry = magicJS.retry(WebCheckin, 2, 1000);
-        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinRetry(), [false, 'Web端签到异常']);
-        if (webCheckinErr) 
-        {
+      if (!beforeHasCheckin){
+        let webCheckinRetry = magicJS.retry(WebCheckin, 3, 3000);
+        [webCheckinErr,[webCheckinResult, webCheckinStr]] = await magicJS.attempt(webCheckinRetry(smzdmCookie), [false, 'Web端签到异常']);
+        if (webCheckinErr){
           webCheckinStr = webCheckinErr;
-          magicJS.log('Web端签到异常：' + webCheckinErr);
+          magicJS.logWarning('Web端签到异常：' + webCheckinErr);
         }
       }
       else{
-        magicJS.log('Web端重复签到');
+        magicJS.logWarning('Web端重复签到');
+        [webCheckinErr,[webCheckinResult, webCheckinStr]] = [null, [true, '重复签到']];
+      }
+
+      // ---------------------- 每日完成任务 ---------------------- 
+      
+      // 获取去购买和好价Id列表
+      let [goBuyList, likProductList] = await GetProductList();
+      // 获取好文列表
+      let articleList = await GetDataArticleIdList();
+
+      // 好价点击去购买
+      const clickGoBuyAsync = async() =>{
+        let clickGoBuyList = goBuyList.splice(0, clickGoBuyMaxTimes);
+        if (clickGoBuyList.length > 0){
+          for (let i=0;i<clickGoBuyList.length;i++){
+            await ClickGoBuyButton(smzdmCookie, clickGoBuyList[i]);
+            magicJS.logInfo(`完成第${i+1}次“每日去购买”任务，点击链接：\n${clickGoBuyList[i]}`);
+            clickGoBuyTimes += 1;
+            await magicJS.sleep(3100);
+          }
+        }
+      }
+
+      // 好价点值
+      const clickLikeProductAsync = async() =>{
+        let clickLikeProductList = likProductList.splice(0, clickLikeProductMaxTimes);
+        if (clickLikeProductList.length > 0){
+          for (let i=0;i<clickLikeProductList.length;i++){
+            await ClickLikeProduct(smzdmCookie, clickLikeProductList[i]);
+            magicJS.logInfo(`完成第${i+1}次“好价点值”任务，好价Id：\n${clickLikeProductList[i]}`);
+            clickLikePrductTimes += 1;
+            await magicJS.sleep(3100);
+          }
+        } 
+      }
+
+      // 好文点赞
+      const clickLikeArticleAsync = async() =>{
+        let likeArticleList = articleList.splice(0, clickLikeArticleMaxTimes);
+        if (likeArticleList.length > 0){
+          for (let i=0;i<likeArticleList.length;i++){
+            await ClickLikeArticle(smzdmCookie, likeArticleList[i]);
+            magicJS.logInfo(`完成第${i+1}次“好文点赞”任务，好文Id：\n${likeArticleList[i]}`);
+            clickLikeArticleTimes += 1;
+            await magicJS.sleep(3100);
+          }
+        }
+      }
+
+      // 好文收藏
+      const clickFavArticleAsync = async() =>{
+        let favArticleList = articleList.splice(0, clickFavArticleMaxTimes);
+        if (favArticleList.length > 0){
+          // 好文收藏
+          for (let i=0;i<favArticleList.length;i++){
+            await ClickFavArticle(smzdmCookie, articleList[i]);
+            magicJS.logInfo(`完成第${i+1}次“好文收藏”任务，好文Id：\n${articleList[i]}`);
+            clickFavArticleTimes += 1;
+            await magicJS.sleep(3100);
+          }
+          // 取消收藏
+          for (let i=0;i<favArticleList.length;i++){
+            await ClickFavArticle(smzdmCookie, articleList[i]);
+            magicJS.logInfo(`取消第${i+1}次“好文收藏”任务的好文，好文Id：\n${articleList[i]}`);
+            await magicJS.sleep(3100);
+          }
+        }
+      }
+
+      await Promise.all([clickGoBuyAsync(), clickLikeProductAsync()]);
+      await Promise.all([clickLikeArticleAsync(), clickFavArticleAsync()]);
+
+      // ---------------------- 查询签到后用户数据 ---------------------- 
+      // 休眠3秒再查询，减少延迟显示的情况
+      await magicJS.sleep(3000); 
+      let [, afteruserPointList, , afterExp, ,afterPrestige, ] = await WebGetCurrentInfoNewVersion(smzdmCookie);
+      let [, , afterVIPLevel, afterHasCheckin, afterCheckinNum, afterNotice, , , afterPoint, afterGold, afterSilver] = await WebGetCurrentInfo(smzdmCookie);
+
+      magicJS.logInfo(`昵称：${nickName}\nWeb端签到状态：${afterHasCheckin}\n签到前等级${afterVIPLevel}，积分${afterPoint}，经验${afterExp}，金币${afterGold}，碎银子${afterSilver}，威望${afterPrestige}, 未读消息${afterNotice}`);
+      title = `${scriptName} - ${nickName} V${afterVIPLevel}`;
+  
+      if (beforeHasCheckin && afterHasCheckin){
         webCheckinStr = 'Web端重复签到';
+      }
+      else if(!beforeHasCheckin && afterHasCheckin){
+        webCheckinStr = 'Web端签到成功';
+      }
+  
+      subTitle = `${webCheckinStr} ${appCheckinStr}`;
+      if (!!afterCheckinNum) subTitle += ` 已签${afterCheckinNum}天`;
+  
+      if (afterExp && beforeExp){
+        let addPoint = afterPoint - beforePoint;
+        let addExp = afterExp - beforeExp;
+        let addGold = afterGold - beforeGold;
+        let addPrestige = afterPrestige - beforePrestige;
+        let addSilver = afterSilver - beforeSilver;
+        content += !!content? '\n' : '';
+        content += '积分' + afterPoint + (addPoint > 0 ? '(+' + addPoint + ')' : '') +  
+        ' 经验' + afterExp + (addExp > 0 ? '(+' + addExp + ')' : '') + 
+        ' 金币' + afterGold + (addGold > 0 ? '(+' + addGold + ')' : '') + '\n' +
+        '碎银子' + afterSilver + (addSilver > 0 ? '(+' + addSilver + ')' : '') +
+        ' 威望' + afterPrestige + (addPrestige > 0 ? '(+' + addPrestige + ')' : '') + 
+        ' 未读消息' + afterNotice;
+      }
+      
+      content += `\n点值 ${clickLikePrductTimes}/${clickLikeProductMaxTimes} 去购买 ${clickGoBuyTimes}/${clickGoBuyMaxTimes}\n点赞 ${clickLikeArticleTimes}/${clickLikeArticleMaxTimes} 收藏 ${clickLikeArticleTimes}/${clickFavArticleTimes}`
+
+      content += !!content? '\n' : '';
+      if (afteruserPointList.length > 0){
+        content += '用户近期经验变动情况(有延迟)：'
+        afteruserPointList.forEach(element => {
+          content += `\n${element['time']} ${element['detail']}`
+        });
+        content += '\n如经验值无变动，请更新ookie。';
+      }
+      else{
+        content += '没有获取到用户近期的经验变动情况'
+      }
+  
+      if (webCheckinStr || appCheckinStr || content){
+        magicJS.notify(title, subTitle, content, {'media-url': avatar});
       }
     }
 
-    if (WebCheckCookie()){
-      // 查询签到后用户数据
-      [afterLevel, afterPoint, afterExp, afterGold, afterSilver, afterHaveCheckin, checkinNum, unread] = await WebGetCurrentInfo();
-      magicJS.log(`签到后等级${afterLevel}，积分${afterPoint}，经验${afterExp}，金币${afterGold}，碎银子${afterSilver}`);
-    }
 
-    if (haveCheckin && afterHaveCheckin){
-      webCheckinStr = 'Web端重复签到';
-    }
-    else if(!haveCheckin && afterHaveCheckin){
-      webCheckinStr = 'Web端签到成功';
-    }
 
-    subTitle = `${webCheckinStr} ${appCheckinStr}`;
-    if (!!checkinNum) subTitle += ` 已签到${checkinNum}天`;
-
-    if (beforeLevel && afterLevel){
-      let addLevel = afterLevel - beforeLevel;
-      let addPoint = afterPoint - beforePoint;
-      let addExp = afterExp - beforeExp;
-      let addGold = afterGold - beforeGold;
-      let addSilver = afterSilver - beforeSilver;
-      content = '🥇等级' + afterLevel + (addLevel > 0 ? '(+' + addLevel + ')' : '') + 
-      ' 💡积分' + afterPoint + (addPoint > 0 ? '(+' + addPoint + ')' : '') +  
-      ' 🔰经验' + afterExp + (addExp > 0 ? '(+' + addExp + ')' : '') + '\n' + 
-      '💰金币' + afterGold + (addGold > 0 ? '(+' + addGold + ')' : '') +  
-      ' ✨碎银子' + afterSilver + (addSilver > 0 ? '(+' + addSilver + ')' : '') +
-      ' 📮未读消息' + unread;
-    }
-    if (webCheckinStr || appCheckinStr || content){
-      magicJS.notify(scriptName, subTitle, content);
-    }
-    
   }
   magicJS.done();
 }
@@ -443,23 +825,40 @@ Main();
 function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
   return new class{
+
     constructor(){
+      this.version = '2.2.2'
       this.scriptName = scriptName;
-      this.logLevel = this.getLogLevels(logLevel.toUpperCase());
+      this.logLevels = {
+        DEBUG: 5,
+        INFO: 4,
+        NOTIFY: 3,
+        WARNING: 2,
+        ERROR: 1,
+        CRITICAL: 0,
+        NONE: -1
+      };
+      this.isLoon = typeof $loon !== 'undefined';
+      this.isQuanX = typeof $task !== 'undefined';
+      this.isJSBox = typeof $drive !== 'undefined';
+      this.isNode = typeof module !== 'undefined' && !this.isJSBox;
+      this.isSurge = typeof $httpClient !== 'undefined' && !this.isLoon;
       this.node = {'request': undefined, 'fs': undefined, 'data': {}};
+      this.iOSUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.5 Mobile/15E148 Safari/604.1';
+      this.pcUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36 Edg/84.0.522.59';
+      this.logLevel = logLevel;
       if (this.isNode){
         this.node.fs = require('fs');
         this.node.request = require('request');
         try{
-          this.node.fs.accessSync('./magic.json');
+          this.node.fs.accessSync('./magic.json', this.node.fs.constants.R_OK | this.node.fs.constants.W_OK);
         }
         catch(err){
-          this.logError(err);
-          this.node.fs.writeFileSync('./magic.json', '{}')
+          this.node.fs.writeFileSync('./magic.json', '{}', {encoding: 'utf8'})
         }
         this.node.data = require('./magic.json');
       }
-      if (this.isJSBox){
+      else if (this.isJSBox){
         if (!$file.exists('drive://MagicJS')){
           $file.mkdir('drive://MagicJS');
         }
@@ -471,16 +870,12 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       }
     }
-    
-    get version() { return 'v2.1.4' };
-    get isSurge() { return typeof $httpClient !== 'undefined' && !this.isLoon };
-    get isQuanX() { return typeof $task !== 'undefined' };
-    get isLoon() { return typeof $loon !== 'undefined' };
-    get isJSBox() { return typeof $drive !== 'undefined'};
-    get isNode() { return typeof module !== 'undefined' && !this.isJSBox };
-    get isRequest() { return (typeof $request !== 'undefined') && (typeof $response === 'undefined')}
+
+    set logLevel(level) {this._logLevel = typeof level === 'string'? level.toUpperCase(): 'DEBUG'};
+    get logLevel() {return this._logLevel};
+    get isRequest() { return typeof $request !== 'undefined' && typeof $response === 'undefined'}
     get isResponse() { return typeof $response !== 'undefined' }
-    get request() { return (typeof $request !== 'undefined') ? $request : undefined }
+    get request() { return typeof $request !== 'undefined' ? $request : undefined }
     get response() { 
       if (typeof $response !== 'undefined'){
         if ($response.hasOwnProperty('status')) $response['statusCode'] = $response['status']
@@ -491,37 +886,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         return undefined;
       }
     }
-
-    get logLevels(){
-      return {
-        DEBUG: 4,
-        INFO: 3,
-        WARNING: 2,
-        ERROR: 1,
-        CRITICAL: 0
-      };
-    } 
-
-    getLogLevels(level){
-      try{
-        if (this.isNumber(level)){
-          return level;
-        }
-        else{
-          let levelNum = this.logLevels[level];
-          if (typeof levelNum === 'undefined'){
-            this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}。`)
-            return this.logLevels.DEBUG;
-          }
-          else{
-            return levelNum;
-          }
-        }
-      }
-      catch(err){
-        this.logError(`获取MagicJS日志级别错误，已强制设置为DEBUG级别。传入日志级别：${level}，异常信息：${err}。`)
-        return this.logLevels.DEBUG;
-      }
+    get platform(){
+      if (this.isSurge) return "Surge"
+      else if (this.isQuanX) return "Quantumult X"
+      else if (this.isLoon) return "Loon"
+      else if (this.isJSBox) return "JSBox"
+      else if (this.isNode) return "Node.js"
+      else return "unknown"
     }
 
     read(key, session=''){
@@ -550,13 +921,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         }
       } 
       catch (err){ 
-        this.logError(`raise exception: ${err}`);
+        this.logError(err);
         val = !!session? {} : null;
         this.del(key);
       }
       if (typeof val === 'undefined') val = null;
       try {if(!!val && typeof val === 'string') val = JSON.parse(val)} catch(err) {}
-      this.logDebug(`read data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`READ DATA [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
       return val;
     };
 
@@ -576,13 +947,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         data = JSON.parse($file.read('drive://MagicJS/magic.json').string);
       }
       if (!!session){
-        // 有Session，要求所有数据都是Object
+        // 有Session，所有数据都是Object
         try {
           if (typeof data === 'string') data = JSON.parse(data)
           data = typeof data === 'object' && !!data ? data : {};
         }
         catch(err){
-          this.logError(`raise exception: ${err}`);
+          this.logError(err);
           this.del(key); 
           data = {};
         };
@@ -647,11 +1018,11 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       else if (this.isJSBox){
         $file.write({data: $data({string: data}), path: 'drive://MagicJS/magic.json'});
       }
-      this.logDebug(`write data [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
+      this.logDebug(`WRITE DATA [${key}]${!!session? `[${session}]`: ''}(${typeof val})\n${JSON.stringify(val)}`);
     };
 
     del(key, session=''){
-      this.logDebug(`delete key [${key}]${!!session ? `[${session}]`:''}`);
+      this.logDebug(`DELETE KEY [${key}]${!!session ? `[${session}]`:''}`);
       this.write(key, undefined, session);
     }
 
@@ -668,6 +1039,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
      * options {'open-url': 'https://www.apple.com.cn/', 'media-url': 'https://raw.githubusercontent.com/Orz-3/mini/master/Apple.png'} 打开Apple.com.cn，显示一个苹果Logo
      */ 
     notify(title=this.scriptName, subTitle='', body='', options=''){
+      this.logNotify(`title:${title}\nsubTitle:${subTitle}\nbody:${body}\noptions:${typeof options === 'object'? JSON.stringify(options) : options}`);
       let convertOptions = (_options) =>{
         let newOptions = '';
         if (typeof _options === 'string'){
@@ -691,17 +1063,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         $notification.post(title, subTitle, body);
       }
       else if (this.isLoon){
-        // 2020.08.11 Loon2.1.3(194)TF 如果不加这个log，在跑测试用例连续6次通知，会漏掉一些通知，已反馈给作者。
-        this.logInfo(`title: ${title}, subTitle：${subTitle}, body：${body}, options：${options}`);
         if (!!options) $notification.post(title, subTitle, body, options);
         else $notification.post(title, subTitle, body);
       }
       else if (this.isQuanX) {
          $notify(title, subTitle, body, options);
       }
-      else if (this.isNode) {
-        this.log(`${title} ${subTitle}\n${body}`);
-      }
+      else if (this.isNode) {}
       else if (this.isJSBox){
         let push = {
           title: title,
@@ -712,7 +1080,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     }
     
     log(msg, level="INFO"){
-      if (this.logLevel >= this.getLogLevels(level.toUpperCase())) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`)
+      if (!(this.logLevels[this._logLevel] < this.logLevels[level.toUpperCase()])) console.log(`[${level}] [${this.scriptName}]\n${msg}\n`);
     }
 
     logDebug(msg){
@@ -723,6 +1091,10 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       this.log(msg, "INFO");
     }
 
+    logNotify(msg){
+      this.log(msg, "NOTIFY");
+    }
+
     logWarning(msg){
       this.log(msg, "WARNING");
     }
@@ -730,16 +1102,196 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
     logError(msg){
       this.log(msg, "ERROR");
     }
+
+    /**
+     * 对传入的Http Options根据不同环境进行适配
+     * @param {*} options 
+     */
+    adapterHttpOptions(options, method){
+      let _options = typeof options === 'object'? Object.assign({}, options): {'url': options, 'headers': {}};
+      
+      if (_options.hasOwnProperty('header') && !_options.hasOwnProperty('headers')){
+        _options['headers'] = _options['header'];
+        delete _options['header'];
+      }
+
+      // 规范化的headers
+      const headersMap = {
+        'accept': 'Accept',
+        'accept-ch': 'Accept-CH',
+        'accept-charset': 'Accept-Charset',
+        'accept-features': 'Accept-Features',
+        'accept-encoding': 'Accept-Encoding',
+        'accept-language': 'Accept-Language',
+        'accept-ranges': 'Accept-Ranges',
+        'access-control-allow-credentials': 'Access-Control-Allow-Credentials',
+        'access-control-allow-origin': 'Access-Control-Allow-Origin',
+        'access-control-allow-methods': 'Access-Control-Allow-Methods',
+        'access-control-allow-headers': 'Access-Control-Allow-Headers',
+        'access-control-max-age': 'Access-Control-Max-Age',
+        'access-control-expose-headers': 'Access-Control-Expose-Headers',
+        'access-control-request-method': 'Access-Control-Request-Method',
+        'access-control-request-headers': 'Access-Control-Request-Headers',
+        'age': 'Age',
+        'allow': 'Allow',
+        'alternates': 'Alternates',
+        'authorization': 'Authorization',
+        'cache-control': 'Cache-Control',
+        'connection': 'Connection',
+        'content-encoding': 'Content-Encoding',
+        'content-language': 'Content-Language',
+        'content-length': 'Content-Length',
+        'content-location': 'Content-Location',
+        'content-md5': 'Content-MD5',
+        'content-range': 'Content-Range',
+        'content-security-policy': 'Content-Security-Policy',
+        'content-type': 'Content-Type',
+        'cookie': 'Cookie',
+        'dnt': 'DNT',
+        'date': 'Date',
+        'etag': 'ETag',
+        'expect': 'Expect',
+        'expires': 'Expires',
+        'from': 'From',
+        'host': 'Host',
+        'if-match': 'If-Match',
+        'if-modified-since': 'If-Modified-Since',
+        'if-none-match': 'If-None-Match',
+        'if-range': 'If-Range',
+        'if-unmodified-since': 'If-Unmodified-Since',
+        'last-event-id': 'Last-Event-ID',
+        'last-modified': 'Last-Modified',
+        'link': 'Link',
+        'location': 'Location',
+        'max-forwards': 'Max-Forwards',
+        'negotiate': 'Negotiate',
+        'origin': 'Origin',
+        'pragma': 'Pragma',
+        'proxy-authenticate': 'Proxy-Authenticate',
+        'proxy-authorization': 'Proxy-Authorization',
+        'range': 'Range',
+        'referer': 'Referer',
+        'retry-after': 'Retry-After',
+        'sec-websocket-extensions': 'Sec-Websocket-Extensions',
+        'sec-websocket-key': 'Sec-Websocket-Key',
+        'sec-websocket-origin': 'Sec-Websocket-Origin',
+        'sec-websocket-protocol': 'Sec-Websocket-Protocol',
+        'sec-websocket-version': 'Sec-Websocket-Version',
+        'server': 'Server',
+        'set-cookie': 'Set-Cookie',
+        'set-cookie2': 'Set-Cookie2',
+        'strict-transport-security': 'Strict-Transport-Security',
+        'tcn': 'TCN',
+        'te': 'TE',
+        'trailer': 'Trailer',
+        'transfer-encoding': 'Transfer-Encoding',
+        'upgrade': 'Upgrade',
+        'user-agent': 'User-Agent',
+        'variant-vary': 'Variant-Vary',
+        'vary': 'Vary',
+        'via': 'Via',
+        'warning': 'Warning',
+        'www-authenticate': 'WWW-Authenticate',
+        'x-content-duration': 'X-Content-Duration',
+        'x-content-security-policy': 'X-Content-Security-Policy',
+        'x-dnsprefetch-control': 'X-DNSPrefetch-Control',
+        'x-frame-options': 'X-Frame-Options',
+        'x-requested-with': 'X-Requested-With',
+        'x-surge-skip-scripting':'X-Surge-Skip-Scripting'
+      }
+      if (typeof _options.headers === 'object'){
+        for (let key in _options.headers){
+          if (headersMap[key]) {
+            _options.headers[headersMap[key]] = _options.headers[key];
+            delete _options.headers[key];
+          }
+        }
+      }
+
+      // 自动补完User-Agent，减少请求特征
+      if (!!!_options.headers || typeof _options.headers !== 'object' || !!!_options.headers['User-Agent']){
+        if (!!!_options.headers || typeof _options.headers !== 'object') _options.headers = {};
+        if (this.isNode) _options.headers['User-Agent'] = this.pcUserAgent;
+        else  _options.headers['User-Agent'] = this.iOSUserAgent
+      }
+
+      // 判断是否跳过脚本处理
+      let skipScripting = false;
+      if ((typeof _options['opts'] === 'object' && (_options['opts']['hints'] === true || _options['opts']['Skip-Scripting'] === true)) || 
+          (typeof _options['headers'] === 'object' && _options['headers']['X-Surge-Skip-Scripting'] === true)){
+        skipScripting = true;
+      }
+      if (!skipScripting){
+        if (this.isSurge) _options.headers['X-Surge-Skip-Scripting'] = false;
+        // 目前对Loon的处理暂时无用，会被强制覆盖掉，等待作者更新
+        else if (this.isLoon) _options.headers['X-Requested-With'] = 'XMLHttpRequest'; 
+        else if (this.isQuanX){
+          if (typeof _options['opts'] !== 'object') _options.opts = {};
+          _options.opts['hints'] = false;
+        }
+      }
+
+      // 对请求数据做清理
+      if (!this.isSurge || skipScripting) delete _options.headers['X-Surge-Skip-Scripting'];
+      if (!this.isQuanX && _options.hasOwnProperty('opts')) delete _options['opts'];
+      if (this.isQuanX && _options.hasOwnProperty('opts')) delete _options['opts']['Skip-Scripting'];
+      
+      // GET请求将body转换成QueryString(beta)
+      if (method === 'GET' && !this.isNode && !!_options.body){
+        let qs = Object.keys(_options.body).map(key=>{
+          if (typeof _options.body === 'undefined') return ''
+          return `${encodeURIComponent(key)}=${encodeURIComponent(_options.body[key])}`
+        }).join('&');
+        if (_options.url.indexOf('?') < 0) _options.url += '?'
+        if (_options.url.lastIndexOf('&')+1 != _options.url.length && _options.url.lastIndexOf('?')+1 != _options.url.length) _options.url += '&'
+        _options.url += qs;
+        delete _options.body;
+      }
+
+      // 适配多环境
+      if (this.isQuanX){
+        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
+        _options['method'] = method;
+      }
+      else if (this.isNode){
+        delete _options.headers['Accept-Encoding'];
+        if (typeof _options.body === 'object'){
+          if (method === 'GET'){
+            _options.qs = _options.body;
+            delete _options.body
+          }
+          else if (method === 'POST'){
+            _options['json'] = true;
+            _options.body = _options.body;
+          }
+        }
+      }
+      else if (this.isJSBox){
+        _options['header'] = _options['headers'];
+        delete _options['headers']
+      }
+
+      return _options;
+    }
     
+    /**
+     * Http客户端发起GET请求
+     * @param {*} options 
+     * @param {*} callback 
+     * options可配置参数headers和opts，用于判断由脚本发起的http请求是否跳过脚本处理。
+     * 支持Surge和Quantumult X两种配置方式。
+     * 以下几种配置会跳过脚本处理，options没有opts或opts的值不匹配，则不跳过脚本处理
+     * {opts:{"hints": true}}
+     * {opts:{"Skip-Scripting": true}}
+     * {headers: {"X-Surge-Skip-Scripting": true}}
+     */
     get(options, callback){
-      let _options = typeof options === 'object'? Object.assign({}, options): options;
-      this.logDebug(`http get: ${JSON.stringify(_options)}`);
+      let _options = this.adapterHttpOptions(options, 'GET');
+      this.logDebug(`HTTP GET: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.get(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof _options === 'string') _options = { url: _options }
-        _options['method'] = 'GET'
         $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
@@ -752,9 +1304,6 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         return this.node.request.get(_options, callback);
       }
       else if(this.isJSBox){
-        _options = typeof _options === 'string'? {'url': _options} :_options;
-        options['header'] = _options['headers'];
-        delete _options['headers']
         _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
@@ -764,16 +1313,24 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
       }
     }
 
+    /**
+     * Http客户端发起POST请求
+     * @param {*} options 
+     * @param {*} callback 
+     * options可配置参数headers和opts，用于判断由脚本发起的http请求是否跳过脚本处理。
+     * 支持Surge和Quantumult X两种配置方式。
+     * 以下几种配置会跳过脚本处理，options没有opts或opts的值不匹配，则不跳过脚本处理
+     * {opts:{"hints": true}}
+     * {opts:{"Skip-Scripting": true}}
+     * {headers: {"X-Surge-Skip-Scripting": true}}
+     */
     post(options, callback){
-      let _options = typeof options === 'object'? Object.assign({}, options): options;
-      this.logDebug(`http post: ${JSON.stringify(_options)}`);
+      let _options = this.adapterHttpOptions(options, 'POST');
+      this.logDebug(`HTTP POST: ${JSON.stringify(_options)}`);
       if (this.isSurge || this.isLoon) {
         $httpClient.post(_options, callback);
       }
       else if (this.isQuanX) {
-        if (typeof _options === 'string') _options = { url: _options }
-        if (_options.hasOwnProperty('body') && typeof _options['body'] !== 'string') _options['body'] = JSON.stringify(_options['body']);
-        _options['method'] = 'POST'
         $task.fetch(_options).then(
           resp => {
             resp['status'] = resp.statusCode
@@ -783,13 +1340,9 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
         )
       }
       else if(this.isNode){
-        if (typeof _options.body === 'object') _options.body = JSON.stringify(_options.body);
         return this.node.request.post(_options, callback);
       }
       else if(this.isJSBox){
-        _options = typeof _options === 'string'? {'url': _options} : _options;
-        _options['header'] = _options['headers'];
-        delete _options['headers']
         _options['handler'] = (resp)=>{
           let err = resp.error? JSON.stringify(resp.error) : undefined;
           let data = typeof resp.data === 'object' ? JSON.stringify(resp.data) : resp.data;
@@ -829,11 +1382,13 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
 
     /**
      * 对await执行中出现的异常进行捕获并返回，避免写过多的try catch语句
+     * 示例：let [err,val] = await magicJS.attempt(func(), 'defaultvalue');
+     * 或者：let [err, [val1,val2]] = await magicJS.attempt(func(), ['defaultvalue1', 'defaultvalue2']);
      * @param {*} promise Promise 对象
      * @param {*} defaultValue 出现异常时返回的默认值
      * @returns 返回两个值，第一个值为异常，第二个值为执行结果
      */
-    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.log('raise exception:' + ex); return [ex, defaultValue]})};
+    attempt(promise, defaultValue=null){ return promise.then((args)=>{return [null, args]}).catch(ex=>{this.logError(ex); return [ex, defaultValue]})};
 
     /**
      * 重试方法
@@ -851,6 +1406,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
               result => {
                 if (typeof callback === 'function'){
                   Promise.resolve().then(()=>callback(result)).then(()=>{resolve(result)}).catch(ex=>{
+                    this.logError(ex);
                     if (retries >= 1 && interval > 0){
                       setTimeout(() => _retry.apply(this, args), interval);
                     }
@@ -868,6 +1424,7 @@ function MagicJS(scriptName='MagicJS', logLevel='INFO'){
                 }
               }
               ).catch(ex=>{
+              this.logError(ex);
               if (retries >= 1 && interval > 0){
                 setTimeout(() => _retry.apply(this, args), interval);
               }

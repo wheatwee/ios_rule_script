@@ -1,10 +1,18 @@
 # 什么值得买
 
-## Web端和App端自动签到
+## 前言
 
-什么值得买Web端和App端每日自动签到脚本，签到完成后，显示连续签到次数和签到收益。
+什么值得买的会员体系更新后，连续签到30天加30经验值的福利已经没有，每日签到只能获得2点经验值。以现在的会员升级体系，从V5升级到V6，需要1万的经验值，依靠签到需要连续签到13年半。
 
-![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/images/checkin.jpg)
+所以在原来签到的基础上，增加了每日完成一些任务的功能，这样每日基本上可以获得120左右的经验值。V5升级到V6，只需要84天。
+
+## 签到与每日任务
+
+什么值得买Web端和App端每日自动签到脚本，并且完成每日点击去购买10次、点值5次、点赞5次、收藏5次的任务。
+
+执行效果如下，会显示昵称、级别、经验值变动总数、经验值变动明细、任务完成情况。
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/images/01.png)
 
 ### 配置说明
 
@@ -13,20 +21,6 @@
 ##### **安装模块**
 
 Surge推荐使用模块进行部署，模块地址：https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.sgmodule
-
-##### **配置文件**
-
-如果不方便使用模块，则根据如下内容修改配置文件
-
-```ini
-[Script]
-什么值得买_每日签到 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=cron,cronexp=5 0 * * *
-什么值得买_获取cookie = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=http-request,requires-body=true,pattern=^https?:\/\/zhiyou\.smzdm\.com\/user$
-什么值得买_获取账号密码 = script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,type=http-request,requires-body=true,pattern=^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$
-
-[MITM]
-hostname = zhiyou.smzdm.com, user-api.smzdm.com
-```
 
 ### Loon
 
@@ -39,43 +33,16 @@ hostname = zhiyou.smzdm.com, user-api.smzdm.com
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.loon, tag=什么值得买_每日签到, enabled=true
 ```
 
-**本地脚本**
-
-使用本地脚本时，在配置中增加如下配置项
-
-```ini
-[Script]
-enable = true
-# 什么值得买签到
-http-request ^https?:\/\/zhiyou\.smzdm\.com\/user$ requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,tag=什么值得买_获取cookie
-http-request ^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$ requires-body=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,tag=什么值得买_获取账号密码
-cron "5 0 * * *" script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js,tag=什么值得买_每日签到
-
-[MITM]
-hostname = zhiyou.smzdm.com, user-api.smzdm.com
-```
-
 ### Quantumult X
-
-修改配置文件
-
-```ini
-[rewrite_local]
-^https?:\/\/zhiyou\.smzdm\.com\/user$ url script-request-header https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js
-^https?:\/\/user-api\.smzdm\.com\/user_login\/normal$ url script-request-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js
-
-[task_local]
-5 0 * * * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js, tag=什么值得买每日签到
-
-[mitm]
-hostname = video.google.com,zhiyou.smzdm.com,user-api.smzdm.com
-```
 
 远程复写配置
 
 ```ini
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.quanx, tag=什么值得买_去广告, update-interval=86400, opt-parser=false, enabled=true
+
+[task_local]
+5 0 * * * https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_checkin.js, tag=什么值得买每日签到
 ```
 
 ### 使用说明
@@ -145,19 +112,6 @@ hostname = homepage-api.smzdm.com, haojia-api.smzdm.com, article-api.smzdm.com
 
 ### Loon
 
-**本地脚本**
-
-```ini
-[Script]
-enable = true
-http-response ^https:\/\/homepage-api.smzdm.com\/home script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js, requires-body=true, timeout=10, tag=什么值得买_首页去广告
-http-response ^https:\/\/haojia-api.smzdm.com\/home\/list script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js, requires-body=true, timeout=10, tag=什么值得买_好价去广告
-http-response ^https:\/\/article-api.smzdm.com\/article\/index_home_page script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js, requires-body=true, timeout=10, tag=什么值得买_好文去广告
-
-[MITM]
-hostname = homepage-api.smzdm.com, haojia-api.smzdm.com, article-api.smzdm.com
-```
-
 **远程脚本**
 
 ```ini
@@ -166,18 +120,6 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smz
 ```
 
 ### Quantumult X
-
-**本地复写脚本**
-
-```ini
-[rewrite_local]
-^https:\/\/homepage-api.smzdm.com\/home url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js
-^https:\/\/haojia-api.smzdm.com\/home\/list url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js
-^https:\/\/article-api.smzdm.com\/article\/index_home_page url script-response-body https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.js
-
-[mitm]
-hostname = homepage-api.smzdm.com, haojia-api.smzdm.com, article-api.smzdm.com
-```
 
 **远程复写脚本**
 
