@@ -21,35 +21,43 @@
 9. 去除未读消息的红点
 10. 拦截知乎内测邀请(beta)
 11. 去除预置关键字广告(beta)
-12. 付费内容文首提醒✨
-13. 拦截部分回答预加载以节约流量✨
-14. 去除推荐列表的付费推荐内容✨
-15. 去除官方账号的推广消息✨
-16. 去除推荐列表中黑名单用户的回答✨
-17. 去除回答列表中黑名单用户的回答✨
-18. 去除关注列表顶部的最常访问✨
+12. 付费内容文首提醒(beta)✨
+13. 营销内容文首提醒(beta)✨
+14. 拦截部分回答预加载以节约流量✨
+15. 去除推荐列表的付费推荐内容✨
+16. 去除官方账号的推广消息✨
+17. 去除推荐列表中黑名单用户的回答✨
+18. 去除回答列表中黑名单用户的回答✨
+19. 去除关注列表顶部的最常访问✨
 
 ## 最近更新
 
-1. 脚本黑名单跟随登录用户切换，需要重新获取黑名单。
-2. 拦截部分回答预加载以节约流量
-3. 屏蔽推荐列表中的直播
-4. 付费内容文首提醒
+1. 营销内容文首提醒
+2. 部分功能支持Shadowrocket TF 2.1.62(1071)+
+3. 脚本黑名单跟随登录用户切换，需要重新获取黑名单。
+4. 拦截部分回答预加载以节约流量
+5. 屏蔽推荐列表中的直播
+6. 付费内容文首提醒
 
 ## 去广告
 
-如果出现去广告无效的情况，通常有两种可能：一种是CDN服务器的IP没有加到MITM中引起的；另外一种是你有其他的规则优先级更高，知乎去广告的规则覆盖掉了。
+如果出现去广告无效的情况，通常有两种可能：一种是CDN服务器的IP没有加到MITM中引起的；另外一种是你有其他的规则优先级更高，规则互相覆盖或冲突导致某些情况下失效。
 
 建议解决方法：
 
 1. **将知乎去广告规则的优先级调整到最高**
-2. 重启知乎
-3. 清理知乎的缓存
-4. 卸载知乎后重装
-5. 安装已经验证过的版本
-6. [点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)
+2. 使用一个空白配置文件验证去广告效果
+3. 重启知乎
+4. 清理知乎的缓存
+5. 卸载知乎后重装
+6. 安装已经验证过的版本
+7. [点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)
 
 ### 验证情况
+
+2020年9月18日：
+
+在知乎 V6.56.0(2676)中，Loon TF 2.1.3(204) 中验证通过。
 
 2020年8月22日：
 
@@ -61,13 +69,19 @@
 
 > 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
 
-## 付费内容提醒
+## 付费内容提醒(beta)
 
 遇到需要付费阅读的回答时，会**将付费内容的提醒置顶**。避免阅读中途发现内容需要付费的情况，提高阅读体验。
 
 浅色/深色效果如下图：
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/04.jpg)
+
+## 营销内容提醒(beta)
+
+遇到含有营销内容的回答时，会将营销内容的提醒置顶。自行判断是否继续阅读。
+
+![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/05.png)
 
 ## 黑名单增强
 
@@ -93,7 +107,7 @@
 
 ## 配置说明(Plus)
 
-#### Surge
+### Surge
 
 使用模块
 
@@ -101,18 +115,18 @@
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.sgmodule
 ```
 
-#### Loon
+### Loon(beta)
 
-Loon 2.1.3(193) TF + 可以使用插件Plugin
+Loon 2.1.3(193) TF + 可以使用插件Plugin。
 
 ```ini
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin, tag=知乎助手_去广告及体验增强, enabled=true
 ```
 
-Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
+Loon 使用此插件，有一定几率出现如推荐列表加载缓慢或无法加载的情况，原因不明，请权衡利弊使用。
 
-#### Quantumult X
+### Quantumult X
 
 配置文件
 
@@ -131,6 +145,10 @@ DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎助手_去广告及体验增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
+### Shadowrocket (beta)
+
+Plus版本仍存在不少问题，暂不支持小火箭。
+
 ## 配置说明(Lite)
 
 如果只想单纯去广告，使用下面的Lite版本的配置。
@@ -143,16 +161,16 @@ https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhi
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.sgmodule
 ```
 
-### Loon
+### Loon(beta)
 
-Loon 2.1.3(193) TF + 可以使用插件Plugin
+Loon 2.1.3(193) TF + 可以使用插件Plugin。
 
 ```ini
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
 ```
 
-Loon不再维护非插件的配置，如使用不支持插件的版本，请打开插件详情，将对应规则复制到你的配置文件中即可。
+Loon 使用此插件，有一定几率出现如推荐列表加载缓慢或无法加载的情况，原因不明，请权衡利弊使用。
 
 #### Quantumult X
 
@@ -171,6 +189,34 @@ DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 
 [rewrite_remote]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎助手_去广告, update-interval=86400, opt-parser=false, enabled=true
+```
+
+#### Shadowrocket (beta)
+
+小火箭的支持为测试功能，可能出现如VPN重启、知乎无法显示内容等奇怪情况，请权衡使用。
+
+```ini
+[Rule]
+# 知乎去广告
+DOMAIN,118.89.204.198,REJECT
+DOMAIN-SUFFIX,118.89.204.198,REJECT
+DOMAIN-KEYWORD,118.89.204.198,REJECT
+IP-CIDR,118.89.204.198/32,REJECT,no-resolve
+DOMAIN,appcloud2.zhihu.com,REJECT
+DOMAIN,appcloud2.in.zhihu.com,REJECT
+USER-AGENT,AVOS*,REJECT
+URL-REGEX,^https?:\/\/api\.zhihu\.com\/(notifications\/v3\/count|v3\/package|me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|tab)|.*featured-comment-ad|appview\/api\/v\d\/answers\/\d+\/recommendations),REJECT
+# 知乎拦截部分预加载
+URL-REGEX,^https?:\/\/www\.zhihu\.com\/appview\/(p|v2\/answer|zvideo)\/.*entry=(preload-topstory|preload-search|preload-subscription),REJECT
+
+[Script]
+知乎_处理用户信息 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/people\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_信息流去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/(moments|topstory)(\/|\?)?(recommend|action=|feed_type=),script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+知乎_回答列表去广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/v4\/questions,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
+
+[MITM]
+enable = true
+hostname=www.zhihu.com,api.zhihu.com
 ```
 
 ## 其他问题
