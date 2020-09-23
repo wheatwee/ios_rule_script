@@ -1,7 +1,5 @@
 # 知乎助手
 
-**低调使用，勿宣扬**，请不要在任何公共场合/群组内宣传此脚本，十分感谢。
-
 ## 介绍
 
 去除知乎广告，提供付费内容提醒、黑名单增强等优化阅读体验的功能。
@@ -22,7 +20,7 @@
 10. 拦截知乎内测邀请(beta)
 11. 去除预置关键字广告(beta)
 12. 付费内容文首提醒(beta)✨
-13. 营销内容文首提醒(beta)✨
+13. 推广内容文首提醒(beta)✨
 14. 拦截部分回答预加载以节约流量✨
 15. 去除推荐列表的付费推荐内容✨
 16. 去除官方账号的推广消息✨
@@ -55,17 +53,29 @@
 
 ### 验证情况
 
-2020年9月18日：
+**2020年9月23日：**
 
-在知乎 V6.56.0(2676)中，Loon TF 2.1.3(204) 中验证通过。
+知乎 V6.57.0(2708)
 
-2020年8月22日：
+Surge 4.10.0(1819) TF  验证通过，Shadowrocket 2.1.62(1092) TF 纯去广告功能验证通过。
 
-在知乎 V6.52.0(2548)、Surge4.10.0(1800) TF、Quantumult X 1.0.14(367) TF、Loon 2.1.3(197) TF 中验证通过。
+**2020年9月18日：**
 
-2020年8月8日：
+知乎 V6.56.0(2676)
 
-在知乎 V6.51.1(2518)、Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 中验证通过。
+Loon TF 2.1.3(204)  验证通过。
+
+**2020年8月22日：**
+
+知乎 V6.52.0(2548)
+
+Surge4.10.0(1800) TF、Quantumult X 1.0.14(367) TF、Loon 2.1.3(197) TF  验证通过。
+
+**2020年8月8日：**
+
+知乎 V6.51.1(2518)
+
+Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 验证通过。
 
 > 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
 
@@ -77,9 +87,9 @@
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/04.jpg)
 
-## 营销内容提醒(beta)
+## 推广内容提醒(beta)
 
-遇到含有营销内容的回答时，会将营销内容的提醒置顶。自行判断是否继续阅读。
+遇到含有营销推广/购物推广内容的回答时，会将含有推广内容的提醒置顶，自行判断是否继续阅读。
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/05.png)
 
@@ -89,15 +99,17 @@
 
 黑名单增强就是对黑名单用户的回答进行屏蔽，让他的回答从推荐列表和回答列表中消失。(如果只为在推荐列表屏蔽某人，建议用知乎提供的屏蔽用户的方法，这是在服务器端进行的更加高效的屏蔽。)
 
-如果需要定向查看某个黑名单的用户，请搜索他的名称，然后点进去看他的回答。
+黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
+
+屏蔽后，如果需要定向查看某个黑名单的用户，请搜索他的名称，然后点进去看他的回答。
 
 #### 自定义黑名单
 
-**首次使用时，需要获取一次完整的黑名单**。请从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“获取脚本黑名单结束”，表示黑名单获取完成。此时黑名单为脚本内置黑名单与用户自定义黑名单的并集，如果不需要脚本内置的黑名单，则fork后自行修改。
+**首次使用时，需要获取一次完整的黑名单**。请从“我的”-“设置”-“屏蔽设置”-“管理黑名单”，进入黑名单列表。不断往下滑动，直到滑动到列表底部。滑动到底部后，会弹出通知“获取脚本黑名单结束”，表示黑名单获取完成。
 
-黑名单匹配方式为用户名，同名用户都会被屏蔽，“[已重置]”除外。
+脚本黑名单可以跟随知乎登录账户切换，每次切换知乎不同的账户时，请重新获取一次黑名单。
 
-每次添加或移除黑名单用户，脚本内置的黑名单也会同步更新。脚本黑名单可以跟随登录用户切换。
+每次添加或移除黑名单用户，脚本内置的黑名单也会同步更新。
 
 ![](https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/images/01.jpg)
 
@@ -115,7 +127,7 @@
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.sgmodule
 ```
 
-### Loon(beta)
+### Loon
 
 Loon 2.1.3(193) TF + 可以使用插件Plugin。
 
@@ -123,8 +135,6 @@ Loon 2.1.3(193) TF + 可以使用插件Plugin。
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.loonplugin, tag=知乎助手_去广告及体验增强, enabled=true
 ```
-
-Loon 使用此插件，有一定几率出现如推荐列表加载缓慢或无法加载的情况，原因不明，请权衡利弊使用。
 
 ### Quantumult X
 
@@ -145,13 +155,13 @@ DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.quanx, tag=知乎助手_去广告及体验增强, update-interval=86400, opt-parser=false, enabled=true
 ```
 
-### Shadowrocket (beta)
+### Shadowrocket (alpha)
 
-Plus版本仍存在不少问题，暂不支持小火箭。
+Plus版本在Shadowrocket下运行可能会出现部分功能不可用，甚至VPN自动关闭的情况。所以Plus版本暂不支持Shadowrocket，建议使用Lite版本配置。
 
 ## 配置说明(Lite)
 
-如果只想单纯去广告，使用下面的Lite版本的配置。
+Plus版本功能较多，需要消耗较多的系统资源。如果出现VPN自动关闭或VPN频繁重启的情况，请使用下面的Lite版本的配置。Lite版本专注于去广告功能，资源开销较小，稳定性更佳。
 
 ### Surge
 
@@ -161,7 +171,7 @@ Plus版本仍存在不少问题，暂不支持小火箭。
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.sgmodule
 ```
 
-### Loon(beta)
+### Loon
 
 Loon 2.1.3(193) TF + 可以使用插件Plugin。
 
@@ -169,8 +179,6 @@ Loon 2.1.3(193) TF + 可以使用插件Plugin。
 [Plugin]
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.loonplugin, tag=知乎助手_去广告, enabled=true
 ```
-
-Loon 使用此插件，有一定几率出现如推荐列表加载缓慢或无法加载的情况，原因不明，请权衡利弊使用。
 
 #### Quantumult X
 
@@ -191,9 +199,9 @@ DOMAIN-SUFFIX,appcloud2.in.zhihu.com,REJECT
 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_lite.quanx, tag=知乎助手_去广告, update-interval=86400, opt-parser=false, enabled=true
 ```
 
-#### Shadowrocket (beta)
+#### Shadowrocket (alpha)
 
-小火箭的支持为测试功能，可能出现如VPN重启、知乎无法显示内容等奇怪情况，请权衡使用。
+小火箭的支持为测试功能，可能出现如VPN关闭、VPN重启、知乎无法显示内容等奇怪情况，请权衡使用。
 
 ```ini
 [Rule]
