@@ -2,7 +2,9 @@
 
 ## 前言
 
-针对之前的签到脚本，做如下改动：
+参考 https://github.com/NobyDa/Script/tree/master/BDTieBa-DailyBonus 做了彻底的重写。
+
+做如下改动：
 
 1. 精简合并通知
 
