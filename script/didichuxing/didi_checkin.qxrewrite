@@ -1,0 +1,8 @@
+# 滴滴出行每日自动签到
+
+# 获取Cookie
+^https?:\/\/api\.didialift\.com\/beatles\/userapi\/user\/user\/getuserinfo?.*city_id=(\d+).*token=([^&]*) url script-request-header ^https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didichuxing/didi_checkin.js
+# 获取lid
+^https?:\/\/bosp-api\.xiaojukeji\.com\/bosp-api\/lottery\/info?.*lid=([^&]*) url script-request-header ^https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/didichuxing/didi_checkin.js
+
+hostname = api.didialift.com,bosp-api.xiaojukeji.com
