@@ -2,15 +2,25 @@ const scriptName = '滴滴出行';
 const didiTokenKey = 'didi_token';
 const didiCityIdKey = 'didi_city_id';
 const didiLidKey = 'didi_lid';
-const getTokenRegex = /^https?:\/\/api\.didialift\.com\/beatles\/userapi\/user\/user\/getuserinfo?.*city_id=(\d+).*token=([^&]*)/;
+const getTokenRegex = /^https?:\/\/api\.didialift\.com\/beatles\/userapi\/user\/user\/getuserinfo?.*city_id=(\d+).*&token=([^&]*)/;
+const getTokenRegex2 = /^https?:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\?.*location_cityid=(\d+).*&ticket=([^&]*)/;
 const getLidRegex = /^https?:\/\/bosp-api\.xiaojukeji\.com\/bosp-api\/lottery\/info?.*lid=([^&]*)/;
+const sourceIdList = ['pDmWW7HoWUkNu2nmJ3HJEQ%3D%3D'];
 let magicJS = MagicJS(scriptName, "INFO");
 
 
-function CheckIn(token, cityId, source_id='pDmWW7HoWUkNu2nmJ3HJEQ%3D%3D'){
+function CheckIn(token, cityId, source_id=''){
   return new Promise((resolve, reject) =>{
+    let url = '';
+    if (source_id){
+      url = `https://bosp-api.xiaojukeji.com/wechat/benefit/public/index?city_id=${cityId}&share_source_id=${source_id}&share_date=${magicJS.today()}`;
+    }
+    else{
+      url = `https://bosp-api.xiaojukeji.com/wechat/benefit/public/index?city_id=${cityId}&share_date=${magicJS.today()}`;
+    }
+    magicJS.logInfo(`当前使用的source_id：${source_id}`);
     let options = {
-      url: `https://bosp-api.xiaojukeji.com/wechat/benefit/public/index?city_id=${cityId}&share_source_id=${source_id}&share_date=${magicJS.today()}`,
+      url: url,
       headers: {
         'Didi-Ticket': token
       },
@@ -168,12 +178,19 @@ function LotteryDraw(lid, token){
   });
 }
 
+function getSourceId(){
+  return sourceIdList[Math.round(Math.random() * (sourceIdList.length - 1))]; 
+}
+
 async function Main(){
   if (magicJS.isRequest){
-    if (getTokenRegex.test(magicJS.request.url) && magicJS.request.method === 'GET')
-    {
+    if (getTokenRegex.test(magicJS.request.url) || getTokenRegex2.test(magicJS.request.url)){
       try{
         let arr = magicJS.request.url.match(getTokenRegex);
+        // 使用备用匹配
+        if (arr === null){
+          arr = magicJS.request.url.match(getTokenRegex2);
+        }
         let cityId = arr[1];
         let token = arr[2];
         let hisToken = magicJS.read(didiTokenKey);
@@ -183,6 +200,9 @@ async function Main(){
           magicJS.write(didiTokenKey, token);
           magicJS.logInfo(`新的Token：\n${token}，旧的Token：\n${hisToken}，Token已更新。`);
           magicJS.notify('🎉滴滴出行写入Token成功！！');
+        }
+        else{
+          magicJS.logInfo(`新的Token：\n${token}，旧的Token：\n${hisToken}，滴滴出行Token没有变化，无需更新。`);
         }
       }
       catch(err){
@@ -219,57 +239,63 @@ async function Main(){
     let lid = magicJS.read(didiLidKey);
 
     // 签到
-    let [checkInErr, [checkInStr, subsidy, balance, notification]] = await magicJS.attempt(CheckIn(token, cityId));
-    if (checkInErr){
-      subTitle = checkInErr;
-    }
-    else{
-      subTitle = checkInStr;
-      if (subsidy > 0){
-        subTitle += `获取${subsidy}福利金！`;
+    if (token && cityId){
+      let source_id = getSourceId();
+      let [checkInErr, [checkInStr, subsidy, balance, notification]] = await magicJS.attempt(CheckIn(token, cityId, source_id));
+      if (checkInErr){
+        subTitle = checkInErr;
       }
-      if (balance) content = `账户共${balance}福利金，可抵扣${balance/100}元。`;
-      // 系统通知
-      notification.forEach(element => {
-        if (content) content += '\n';
-        content += element + '。';
-      });
-    }
+      else{
+        subTitle = checkInStr;
+        if (subsidy > 0){
+          subTitle += `获取${subsidy}福利金！`;
+        }
+        if (balance) content = `账户共${balance}福利金，可抵扣${balance/100}元。`;
+        // 系统通知
+        notification.forEach(element => {
+          if (content) content += '\n';
+          content += element + '。';
+        });
+      }
 
-    // 抽奖
-    if (lid) {
-      let drawCount = await GetDrawAmount(lid, token);
-      if (drawCount > 0){
-        // 避免抽奖太频繁
-        await magicJS.sleep(5000);
-        if (content) content += '\n';
-        content = `转盘抽奖${drawCount}次：`;
-        for (let i=0;i<drawCount;i++){
+      // 抽奖
+      if (lid) {
+        let drawCount = await GetDrawAmount(lid, token);
+        if (drawCount > 0){
           // 避免抽奖太频繁
           await magicJS.sleep(5000);
-          let drawResult = await LotteryDraw(lid, token);
-          if (drawResult){
-            content += `\n第${i+1}次：${drawResult}`;
+          if (content) content += '\n';
+          content = `转盘抽奖${drawCount}次：`;
+          for (let i=0;i<drawCount;i++){
+            // 避免抽奖太频繁
+            await magicJS.sleep(5000);
+            let drawResult = await LotteryDraw(lid, token);
+            if (drawResult){
+              content += `\n第${i+1}次：${drawResult}`;
+            }
           }
         }
       }
+
+      // 领取福利金
+      let orderList = await GetOrderList(token);
+      magicJS.logInfo(`当前获取的订单信息：${JSON.stringify(orderList)}`);
+      let rewardList = [];
+      let total = 0;
+      orderList.forEach(element => {
+        total += Number(element.bonus_info.amount);
+        rewardList.push(GetRewards(element.oid, token));
+      });
+
+      await Promise.all(rewardList);
+
+      if (total > 0){
+        if (content) content += '\n';
+        content += `\n本日领取福利金${total}。`
+      }
     }
-
-    // 领取福利金
-    let orderList = await GetOrderList(token);
-    magicJS.logInfo(`当前获取的订单信息：${JSON.stringify(orderList)}`);
-    let rewardList = [];
-    let total = 0;
-    orderList.forEach(element => {
-      total += Number(element.bonus_info.amount);
-      rewardList.push(GetRewards(element.oid, token));
-    });
-
-    await Promise.all(rewardList);
-
-    if (total > 0){
-      if (content) content += '\n';
-      content += `\n本日领取福利金${total}。`
+    else{
+      content = '❓请先获取滴滴出行Token再进行签到。';
     }
 
     // 通知

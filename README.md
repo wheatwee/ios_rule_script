@@ -51,6 +51,7 @@ iOS平台的分流规则和一些自动化脚本。
 | [联通手机营业厅](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/10010) | 每日自动签到、必领美团外卖30-3优惠券、4次抽奖、话费流量语音情况推送 |
 | [联享家](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/lxj) | 去广告、拦截检测更新                                         |
 | [嘀嗒出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didachuxing) | 每日自动签到                                                 |
+| [滴滴出行](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/didichuxing) | 每日自动签到                                                 |
 | [家长帮](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/jiazhangbang) | 每日自动签到                                                 |
 | [慢慢买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/manmanbuy) | 每日自动签到                                                 |
 | [小米有品](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/youpin) | 每日自动签到                                                 |
