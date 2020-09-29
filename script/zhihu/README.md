@@ -38,21 +38,22 @@
 6. 屏蔽推荐列表中的直播
 7. 付费内容文首提醒
 
-## 去广告
+## 特别说明
 
-如果出现去广告无效的情况，通常有两种可能：一种是CDN服务器的IP没有加到MITM中引起的；另外一种是你有其他的规则优先级更高，规则互相覆盖或冲突导致某些情况下失效。
+如出现执行异常，绝大部分是因为引用过多的去广告规则，规则之间互相冲突覆盖导致。
 
 建议解决方法：
 
-1. **将知乎去广告规则的优先级调整到最高**
-2. 使用一个空白配置文件验证去广告效果
+1. 使用一个不含其他规则的空白配置文件验证去广告效果
+2. 将知乎去广告规则的优先级调整到最高
 3. 重启知乎
 4. 清理知乎的缓存
 5. 卸载知乎后重装
 6. 安装已经验证过的版本
-7. [点击这里反馈给我](https://github.com/blackmatrix7/ios_rule_script/issues/new)
 
-### 验证情况
+## 去广告
+
+对知乎内置的部分广告进行去除，目前验证情况如下：
 
 **2020年9月23日：**
 
@@ -215,8 +216,6 @@ DOMAIN,appcloud2.zhihu.com,REJECT
 DOMAIN,appcloud2.in.zhihu.com,REJECT
 USER-AGENT,AVOS*,REJECT
 URL-REGEX,^https?:\/\/api\.zhihu\.com\/(notifications\/v3\/count|v3\/package|me\/guides|drama\/living-info|ad|fringe|commercial|market\/popovers|search\/(top|tab)|.*featured-comment-ad|appview\/api\/v\d\/answers\/\d+\/recommendations),REJECT
-# 知乎拦截部分预加载
-URL-REGEX,^https?:\/\/www\.zhihu\.com\/appview\/(p|v2\/answer|zvideo)\/.*entry=(preload-topstory|preload-search|preload-subscription),REJECT
 
 [Script]
 知乎_处理用户信息 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.zhihu\.com\/people\/,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zhihu/zhihu_plus.js
@@ -265,8 +264,6 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 # 知乎直播修正
 ^https?:\/\/api\.zhihu\.com\/drama\/ https://api.zhihu.com/drama/ header
 ```
-
-根据实际情况二选一即可。如果使用插件，为覆盖各种场景，两个规则都写入到插件中了。
 
 如果远程错误的规则是在模块或插件中的，由于模块和插件优先级很高，上面的修正可能不会生效，建议联系插件作者修改。
 
