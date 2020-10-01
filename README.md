@@ -37,7 +37,7 @@ iOS平台的分流规则和一些自动化脚本。
 
 支持优先级：Surge > Quantumult X > Loon > Shadowrocket ≥  JSBox > Node.js
 
-**搬运其他作者的脚本，没办法进行任何支持、维护和解答，有问题请联系原作者。**
+**项目中含有部分搬运其他作者的脚本，没办法进行任何支持、维护和解答，有问题请联系原作者。**
 
 ## 脚本说明
 
@@ -56,13 +56,14 @@ iOS平台的分流规则和一些自动化脚本。
 | [慢慢买](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/manmanbuy) | 每日自动签到                                                 |
 | [小米有品](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/youpin) | 每日自动签到                                                 |
 | [叮咚买菜](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/dingdong) | 每日自动签到                                                 |
-| [万达电影](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/wanda) | 每日自动签到                                                 |
+| [万达电影](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/wanda) | 每日自动签到，月末将剩余能量抽奖                             |
+| [饿了么](https://github.com/blackmatrix7/ios_rule_script/tree/master/script/eleme) | 每日自动领取会员任务                                         |
 
 ## 其他说明
 
 ### 脚本
 
-除自己编写的脚本外，还有部分脚本来自其他大佬的作品，如 [chavyleung](https://github.com/chavyleung/scripts)、[NobyDa](https://github.com/NobyDa/Script/tree/master)、[ConnersHua](https://github.com/ConnersHua/Profiles/tree/master)、[onewayticket255](https://github.com/onewayticket255/Surge-Script)，这里主要进行一些定制化修改、整合和备份。
+除自己编写的脚本外，还有部分脚本来自其他大佬的作品（具体以不同目录的README为准），这里主要进行一些定制化修改、整合和备份。
 
 **自己编写的脚本，通常**：
 
