@@ -126,6 +126,11 @@ function GetDrawAmount(lid, token){
             magicJS.logInfo(`转盘抽奖次数：${obj.data.eliminate_info.base_share_amount}`);
             resolve(obj.data.eliminate_info.base_share_amount);
           }
+          else if (obj.code == 20008){
+            magicJS.logWarning('获取转盘抽奖次数失败');
+            magicJS.logWarning(obj.message);
+            resolve(0);
+          }
           else{
             magicJS.logWarning(`获取转盘抽奖次数失败，响应异常：${data}`);
             resolve(0);
