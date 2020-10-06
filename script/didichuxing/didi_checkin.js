@@ -5,7 +5,7 @@ const didiLidKey = 'didi_lid';
 const getTokenRegex = /^https?:\/\/api\.didialift\.com\/beatles\/userapi\/user\/user\/getuserinfo?.*city_id=(\d+).*&token=([^&]*)/;
 const getTokenRegex2 = /^https?:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\?.*location_cityid=(\d+).*&ticket=([^&]*)/;
 const getLidRegex = /^https?:\/\/bosp-api\.xiaojukeji\.com\/bosp-api\/lottery\/info?.*lid=([^&]*)/;
-const sourceIdList = ['pDmWW7HoWUkNu2nmJ3HJEQ%3D%3D'];
+const sourceIdList = ['7mO4XP93fb84VMSC8Xk5vg%3D%3D'];
 let magicJS = MagicJS(scriptName, "INFO");
 
 
