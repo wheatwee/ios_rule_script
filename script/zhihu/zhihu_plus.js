@@ -107,13 +107,12 @@ async function main(){
         }
         break;
       // 关注列表去广告
-      case /^https?:\/\/api\.zhihu\.com\/moments(\/|\?)?(recommend|action=|feed_type=)/.test(magicJS.request.url):
+      case /^https?:\/\/api\.zhihu\.com\/moments(\/|\?)?(recommend|action=|feed_type=)(?!\/people)/.test(magicJS.request.url):
         try{
           let body = JSON.parse(magicJS.response.body);
           let data = [];
-          for (let i=0;i<body['data'].length;i++){
-            let element = body['data'][i];
-            // 修正由于JS number类型精度问题，导致JSON.parse精度丢失，引起想法不存在的问题
+          // 修正由于JS number类型精度问题，导致JSON.parse精度丢失，引起想法不存在的问题
+          const targetIdFix = (element)=>{
             if (element['target_type'] == 'pin'){
               target_id = element['target']['url'].match(/https?:\/\/www\.zhihu\.com\/pin\/(\d*)/)[1];
               element['target']['id'] = target_id;
@@ -123,6 +122,10 @@ async function main(){
                 element['target']['origin_pin']['id'] = origin_target_id;
               }
             }
+            return element;
+          }
+          for (let i=0;i<body['data'].length;i++){
+            let element = targetIdFix(body['data'][i]);
             if (!element['ad']){
               data.push(body['data'][i]);
             }

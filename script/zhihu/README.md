@@ -30,7 +30,7 @@
 
 ## 最近更新
 
-1. 临时解决Loon TF 204版本之后，使用插件导致知乎无法加载数据的问题，解决方法见文末
+1. 修复想法不存在的问题
 2. 营销内容文首提醒
 3. 部分功能支持Shadowrocket TF 2.1.62(1071)+
 4. 脚本黑名单跟随登录用户切换，需要重新获取黑名单。
@@ -78,8 +78,6 @@ Surge4.10.0(1800) TF、Quantumult X 1.0.14(367) TF、Loon 2.1.3(197) TF  验证�
 知乎 V6.51.1(2518)
 
 Surge4.10.0(1788) TF、Quantumult X 1.0.14(359) TF、Loon 2.1.3(191) TF 验证通过。
-
-> 部分去广告的思路来自 [@onewayticket255](https://github.com/onewayticket255/Surge-Script)
 
 ## 付费内容提醒(beta)
 
@@ -279,10 +277,6 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 ### 想法不存在
 
 已修复，具体原因 https://github.com/blackmatrix7/ios_rule_script/issues/17
-
-### Loon TF 204后知乎无法加载数据
-
-推测为规则冲突导致，最近的更新已临时进行修复。如果更新最新的插件依旧无法加载数据，请排查引用的其他去广告规则，将这些规则中所有关于知乎的规则全部删除，确保只有插件中存在知乎相关规则，以免引起冲突。
 
 ## 最后
 
