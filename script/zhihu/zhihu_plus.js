@@ -110,7 +110,23 @@ async function main(){
       case /^https?:\/\/api\.zhihu\.com\/moments(\/|\?)?(recommend|action=|feed_type=)/.test(magicJS.request.url):
         try{
           let body = JSON.parse(magicJS.response.body);
-          let data = body['data'].filter((element) =>{return !element['ad']});
+          let data = [];
+          for (let i=0;i<body['data'].length;i++){
+            let element = body['data'][i];
+            // 修正由于JS number类型精度问题，导致JSON.parse精度丢失，引起想法不存在的问题
+            if (element['target_type'] == 'pin'){
+              target_id = element['target']['url'].match(/https?:\/\/www\.zhihu\.com\/pin\/(\d*)/)[1];
+              element['target']['id'] = target_id;
+              // 转发的想法处理
+              if (!!element['target']['origin_pin'] && element['target']['origin_pin'].hasOwnProperty('url')){
+                origin_target_id = element['target']['origin_pin']['url'].match(/https?:\/\/www\.zhihu\.com\/pin\/(\d*)/)[1];
+                element['target']['origin_pin']['id'] = origin_target_id;
+              }
+            }
+            if (!element['ad']){
+              data.push(body['data'][i]);
+            }
+          }
           body['data'] = data;
           body=JSON.stringify(body);
           magicJS.done({body: body});

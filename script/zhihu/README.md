@@ -278,7 +278,7 @@ URL-REGEX,^https?:\/\/api\.zhihu\.com\/drama\/,DIRECT
 
 ### 想法不存在
 
-目前问题已知，待解决。
+已修复，具体原因 https://github.com/blackmatrix7/ios_rule_script/issues/17
 
 ### Loon TF 204后知乎无法加载数据
 
